@@ -547,7 +547,7 @@
             background: var(--surface);
             border-radius: var(--radius);
             padding: 28px;
-            max-width: 600px; /* Diperbesar sedikit agar form kendaraan muat */
+            max-width: 600px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -654,7 +654,7 @@
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
-            display: none; /* Disembunyikan secara default */
+            display: none;
         }
 
         .form-kendaraan-title {
@@ -687,7 +687,7 @@
                 <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
             </div>
         </div>
-
+        
         <div class="content">
             @if (session('success'))
                 <div class="alert alert-success">
@@ -704,6 +704,23 @@
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                     </svg>
                     {{ session('error') }}
+                </div>
+            @endif
+
+            {{-- PERBAIKAN 1: PENANGKAP ERROR VALIDASI AGAR FORM TIDAK "MENGUAP" --}}
+            @if ($errors->any())
+                <div class="alert alert-danger" style="display: block;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-weight: bold; margin-bottom: 8px;">
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                        </svg>
+                        Terdapat Kesalahan Input (Silakan cek form kembali):
+                    </div>
+                    <ul style="margin-left: 35px; font-size: 13px; font-weight: normal;">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
 
@@ -845,7 +862,7 @@
                                         </div>
                                     </div>
 
-                                    {{-- INFO DETAIL KENDARAAN JIKA KATEGORI = KENDARAAN ATAU ALAT ANGKUTAN BERMOTOR --}}
+                                    {{-- INFO DETAIL KENDARAAN --}}
                                     @php
                                         $katDetail = strtolower($aset->kategori ?? '');
                                         $isKendaraan = (str_contains($katDetail, 'kendaraan') || str_contains($katDetail, 'angkutan bermotor'));
@@ -946,12 +963,11 @@
                                             </div>
                                             <div class="form-group">
                                                 <label class="form-label">Kategori <span class="text-red-500">*</span></label>
-                                                <!-- Kategori menggunakan input text dengan trigger oninput JS -->
                                                 <input type="text" name="kategori" class="form-input" value="{{ old('kategori', $aset->kategori) }}" required oninput="toggleKendaraanFields(this, 'kendaraan_fields_edit_{{ $aset->id }}')" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR">
                                             </div>
                                         </div>
 
-                                        <!-- AREA DETAIL KENDARAAN (Muncul otomatis saat kategori mengandung "Kendaraan" atau "Angkutan Bermotor") -->
+                                        <!-- AREA DETAIL KENDARAAN -->
                                         @php
                                             $katEdit = strtolower(old('kategori', $aset->kategori ?? ''));
                                             $showEdit = (str_contains($katEdit, 'kendaraan') || str_contains($katEdit, 'angkutan bermotor')) ? 'block' : 'none';
@@ -1065,7 +1081,7 @@
                     </svg>
                     <p style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px;">Pilih file Excel untuk diupload</p>
                     <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Format yang didukung: .xlsx, .xls</p>
-                    <input type="file" name="file" accept=".xlsx, .xls" required style="font-size: 13px; max-width: 100%;">
+                    <input type="file" name="file_excel" accept=".xlsx, .xls" required style="font-size: 13px; max-width: 100%;">
                 </div>
                 <div style="margin-bottom: 20px;">
                     <a href="{{ route('adminasettetap.data-aset-tetap.template') }}" style="font-size: 13px; color: var(--blue); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
@@ -1119,18 +1135,19 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Kategori <span class="text-red-500">*</span></label>
-                        <!-- Pilihan kategori dirubah menjadi input teks dengan event listener oninput -->
                         <input type="text" name="kategori" class="form-input" value="{{ old('kategori') }}" required oninput="toggleKendaraanFields(this, 'kendaraan_fields_tambah')" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR">
                     </div>
                 </div>
 
-                <!-- AREA DETAIL KENDARAAN (Muncul otomatis saat kategori "Kendaraan" atau "Angkutan Bermotor" diketik) -->
+                <!-- PERBAIKAN 2: AREA DETAIL KENDARAAN (Menghapus pemanggilan variabel $aset karena ini form Tambah) -->
                 @php
-                    $katTambah = strtolower(old('kategori') ?? '');
+                    $katTambah = strtolower(old('kategori', ''));
                     $showTambah = (str_contains($katTambah, 'kendaraan') || str_contains($katTambah, 'angkutan bermotor')) ? 'block' : 'none';
                 @endphp
+
                 <div id="kendaraan_fields_tambah" class="form-kendaraan" style="display: {{ $showTambah }};">
                     <div class="form-kendaraan-title">Informasi Detail Kendaraan</div>
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Nomor Polisi</label>
@@ -1141,6 +1158,7 @@
                             <input type="text" name="no_bpkb" class="form-input" value="{{ old('no_bpkb') }}" placeholder="Contoh: BPKB-12345">
                         </div>
                     </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Nomor Rangka</label>

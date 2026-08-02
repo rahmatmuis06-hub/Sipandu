@@ -1,818 +1,233 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIPANDU - Pengembalian Kendaraan</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-
+    <title>Berita Acara Pengembalian Kendaraan - {{ $pengembalian->id }}</title>
     <style>
-        :root {
-            --primary: #2563eb;
-            --primary-light: #3b82f6;
-            --accent: #06b6d4;
-            --accent2: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: #f0f4ff;
-            --sidebar-bg: #0f172a;
-            --sidebar-text: #94a3b8;
-            --card-bg: #ffffff;
-            --text-primary: #0f172a;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            --radius: 16px;
-            --radius-sm: 10px;
-            --shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
-            --shadow-lg: 0 8px 40px rgba(37, 99, 235, 0.14);
+        /* KOMPRESI EKSTREM UNTUK 1 HALAMAN */
+        @page {
+            size: A4 portrait;
+            margin: 1cm 1.5cm; /* Atas-Bawah 1cm, Kiri-Kanan 1.5cm */
         }
-
-        * {
+        body {
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 9pt; /* Ukuran font diperkecil */
+            line-height: 1.1; /* Spasi antar baris sangat dirapatkan */
+            color: #000;
         }
-
-        body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg);
-            color: var(--text-primary);
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .main {
-            margin-left: 260px;
-            flex: 1;
-            padding: 0 32px 40px;
-        }
-
-        .topbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 20px 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            background: var(--bg);
-            border-bottom: 1px solid transparent;
-        }
-
-        .breadcrumb {
-            font-size: 13px;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .breadcrumb a {
-            text-decoration: none;
-            color: var(--text-secondary);
-        }
-
-        .breadcrumb span {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .topbar-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.4fr;
-            gap: 28px;
-        }
-
-        .form-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            position: sticky;
-            top: 90px;
-            height: fit-content;
-        }
-
-        .form-header {
-            padding: 24px 28px 20px;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .form-header::before {
-            content: '';
-            position: absolute;
-            right: -30px;
-            top: -30px;
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .form-header-icon {
-            position: relative;
-            z-index: 1;
-            width: 46px;
-            height: 46px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 13px;
-            display: grid;
-            place-items: center;
-            font-size: 20px;
-            color: #fff;
-            margin-bottom: 12px;
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .form-header-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 18px;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .form-header-sub {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.75);
-            margin-top: 4px;
-        }
-
-        .form-body {
-            padding: 24px 28px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-label {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: .6px;
-            margin-bottom: 8px;
-        }
-
-        .form-label i {
-            color: var(--primary);
-            font-size: 11px;
-        }
-
-        .form-label .req {
-            color: var(--danger);
-        }
-
-        .form-input,
-        .form-select,
-        .form-textarea {
-            width: 100%;
-            padding: 11px 14px;
-            border: 1.5px solid var(--border);
-            border-radius: 10px;
-            font-size: 13px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: var(--text-primary);
-            background: #fff;
-            transition: all .2s;
-            outline: none;
-        }
-
-        .form-input:focus,
-        .form-select:focus,
-        .form-textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        .form-select {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 14px center;
-            padding-right: 36px;
-            cursor: pointer;
-        }
-
-        .form-textarea {
-            resize: vertical;
-            min-height: 90px;
-        }
-
-        .input-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-        }
-
-        .kendaraan-preview {
-            display: none;
-            margin-top: 8px;
-            padding: 12px 14px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #eff6ff, #dbeafe);
-            border: 1px solid #bfdbfe;
-        }
-
-        .kendaraan-preview.show {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .kp-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 9px;
-            background: var(--primary);
-            display: grid;
-            place-items: center;
-            color: #fff;
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .kp-name {
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .kp-details {
-            display: flex;
-            gap: 10px;
-            margin-top: 3px;
-        }
-
-        .kp-tag {
-            font-size: 10px;
-            background: rgba(79, 70, 229, 0.1);
-            color: var(--primary);
-            padding: 2px 8px;
-            border-radius: 5px;
-            font-weight: 600;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 13px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-light));
-            color: #fff;
-            border: none;
-            border-radius: 11px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all .2s;
-            margin-top: 8px;
-        }
-
-        .submit-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Kustomisasi Select2 */
-        .select2-container .select2-selection--single { height: 42px !important; border: 1.5px solid var(--border) !important; border-radius: 10px !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 13px !important; display: flex; align-items: center; transition: all .2s; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { color: var(--text-primary) !important; padding-left: 14px !important; line-height: normal !important; }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px !important; right: 10px !important; }
-        .select2-dropdown { border: 1.5px solid var(--primary) !important; border-radius: 10px !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 13px !important; box-shadow: var(--shadow-lg) !important; }
-        .select2-container--default.select2-container--focus .select2-selection--single { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; }
-        .select2-container--default .select2-search--dropdown .select2-search__field { border-radius: 6px !important; border: 1px solid var(--border) !important; padding: 8px 12px !important; }
-
-        .history-card {
-            background: var(--card-bg);
-            border-radius: var(--radius);
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-
-        .history-header {
-            padding: 22px 28px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .history-title {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 17px;
-            font-weight: 700;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .filter-tabs { display: flex; gap: 6px; }
-        .filter-tab { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 7px; cursor: pointer; border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); transition: all .2s; }
-        .filter-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-
-        .req-list { padding: 20px 28px; display: flex; flex-direction: column; gap: 16px; max-height: 70vh; overflow-y: auto; }
-        .req-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; transition: all .2s; flex-shrink: 0; display: flex; flex-direction: column; }
-        .req-card-top { padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; }
-        .req-card-icon { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; background: rgba(37, 99, 235, 0.1); color: var(--primary); }
-        .req-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-        .req-card-code { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-
-        .status-badge { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 7px; display: flex; align-items: center; gap: 5px; }
-        .status-badge.diproses { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2); }
-        .status-badge.diterima { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
-        .status-badge.ditolak { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-
-        .req-card-meta { padding: 0 18px 16px; }
-        .meta-box { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .meta-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px; }
-        .meta-value { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
-
-        .req-card-footer { padding: 14px 18px; display: flex; gap: 10px; border-top: 1px solid #f1f5f9; }
-        .card-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .2s; }
-        .card-btn.detail { background: #f0f4ff; color: var(--primary); border-color: #dbeafe; }
-        .card-btn.detail:hover { background: var(--primary); color: #fff; }
-        .card-btn.cancel { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
-        .card-btn.cancel:hover { background: var(--danger); color: #fff; }
-
-        .alert-success { background: #dcfce7; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 14px; font-weight: 600; }
-        .alert-danger { background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 14px; font-weight: 600; }
-
-        /* Modal Detail */
-        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-        .modal-box { background: #fff; width: 90%; max-width: 550px; border-radius: 16px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .text-center { text-align: center; }
+        .text-justify { text-align: justify; }
+        .font-bold { font-weight: bold; }
+        .italic { font-style: italic; }
         
-        @media (max-width: 1024px) { .content-grid { grid-template-columns: 1fr; gap: 24px; } .form-card { position: static; top: auto; } }
-        @media (max-width: 768px) { .sidebar { width: 200px; padding: 16px 12px; } .main { margin-left: 200px; width: calc(100% - 200px); padding: 0 20px 40px; } }
+        .mb-2 { margin-bottom: 2px; }
+        .mb-5 { margin-bottom: 3px; }
+        .mb-10 { margin-bottom: 5px; }
+        .mb-15 { margin-bottom: 10px; }
+
+        .kop-surat { width: 100%; margin-bottom: 10px; }
+        .kop-surat img { width: 100%; height: auto; max-height: 2cm; object-fit: contain; }
+
+        .judul-surat { font-size: 10pt; font-weight: normal; margin-bottom: 2px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        td { vertical-align: top; padding: 0.5px 0; }
+        .td-label { width: 160px; }
+        .td-titikdua { width: 15px; text-align: center; }
+
+        .table-pihak { width: 95%; margin-left: 5%; margin-bottom: 2px; }
+        .table-barang { width: 100%; margin-bottom: 10px; }
+
+        .ttd-table { width: 100%; text-align: center; margin-top: 15px; page-break-inside: avoid; }
+        .ttd-table td { width: 50%; padding: 0px; vertical-align: top; }
+        .ttd-img-container { height: 40px; margin: 1px 0; display: block; }
+        .ttd-img-container img { max-height: 40px; max-width: 100px; }
+        .ttd-nama { font-weight: bold; }
     </style>
 </head>
-
 <body>
+    @php
+        function terbilang($angka) {
+            $angka = abs($angka);
+            $baca = array("", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas");
+            $terbilang = "";
+            if ($angka < 12) { $terbilang = " " . $baca[$angka]; }
+            else if ($angka < 20) { $terbilang = terbilang($angka - 10) . " Belas"; }
+            else if ($angka < 100) { $terbilang = terbilang($angka / 10) . " Puluh" . terbilang($angka % 10); }
+            else if ($angka < 200) { $terbilang = " Seratus" . terbilang($angka - 100); }
+            else if ($angka < 1000) { $terbilang = terbilang($angka / 100) . " Ratus" . terbilang($angka % 100); }
+            else if ($angka < 2000) { $terbilang = " Seribu" . terbilang($angka - 1000); }
+            else if ($angka < 1000000) { $terbilang = terbilang($angka / 1000) . " Ribu" . terbilang($angka % 1000); }
+            return trim($terbilang);
+        }
 
-    @include('partials.sidebar')
+        $tgl = $pengembalian->tanggal_pengembalian_aktual ?? now();
+        $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
+        $tgl_angka = \Carbon\Carbon::parse($tgl)->format('j');
+        $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');
+        $tahun_angka = \Carbon\Carbon::parse($tgl)->format('Y');
 
-    <main class="main">
-        <div class="topbar">
-            <div class="topbar-left">
-                <div>
-                    <div class="breadcrumb">
-                        <a href="{{ route('pegawai.dashboard') }}">Dashboard</a>
-                        <i class="fas fa-chevron-right" style="font-size:10px"></i>
-                        <span>Pengembalian Kendaraan</span>
-                    </div>
-                    <div class="topbar-title">Pengembalian Kendaraan</div>
-                </div>
-            </div>
-        </div>
+        $nomor_urut = str_pad($pengembalian->id, 3, '0', STR_PAD_LEFT);
+    @endphp
 
-        @if (session('success'))
-            <div class="alert-success"><i class="fas fa-check-circle"></i> {{ session('success') }}</div>
-        @endif
-
-        @if ($errors->any())
-            <div class="alert-danger">
-                <ul style="padding-left: 20px; margin: 0;">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        <div class="content-grid">
-            <div class="form-card">
-                <div class="form-header">
-                    <div class="form-header-icon"><i class="fas fa-car"></i></div>
-                    <div class="form-header-title">Lapor Pengembalian</div>
-                    <div class="form-header-sub">Pilih kendaraan dan laporkan kondisi pengembalian</div>
-                </div>
-                <div class="form-body">
-                    <form action="{{ route('pegawai.pengembalian-kendaraan.store') }}" method="POST"
-                        enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group">
-                            <div class="form-label"><i class="fas fa-clipboard-list"></i> Pilih Peminjaman <span class="req">*</span></div>
-                            <select class="form-select" name="peminjaman_kendaraan_id" id="peminjamanSelect" required>
-                                <option value="">-- Ketik untuk mencari kendaraan... --</option>
-                                @foreach ($peminjamanKendaraan as $pinjam)
-                                    <!-- Menyisipkan data nopol, bpkb, rangka, mesin -->
-                                    <option value="{{ $pinjam->id }}"
-                                        data-name="{{ $pinjam->nama_barang ?? 'Kendaraan' }}"
-                                        data-merek="{{ $pinjam->merek ?? '-' }}"
-                                        data-nup="{{ $pinjam->nup ?? '-' }}"
-                                        data-nopol="{{ $pinjam->nomor_polisi_saat_pinjam ?? '-' }}"
-                                        data-bpkb="{{ $pinjam->no_bpkb_saat_pinjam ?? '-' }}"
-                                        data-rangka="{{ $pinjam->nomor_rangka_saat_pinjam ?? '-' }}"
-                                        data-mesin="{{ $pinjam->nomor_mesin_saat_pinjam ?? '-' }}">
-                                        {{ $pinjam->nama_barang ?? 'Kendaraan' }} - Plat: {{ $pinjam->nomor_polisi_saat_pinjam ?? '-' }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <div class="kendaraan-preview" id="kendaraanPreview">
-                                <div class="kp-icon"><i class="fas fa-car"></i></div>
-                                <div>
-                                    <div class="kp-name" id="kpName">-</div>
-                                    <div class="kp-details"><span class="kp-tag" id="kpNopol">-</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- BARIS INFORMASI READONLY (Merek & NUP) -->
-                        <div class="input-row" style="margin-top: 14px;">
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-tags"></i> Merek Kendaraan</div>
-                                <input type="text" class="form-input" id="merekInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-barcode"></i> NUP</div>
-                                <input type="text" class="form-input" id="nupInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-                            </div>
-                        </div>
-
-                        <!-- BARIS INFORMASI READONLY (Nopol & BPKB) -->
-                        <div class="input-row">
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-id-card"></i> Nomor Polisi</div>
-                                <input type="text" class="form-input" id="nopolInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-file-alt"></i> Nomor BPKB</div>
-                                <input type="text" class="form-input" id="bpkbInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-                            </div>
-                        </div>
-
-                        <!-- BARIS INFORMASI READONLY (Rangka & Mesin) -->
-                        <div class="input-row">
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-cogs"></i> Nomor Rangka</div>
-                                <input type="text" class="form-input" id="rangkaInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-wrench"></i> Nomor Mesin</div>
-                                <input type="text" class="form-input" id="mesinInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="form-label"><i class="fas fa-calendar-check"></i> Tgl & Jam Kembali <span
-                                    class="req">*</span></div>
-                            <input type="datetime-local" name="tanggal_pengembalian_aktual" id="tglPengembalian"
-                                class="form-input" required>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="form-label"><i class="fas fa-car-side"></i> Kondisi Kendaraan <span
-                                    class="req">*</span></div>
-                            <select class="form-select" name="kondisi_kendaraan" required>
-                                <option value="">-- Pilih Kondisi --</option>
-                                <option value="baik">Baik - Normal</option>
-                                <option value="rusak-ringan">Rusak Ringan</option>
-                                <option value="rusak-berat">Rusak Berat</option>
-                                <option value="hilang">Hilang / Kecelakaan Total</option>
-                            </select>
-                        </div>
-
-                        <div class="input-row">
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-camera"></i> Foto Sebelum <span
-                                        class="req">*</span></div>
-                                <input type="file" name="foto_sebelum" class="form-input" accept="image/*" required>
-                            </div>
-                            <div class="form-group">
-                                <div class="form-label"><i class="fas fa-camera-retro"></i> Foto Sesudah <span
-                                        class="req">*</span></div>
-                                <input type="file" name="foto_sesudah" class="form-input" accept="image/*" required>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <div class="form-label"><i class="fas fa-clipboard"></i> Catatan</div>
-                            <textarea name="catatan" class="form-textarea" placeholder="Deskripsikan kondisi KM, bahan bakar, kerusakan dll..."></textarea>
-                        </div>
-
-                        <button type="submit" class="submit-btn" id="submitBtn" disabled>
-                            <i class="fas fa-paper-plane"></i> Kirim Laporan
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div>
-                <div class="history-card">
-                    <div class="history-header">
-                        <div class="history-title">
-                            <i class="fas fa-history"></i> Riwayat Pengembalian
-                            <span
-                                style="font-size:14px;color:var(--text-secondary);margin-left:8px">{{ $pengembalianKendaraan->count() }}
-                                data</span>
-                        </div>
-                        <div class="filter-tabs">
-                            <button class="filter-tab active" onclick="filterTab(this,'all')">Semua</button>
-                            <button class="filter-tab" onclick="filterTab(this,'pending')">Pending</button>
-                            <button class="filter-tab" onclick="filterTab(this,'diterima')">Diterima</button>
-                        </div>
-                    </div>
-
-                    <div class="req-list">
-                        @forelse($pengembalianKendaraan as $item)
-                            @php $statusClass = strtolower($item->status_verifikasi ?? 'pending'); @endphp
-                            <div class="req-card" data-status="{{ $statusClass }}">
-                                <div class="req-card-top">
-                                    <div style="display:flex;align-items:center;gap:12px">
-                                        <div class="req-card-icon"><i class="fas fa-car-side"></i></div>
-                                        <div>
-                                            <div class="req-card-name">
-                                                {{ $item->peminjamanKendaraan->nama_barang ?? 'Kendaraan' }}</div>
-                                            <div class="req-card-code">{{ $item->peminjamanKendaraan->merek ?? '-' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="status-badge {{ $statusClass }}">
-                                        <i
-                                            class="fas fa-{{ $statusClass == 'diterima' ? 'check-circle' : ($statusClass == 'ditolak' ? 'times-circle' : 'clock') }}"></i>
-                                        {{ ucfirst($item->status_verifikasi ?? 'Pending') }}
-                                    </div>
-                                </div>
-
-                                <div class="req-card-meta">
-                                    <div class="meta-box">
-                                        <div>
-                                            <div class="meta-label">Tgl Kembali</div>
-                                            <div class="meta-value">
-                                                {{ $item->tanggal_pengembalian_aktual ? \Carbon\Carbon::parse($item->tanggal_pengembalian_aktual)->format('d M Y') : '-' }}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div class="meta-label">Kondisi</div>
-                                            <div class="meta-value">
-                                                {{ $item->kondisi_kendaraan ? ucwords(str_replace('-', ' ', $item->kondisi_kendaraan)) : '-' }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="req-card-footer">
-                                    <button type="button" class="card-btn detail"
-                                        onclick="showDetailModal({{ $item->id }})">
-                                        <i class="fas fa-eye"></i> Detail
-                                    </button>
-
-                                    @if (strtolower($item->status_verifikasi ?? '') == 'pending')
-                                        <form action="{{ route('pegawai.pengembalian-kendaraan.cancel', $item->id) }}"
-                                            method="POST" style="flex:1; display:flex;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="card-btn cancel"
-                                                onclick="return confirm('Yakin batalkan laporan ini?')"
-                                                style="width:100%">
-                                                <i class="fas fa-times"></i> Batalkan
-                                            </button>
-                                        </form>
-                                    @endif
-                                </div>
-                            </div>
-                        @empty
-                            <div style="text-align:center;padding:40px 20px;color:var(--text-secondary)">
-                                <i class="fas fa-car" style="font-size:48px;margin-bottom:16px;opacity:0.3"></i>
-                                <p style="font-size:13px; font-weight:600;">Belum ada riwayat pengembalian.</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <div id="detailModal" class="modal-overlay">
-        <div class="modal-box">
-            <div
-                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px;">
-                <h3 style="font-family:'Space Grotesk'; font-weight:700; color:var(--primary);"><i
-                        class="fas fa-info-circle"></i> Detail Pengembalian</h3>
-                <button type="button" onclick="closeModal()"
-                    style="border:none; background:none; cursor:pointer; color:var(--text-secondary); font-size:18px;"><i
-                        class="fas fa-times"></i></button>
-            </div>
-
-            <div id="loadingModal" style="text-align:center; padding:30px;"><i class="fas fa-spinner fa-spin fa-2x"
-                    style="color:var(--primary)"></i></div>
-
-            <div id="contentModal" style="display:none;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:15px;">
-                    <div>
-                        <label
-                            style="font-size:10px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Kendaraan</label>
-                        <div id="modNama" style="font-size:13px; font-weight:700; color:var(--text-primary);"></div>
-                        <div id="modNopol" style="font-size:11px; color:var(--text-secondary);"></div>
-                    </div>
-                    <div>
-                        <label
-                            style="font-size:10px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Tanggal
-                            Lapor</label>
-                        <div id="modTgl" style="font-size:13px; font-weight:600;"></div>
-                    </div>
-                </div>
-
-                <div
-                    style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border); margin-bottom:15px;">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <div>
-                            <label
-                                style="font-size:10px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Kondisi
-                                Dilaporkan</label>
-                            <div id="modKondisi" style="font-size:13px; font-weight:600;"></div>
-                        </div>
-                        <div>
-                            <label
-                                style="font-size:10px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Status
-                                Verifikasi</label>
-                            <div id="modStatus" style="font-size:13px; font-weight:700;"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:15px;">
-                    <label
-                        style="font-size:10px; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Catatan
-                        Anda</label>
-                    <div id="modCatatan" style="font-size:13px; color:var(--text-primary); margin-top:4px;"></div>
-                </div>
-
-                <div id="komentarAdminArea"
-                    style="display:none; margin-bottom:15px; padding:12px; background:#fef2f2; border-left:3px solid var(--danger); border-radius:6px;">
-                    <label
-                        style="font-size:10px; font-weight:700; color:var(--danger); text-transform:uppercase;">Tanggapan
-                        Admin / Ditolak</label>
-                    <div id="modKomentar" style="font-size:13px; color:var(--text-primary); margin-top:4px;"></div>
-                </div>
-
-                <div style="text-align:right; margin-top:20px;">
-                    <button type="button" class="card-btn"
-                        style="background:#e2e8f0; color:var(--text-primary); width:auto; padding:10px 24px; display:inline-block;"
-                        onclick="closeModal()">Tutup</button>
-                </div>
-            </div>
-        </div>
+    <div class="kop-surat">
+        <img src="{{ public_path('storage/kop_surat.png') }}" alt="Kop Surat BPMP"> 
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <div class="text-center mb-15">
+        <div class="judul-surat">BERITA ACARA PENGEMBALIAN PEMINJAMAN</div>
+        <div>No: {{ $nomor_urut }}/LK.01.02/693228/{{ $tahun_angka }}</div>
+    </div>
 
-    <script>
-        $(document).ready(function() {
-            // Inisialisasi Select2
-            $('#peminjamanSelect').select2({
-                placeholder: "-- Ketik untuk mencari kendaraan yang ingin dikembalikan --",
-                allowClear: true,
-                width: '100%'
-            });
+    <div class="text-justify mb-10">
+        Pada hari ini <span class="italic font-bold">{{ $hari }}</span> tanggal <span class="italic font-bold">{{ ucwords(terbilang($tgl_angka)) }}</span> bulan <span class="italic font-bold">{{ $bulan }}</span> tahun <span class="italic font-bold">{{ ucwords(terbilang($tahun_angka)) }}</span> yang bertanda tangan dibawah ini :
+    </div>
 
-            // Trigger saat opsi dipilih di Select2
-            $('#peminjamanSelect').on('select2:select select2:clear', function(e) {
-                onPeminjamanChange();
-            });
-        });
+    <table class="table-pihak">
+        <tr>
+            <td style="width: 20px;">1.</td>
+            <td class="td-label">Nama</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $admin->name ?? 'Wiwin S. Bokingo, S.H' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>NIP</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $admin->nip ?? '198001122008101002' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Jabatan</td>
+            <td class="td-titikdua">:</td>
+            <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Instansi</td>
+            <td class="td-titikdua">:</td>
+            <td>BPMP Provinsi Gorontalo</td>
+        </tr>
+    </table>
+    <div class="mb-5" style="margin-left: 5%;">Selanjutnya disebut sebagai PIHAK PERTAMA</div>
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const now = new Date();
-            const datetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
-            document.getElementById('tglPengembalian').value = datetime;
-        });
+    <table class="table-pihak">
+        <tr>
+            <td style="width: 20px;">2.</td>
+            <td class="td-label">Nama</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->user->name ?? 'Rudi Syaifullah, S.Si., M.M' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>NIP</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->user->nip ?? '197606272003121002' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Jabatan</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->user->jabatan ?? 'Kepala' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Instansi</td>
+            <td class="td-titikdua">:</td>
+            <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
+        </tr>
+    </table>
+    <div class="mb-10" style="margin-left: 5%;">Selanjutnya disebut sebagai PIHAK KEDUA</div>
 
-        function onPeminjamanChange() {
-            const select = document.getElementById('peminjamanSelect');
-            const preview = document.getElementById('kendaraanPreview');
-            const submitBtn = document.getElementById('submitBtn');
+    <div class="text-justify mb-10">
+        PIHAK KEDUA telah menyerahkan kepada PIHAK PERTAMA Barang Milik Negara (BMN) sesuai spesifikasi sebagai berikut :
+    </div>
 
-            // Input Fields
-            const merekInput = document.getElementById('merekInput');
-            const nupInput = document.getElementById('nupInput');
-            const nopolInput = document.getElementById('nopolInput');
-            const bpkbInput = document.getElementById('bpkbInput');
-            const rangkaInput = document.getElementById('rangkaInput');
-            const mesinInput = document.getElementById('mesinInput');
+    <table class="table-barang">
+        <tr>
+            <td class="td-label">Jenis Kendaraan</td>
+            <td class="td-titikdua">:</td>
+            <td>Kendaraan Bermotor Roda Empat</td>
+        </tr>
+        <tr>
+            <td>Kode Barang</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanKendaraan->kode_barang ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Nama Barang /Merek/Type</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanKendaraan->nama_barang ?? '-' }} / {{ $pengembalian->peminjamanKendaraan->merek ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>NUP</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanKendaraan->nup ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Jumlah</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanKendaraan->jumlah ?? '1' }} (satu) unit</td>
+        </tr>
+        <tr>
+            <td>Nomor Polisi/BPKB</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanKendaraan->nomor_polisi_saat_pinjam ?? '-' }} / {{ $pengembalian->peminjamanKendaraan->no_bpkb_saat_pinjam ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Nomor Rangka/Mesin</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanKendaraan->nomor_rangka_saat_pinjam ?? '-' }} / {{ $pengembalian->peminjamanKendaraan->nomor_mesin_saat_pinjam ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Kondisi</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ ucwords(str_replace('-', ' ', $pengembalian->kondisi_kendaraan ?? 'Baik')) }}</td>
+        </tr>
+    </table>
+        
+    <div class="text-justify mb-10">
+        Demikian berita acara ini ditandatangani dengan sebenar-benarnya dan untuk digunakan sebagaimana mestinya.
+    </div>
 
-            if (select.value) {
-                const option = select.options[select.selectedIndex];
-                
-                document.getElementById('kpName').textContent = option.dataset.name;
-                document.getElementById('kpNopol').textContent = option.dataset.nopol;
-                
-                // Isi field readonly
-                merekInput.value = option.dataset.merek || '-';
-                nupInput.value = option.dataset.nup || '-';
-                nopolInput.value = option.dataset.nopol || '-';
-                bpkbInput.value = option.dataset.bpkb || '-';
-                rangkaInput.value = option.dataset.rangka || '-';
-                mesinInput.value = option.dataset.mesin || '-';
-
-                preview.classList.add('show');
-                submitBtn.disabled = false;
-            } else {
-                // Kosongkan field
-                merekInput.value = '';
-                nupInput.value = '';
-                nopolInput.value = '';
-                bpkbInput.value = '';
-                rangkaInput.value = '';
-                mesinInput.value = '';
-
-                preview.classList.remove('show');
-                submitBtn.disabled = true;
-            }
-        }
-
-        function filterTab(el, filter) {
-            document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            document.querySelectorAll('.req-card').forEach(card => {
-                if (filter === 'all' || card.dataset.status === filter) {
-                    card.style.display = '';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-        }
-
-        function showDetailModal(id) {
-            const modal = document.getElementById('detailModal');
-            const loading = document.getElementById('loadingModal');
-            const content = document.getElementById('contentModal');
-
-            modal.style.display = 'flex';
-            loading.style.display = 'block';
-            content.style.display = 'none';
-
-            fetch(`/pegawai/pengembalian-kendaraan/${id}/json`)
-                .then(res => res.json())
-                .then(res => {
-                    if (res.success) {
-                        const data = res.data;
-                        const peminjaman = data.peminjaman_kendaraan || {};
-
-                        document.getElementById('modNama').textContent = peminjaman.nama_barang || 'Kendaraan';
-                        document.getElementById('modNopol').textContent = peminjaman.merek || '-';
-                        document.getElementById('modTgl').textContent = data.tanggal_pengembalian_aktual ? data
-                            .tanggal_pengembalian_aktual.replace('T', ' ').substring(0, 16) : '-';
-
-                        document.getElementById('modKondisi').textContent = data.kondisi_kendaraan ? data
-                            .kondisi_kendaraan.replace('-', ' ').toUpperCase() : '-';
-                        document.getElementById('modStatus').textContent = data.status_pengembalian ? data
-                            .status_pengembalian.toUpperCase() : '-';
-                        document.getElementById('modCatatan').textContent = data.catatan || 'Tidak ada catatan.';
-
-                        const komArea = document.getElementById('komentarAdminArea');
-                        if (data.komentar_admin && data.status_pengembalian === 'ditolak') {
-                            document.getElementById('modKomentar').textContent = data.komentar_admin;
-                            komArea.style.display = 'block';
-                        } else {
-                            komArea.style.display = 'none';
-                        }
-
-                        loading.style.display = 'none';
-                        content.style.display = 'block';
-                    }
-                })
-                .catch(err => {
-                    alert('Gagal memuat detail data.');
-                    closeModal();
-                });
-        }
-
-        function closeModal() {
-            document.getElementById('detailModal').style.display = 'none';
-        }
-    </script>
+    <table class="ttd-table">
+        <tr>
+            <td>
+                <div class="font-bold">PIHAK PERTAMA</div>
+                <div class="ttd-img-container">
+                    @if(!empty($ttdAdmin))
+                        <img src="{{ $ttdAdmin }}" alt="TTD Admin">
+                    @endif
+                </div>
+                <div class="ttd-nama">{{ $admin->name ?? 'Wiwin S. Bokingo, S.H' }}</div>
+                <div class="font-bold">NIP. {{ $admin->nip ?? '198001122008101002' }}</div>
+            </td>
+            <td>
+                <div class="font-bold">PIHAK KEDUA</div>
+                <div class="ttd-img-container">
+                    @if(!empty($ttdPeminjam))
+                        <img src="{{ $ttdPeminjam }}" alt="TTD Peminjam">
+                    @endif
+                </div>
+                <div class="ttd-nama">{{ $pengembalian->user->name ?? 'Rudi Syaifullah, S.Si., M.M' }}</div>
+                <div class="font-bold">NIP. {{ $pengembalian->user->nip ?? '197606272003121002' }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="padding-top: 15px;">
+                <div class="font-bold">Mengetahui,</div>
+                <div class="font-bold">Kuasa Pengguna Barang</div>
+                <div class="ttd-img-container">
+                    @if(!empty($ttdKepala))
+                        <img src="{{ $ttdKepala }}" alt="TTD Kepala">
+                    @endif
+                </div>
+                <div class="ttd-nama">{{ $kepala->name ?? 'Rudi Syaifullah, S.Si., M.M.' }}</div>
+                <div class="font-bold">NIP. {{ $kepala->nip ?? '197606272003121002' }}</div>
+            </td>
+        </tr>
+    </table>
 </body>
-
 </html>

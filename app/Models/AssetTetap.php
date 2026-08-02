@@ -79,7 +79,7 @@ class AssetTetap extends Model
     // Tambahkan fungsi ini di dalam class AssetTetap
     public function detailKendaraan()
     {
-        return $this->hasOne(DetailKendaraan::class, 'aset_tetap_id');
+        return $this->hasOne(DetailKendaraan::class, 'aset_tetap_id', 'id');
     }
 
     protected static function boot()

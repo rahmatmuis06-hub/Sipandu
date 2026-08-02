@@ -18,7 +18,6 @@ class AsetTetapImport implements ToCollection, WithHeadingRow
     {
         foreach ($rows as $row) {
             // Lewati jika kunci utama kosong (Pastikan header di Excel sama persis)
-            dd($row);
             if (empty($row['kode_barang']) || empty($row['nama_barang'])) {
                 continue; 
             }
@@ -62,10 +61,10 @@ class AsetTetapImport implements ToCollection, WithHeadingRow
                 $aset->detailKendaraan()->updateOrCreate(
                     ['aset_tetap_id' => $aset->id], // ✅ FIXED: Typo diperbaiki menjadi 'aset_tetap_id'
                     [
-                        'nomor_polisi' => $row['nomor_polisi'] ?? null,
-                        'no_bpkb'      => $row['nomor_bpkb'] ?? ($row['no_bpkb'] ?? null),
-                        'nomor_rangka' => $row['nomor_rangka'] ?? null,
-                        'nomor_mesin'  => $row['nomor_mesin'] ?? null,
+                        'nomor_polisi' => $row['nomor_polisi'] ?? $row['no_polisi'] ?? null,
+            'no_bpkb'      => $row['nomor_bpkb'] ?? $row['no_bpkb'] ?? $row['bpkb'] ?? null,
+            'nomor_rangka' => $row['nomor_rangka'] ?? $row['no_rangka'] ?? null,
+            'nomor_mesin'  => $row['nomor_mesin'] ?? $row['no_mesin'] ?? null,
                     ]
                 );
             } else {

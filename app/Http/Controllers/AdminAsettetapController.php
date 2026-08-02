@@ -7,6 +7,7 @@ use App\Imports\AsetTetapImport;
 use App\Jobs\SendFonnteNotification;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -98,6 +99,7 @@ class AdminAsettetapController extends Controller
     // ========== PROSES IMPORT EXCEL ==========
     public function importAset(Request $request)
     {
+        
         $request->validate([
             'file_excel' => 'required|mimes:xlsx,xls,csv|max:5120',
         ], [
@@ -106,19 +108,19 @@ class AdminAsettetapController extends Controller
             'file_excel.max'      => 'Ukuran file maksimal 5MB.'
         ]);
 
-        // try {
-        //     Excel::import(new AsetTetapImport, $request->file('file_excel'));
+        try {
+            Excel::import(new AsetTetapImport, $request->file('file_excel'));
 
-        //     return redirect()->route('adminasettetap.data-aset-tetap')
-        //         ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
-        // } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-        //     // Menangkap error jika header file Excel tidak sesuai standar
-        //     return back()->with('error', 'Gagal mengimpor file! Pastikan format tabel sesuai dengan template.');
-        // } catch (\Exception $e) {
-        //     return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
-        // }
+            return redirect()->route('adminasettetap.data-aset-tetap')
+                ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            // Menangkap error jika header file Excel tidak sesuai standar
+            return back()->with('error', 'Gagal mengimpor file! Pastikan format tabel sesuai dengan template.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
 
-        Excel::import(new AsetTetapImport, $request->file('file_excel'));
+        
 
     return redirect()->route('adminasettetap.data-aset-tetap')
         ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
@@ -190,56 +192,80 @@ class AdminAsettetapController extends Controller
     }
 
     // ========== UPDATE ==========
-    public function updateDataAsetTetap(Request $request, AssetTetap $aset)
+    public function updateDataAsetTetap(Request $request, $id)
     {
-        $validated = $request->validate([
-            'tanggal_input' => 'required|date|before_or_equal:today',
-            'kode_barang' => 'required|string|max:50|unique:aset_tetap,kode_barang,' . $aset->id,
-            'nup' => 'nullable|string|max:50',
-            'nama_barang' => 'required|string|max:255',
-            'merek' => 'nullable|string|max:100',
-            'kategori' => 'required|string|max:100',
-            'tanggal_perolehan' => 'nullable|date',
-            'nilai_perolehan' => 'required|numeric|min:0',
-            'kondisi' => 'required|in:baik,rusak ringan,rusak berat',
-            'lokasi' => 'required|string|max:100',
-            'jumlah' => 'required|integer|min:1',
-            'status' => 'required|in:Tersedia,Keluar,Rusak,Dipinjam',
-            'nomor_polisi' => 'nullable|string|max:50',
-            'no_bpkb' => 'nullable|string|max:100',
-            'nomor_rangka' => 'nullable|string|max:100',
-            'nomor_mesin' => 'nullable|string|max:100',
-        ]);
-        // 1. Update Data Aset Tetap Utama
-        $aset->update($request->only([
-            'tanggal_input', 'kode_barang', 'nup', 'nama_barang', 'merek', 
-            'kategori', 'tanggal_perolehan', 'nilai_perolehan', 'kondisi', 
-            'lokasi', 'jumlah', 'status'
-        ]));
+        $aset = \App\Models\AssetTetap::findOrFail($id);
 
-        // 2. LOGIKA UPDATE DETAIL KENDARAAN (Tambahkan blok ini)
+        // 1. Validasi Data (Sekarang NUP yang wajib unik, Kode Barang bebas sama)
+        $validated = $request->validate([
+            'tanggal_input'     => 'required|date',
+            // // 'kode_barang'       => 'required|string|max:50', // Kode barang bebas duplikat
+            // // 'nup'               => [
+            // //     'required', 
+            // //     'string', 
+            // //     'max:50', 
+            // //     Rule::unique('aset_tetap', 'nup')->ignore($aset->id)
+            // ], // NUP dikunci agar tidak boleh ada yang sama
+            'nama_barang'       => 'required|string|max:255',
+            'merek'             => 'nullable|string|max:100',
+            'kategori'          => 'required|string|max:100',
+            'tanggal_perolehan' => 'nullable|date',
+            'nilai_perolehan'   => 'nullable|numeric|min:0',
+            'kondisi'           => 'required|in:baik,rusak ringan,rusak berat',
+            'lokasi'            => 'nullable|string|max:100',
+            'jumlah'            => 'required|integer|min:1',
+            'status'            => 'required|in:Tersedia,Keluar,Rusak,Dipinjam',
+            'nomor_polisi'      => 'nullable|string|max:50',
+            'no_bpkb'           => 'nullable|string|max:100',
+            'nomor_rangka'      => 'nullable|string|max:100',
+            'nomor_mesin'       => 'nullable|string|max:100',
+        ]);
+
+        // 2. Update Data Aset Tetap Utama
+        $aset->update([
+            'tanggal_input'     => $request->tanggal_input,
+            'kode_barang'       => $request->kode_barang,
+            'nup'               => $request->nup,
+            'nama_barang'       => $request->nama_barang,
+            'merek'             => $request->merek,
+            'kategori'          => $request->kategori,
+            'tanggal_perolehan' => $request->tanggal_perolehan,
+            'nilai_perolehan'   => $request->nilai_perolehan,
+            'kondisi'           => $request->kondisi,
+            'lokasi'            => $request->lokasi,
+            'jumlah'            => $request->jumlah,
+            'status'            => $request->status,
+        ]);
+
+        // 3. Update Data Kendaraan
         $kat = strtolower(trim($request->kategori));
+
         if (str_contains($kat, 'kendaraan') || str_contains($kat, 'angkutan bermotor')) {
+            
+            // DETEKTOR 1: JIKA MASUK KE SINI, BERARTI KATEGORI BENAR
+            // dd('VALIDASI LOLOS & KATEGORI COCOK!', $request->all());
+
             \App\Models\DetailKendaraan::updateOrCreate(
                 ['aset_tetap_id' => $aset->id],
                 [
-                    'nomor_polisi'   => $request->nomor_polisi,
-                    'no_bpkb'        => $request->no_bpkb,
-                    'nomor_rangka'   => $request->nomor_rangka,
-                    'nomor_mesin'    => $request->nomor_mesin,
+                    'nomor_polisi' => $request->nomor_polisi,
+                    'no_bpkb'      => $request->no_bpkb,
+                    'nomor_rangka' => $request->nomor_rangka,
+                    'nomor_mesin'  => $request->nomor_mesin,
                 ]
             );
         } else {
-            // Bersihkan jika ternyata diganti jadi barang elektronik
+            
+            // DETEKTOR 2: JIKA MASUK KE SINI, BERARTI NAMA KATEGORI TIDAK DIKENALI
+            // dd('GAGAL MENYIMPAN! KATEGORI BUKAN KENDARAAN. KATEGORI SAAT INI ADALAH:', $kat);
+            
             if ($aset->detailKendaraan) {
                 $aset->detailKendaraan()->delete();
             }
         }
 
-        $aset->update($validated);
-
         return redirect()->route('adminasettetap.data-aset-tetap')
-            ->with('success', 'Aset tetap berhasil diupdate!');
+            ->with('success', 'Aset tetap beserta detailnya berhasil diperbarui!');
     }
 
     // ========== DESTROY ==========

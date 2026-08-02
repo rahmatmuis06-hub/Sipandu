@@ -9,6 +9,10 @@
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
     <style>
         :root {
             --primary: #2563eb;
@@ -28,6 +32,7 @@
             --radius: 16px;
             --radius-sm: 10px;
             --shadow: 0 4px 24px rgba(37, 99, 235, 0.08);
+            --shadow-lg: 0 8px 40px rgba(37, 99, 235, 0.14);
         }
 
         * {
@@ -297,6 +302,14 @@
             cursor: not-allowed;
         }
 
+        /* Kustomisasi Select2 */
+        .select2-container .select2-selection--single { height: 42px !important; border: 1.5px solid var(--border) !important; border-radius: 10px !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 13px !important; display: flex; align-items: center; transition: all .2s; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { color: var(--text-primary) !important; padding-left: 14px !important; line-height: normal !important; }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px !important; right: 10px !important; }
+        .select2-dropdown { border: 1.5px solid var(--primary) !important; border-radius: 10px !important; font-family: 'Plus Jakarta Sans', sans-serif !important; font-size: 13px !important; box-shadow: var(--shadow-lg) !important; }
+        .select2-container--default.select2-container--focus .select2-selection--single { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; }
+        .select2-container--default .select2-search--dropdown .select2-search__field { border-radius: 6px !important; border: 1px solid var(--border) !important; padding: 8px 12px !important; }
+
         .history-card {
             background: var(--card-bg);
             border-radius: var(--radius);
@@ -323,224 +336,43 @@
             gap: 8px;
         }
 
-        .filter-tabs {
-            display: flex;
-            gap: 6px;
-        }
+        .filter-tabs { display: flex; gap: 6px; }
+        .filter-tab { font-size: 11px; font-weight: 600; padding: 5px 12px; border-radius: 7px; cursor: pointer; border: 1.5px solid var(--border); background: transparent; color: var(--text-secondary); transition: all .2s; }
+        .filter-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-        .filter-tab {
-            font-size: 11px;
-            font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 7px;
-            cursor: pointer;
-            border: 1.5px solid var(--border);
-            background: transparent;
-            color: var(--text-secondary);
-            transition: all .2s;
-        }
+        .req-list { padding: 20px 28px; display: flex; flex-direction: column; gap: 16px; max-height: 70vh; overflow-y: auto; }
+        .req-card { border: 1.5px solid var(--border); border-radius: 14px; overflow: hidden; transition: all .2s; flex-shrink: 0; display: flex; flex-direction: column; }
+        .req-card-top { padding: 16px 18px; display: flex; align-items: flex-start; justify-content: space-between; }
+        .req-card-icon { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; font-size: 17px; flex-shrink: 0; background: rgba(37, 99, 235, 0.1); color: var(--primary); }
+        .req-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+        .req-card-code { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
 
-        .filter-tab.active {
-            background: var(--primary);
-            color: #fff;
-            border-color: var(--primary);
-        }
+        .status-badge { font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 7px; display: flex; align-items: center; gap: 5px; }
+        .status-badge.diproses { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .status-badge.diterima { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-badge.ditolak { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
 
-        .req-list {
-            padding: 20px 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
+        .req-card-meta { padding: 0 18px 16px; }
+        .meta-box { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; padding: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .meta-label { font-size: 10px; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin-bottom: 4px; }
+        .meta-value { font-size: 12.5px; font-weight: 700; color: var(--text-primary); }
 
-        .req-card {
-            border: 1.5px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
-            transition: all .2s;
-            flex-shrink: 0;
-            /* ✅ INI KUNCINYA AGAR TIDAK TERPENCET */
-            display: flex;
-            flex-direction: column;
-        }
+        .req-card-footer { padding: 14px 18px; display: flex; gap: 10px; border-top: 1px solid #f1f5f9; }
+        .card-btn { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .2s; }
+        .card-btn.detail { background: #f0f4ff; color: var(--primary); border-color: #dbeafe; }
+        .card-btn.detail:hover { background: var(--primary); color: #fff; }
+        .card-btn.cancel { background: #fef2f2; color: var(--danger); border-color: #fecaca; }
+        .card-btn.cancel:hover { background: var(--danger); color: #fff; }
 
-        .req-card-top {
-            padding: 16px 18px;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-        }
-
-        .req-card-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 11px;
-            display: grid;
-            place-items: center;
-            font-size: 17px;
-            flex-shrink: 0;
-            background: rgba(37, 99, 235, 0.1);
-            color: var(--primary);
-        }
-
-        .req-card-name {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        .req-card-code {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 2px;
-        }
-
-        .status-badge {
-            font-size: 11px;
-            font-weight: 700;
-            padding: 4px 11px;
-            border-radius: 7px;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .status-badge.diproses {
-            background: rgba(245, 158, 11, 0.1);
-            color: var(--warning);
-            border: 1px solid rgba(245, 158, 11, 0.2);
-        }
-
-        .status-badge.diterima {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .status-badge.ditolak {
-            background: rgba(239, 68, 68, 0.1);
-            color: var(--danger);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-        }
-
-        /* ✅ META KARTU (Tampilan Box Abu-abu) */
-        .req-card-meta {
-            padding: 0 18px 16px;
-        }
-
-        .meta-box {
-            background: #f8fafc;
-            border: 1px solid #f1f5f9;
-            border-radius: 12px;
-            padding: 14px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .meta-label {
-            font-size: 10px;
-            text-transform: uppercase;
-            color: #94a3b8;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .meta-value {
-            font-size: 12.5px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-
-        /* ✅ FOOTER KARTU & TOMBOL */
-        .req-card-footer {
-            padding: 14px 18px;
-            display: flex;
-            gap: 10px;
-            border-top: 1px solid #f1f5f9;
-        }
-
-        .card-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            transition: all .2s;
-        }
-
-        .card-btn.detail {
-            background: #f0f4ff;
-            color: var(--primary);
-            border-color: #dbeafe;
-        }
-
-        .card-btn.detail:hover {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .card-btn.cancel {
-            background: #fef2f2;
-            color: var(--danger);
-            border-color: #fecaca;
-        }
-
-        .card-btn.cancel:hover {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .alert-success {
-            background: #dcfce7;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 24px;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .alert-danger {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 12px 20px;
-            border-radius: var(--radius-sm);
-            margin-bottom: 24px;
-            font-size: 14px;
-            font-weight: 600;
-        }
+        .alert-success { background: #dcfce7; border: 1px solid #bbf7d0; color: #16a34a; padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 14px; font-weight: 600; }
+        .alert-danger { background: #fee2e2; border: 1px solid #fecaca; color: #dc2626; padding: 12px 20px; border-radius: var(--radius-sm); margin-bottom: 24px; font-size: 14px; font-weight: 600; }
 
         /* Modal Detail */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(4px);
-        }
-
-        .modal-box {
-            background: #fff;
-            width: 90%;
-            max-width: 550px;
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-box { background: #fff; width: 90%; max-width: 550px; border-radius: 16px; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        @media (max-width: 1024px) { .content-grid { grid-template-columns: 1fr; gap: 24px; } .form-card { position: static; top: auto; } }
+        @media (max-width: 768px) { .sidebar { width: 200px; padding: 16px 12px; } .main { margin-left: 200px; width: calc(100% - 200px); padding: 0 20px 40px; } }
     </style>
 </head>
 
@@ -588,16 +420,20 @@
                         enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
-                            <div class="form-label"><i class="fas fa-clipboard-list"></i> Pilih Peminjaman <span
-                                    class="req">*</span></div>
-                            <select class="form-select" name="peminjaman_kendaraan_id" id="peminjamanSelect"
-                                onchange="onPeminjamanChange()" required>
-                                <option value="">-- Pilih Kendaraan yang Dikembalikan --</option>
+                            <div class="form-label"><i class="fas fa-clipboard-list"></i> Pilih Peminjaman <span class="req">*</span></div>
+                            <select class="form-select" name="peminjaman_kendaraan_id" id="peminjamanSelect" required>
+                                <option value="">-- Ketik untuk mencari kendaraan... --</option>
                                 @foreach ($peminjamanKendaraan as $pinjam)
+                                    <!-- Menyisipkan data nopol, bpkb, rangka, mesin -->
                                     <option value="{{ $pinjam->id }}"
-                                        data-name="{{ $pinjam->nama_barang ?? 'Kendaraan Dinas' }}"
-                                        data-nopol="{{ $pinjam->merek ?? 'Tanpa Merek/Nopol' }}">
-                                        {{ $pinjam->nama_barang ?? 'Kendaraan' }} - {{ $pinjam->merek ?? '-' }}
+                                        data-name="{{ $pinjam->nama_barang ?? 'Kendaraan' }}"
+                                        data-merek="{{ $pinjam->merek ?? '-' }}"
+                                        data-nup="{{ $pinjam->nup ?? '-' }}"
+                                        data-nopol="{{ $pinjam->nomor_polisi_saat_pinjam ?? '-' }}"
+                                        data-bpkb="{{ $pinjam->no_bpkb_saat_pinjam ?? '-' }}"
+                                        data-rangka="{{ $pinjam->nomor_rangka_saat_pinjam ?? '-' }}"
+                                        data-mesin="{{ $pinjam->nomor_mesin_saat_pinjam ?? '-' }}">
+                                        {{ $pinjam->nama_barang ?? 'Kendaraan' }} - Plat: {{ $pinjam->nomor_polisi_saat_pinjam ?? '-' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -608,6 +444,42 @@
                                     <div class="kp-name" id="kpName">-</div>
                                     <div class="kp-details"><span class="kp-tag" id="kpNopol">-</span></div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- BARIS INFORMASI READONLY (Merek & NUP) -->
+                        <div class="input-row" style="margin-top: 14px;">
+                            <div class="form-group">
+                                <div class="form-label"><i class="fas fa-tags"></i> Merek Kendaraan</div>
+                                <input type="text" class="form-input" id="merekInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+                            </div>
+                            <div class="form-group">
+                                <div class="form-label"><i class="fas fa-barcode"></i> NUP</div>
+                                <input type="text" class="form-input" id="nupInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+                            </div>
+                        </div>
+
+                        <!-- BARIS INFORMASI READONLY (Nopol & BPKB) -->
+                        <div class="input-row">
+                            <div class="form-group">
+                                <div class="form-label"><i class="fas fa-id-card"></i> Nomor Polisi</div>
+                                <input type="text" class="form-input" id="nopolInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+                            </div>
+                            <div class="form-group">
+                                <div class="form-label"><i class="fas fa-file-alt"></i> Nomor BPKB</div>
+                                <input type="text" class="form-input" id="bpkbInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+                            </div>
+                        </div>
+
+                        <!-- BARIS INFORMASI READONLY (Rangka & Mesin) -->
+                        <div class="input-row">
+                            <div class="form-group">
+                                <div class="form-label"><i class="fas fa-cogs"></i> Nomor Rangka</div>
+                                <input type="text" class="form-input" id="rangkaInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+                            </div>
+                            <div class="form-group">
+                                <div class="form-label"><i class="fas fa-wrench"></i> Nomor Mesin</div>
+                                <input type="text" class="form-input" id="mesinInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
                             </div>
                         </div>
 
@@ -812,7 +684,25 @@
         </div>
     </div>
 
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
+        $(document).ready(function() {
+            // Inisialisasi Select2
+            $('#peminjamanSelect').select2({
+                placeholder: "-- Ketik untuk mencari kendaraan yang ingin dikembalikan --",
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Trigger saat opsi dipilih di Select2
+            $('#peminjamanSelect').on('select2:select select2:clear', function(e) {
+                onPeminjamanChange();
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const now = new Date();
             const datetime = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
@@ -824,13 +714,39 @@
             const preview = document.getElementById('kendaraanPreview');
             const submitBtn = document.getElementById('submitBtn');
 
+            // Input Fields
+            const merekInput = document.getElementById('merekInput');
+            const nupInput = document.getElementById('nupInput');
+            const nopolInput = document.getElementById('nopolInput');
+            const bpkbInput = document.getElementById('bpkbInput');
+            const rangkaInput = document.getElementById('rangkaInput');
+            const mesinInput = document.getElementById('mesinInput');
+
             if (select.value) {
                 const option = select.options[select.selectedIndex];
+                
                 document.getElementById('kpName').textContent = option.dataset.name;
                 document.getElementById('kpNopol').textContent = option.dataset.nopol;
+                
+                // Isi field readonly
+                merekInput.value = option.dataset.merek || '-';
+                nupInput.value = option.dataset.nup || '-';
+                nopolInput.value = option.dataset.nopol || '-';
+                bpkbInput.value = option.dataset.bpkb || '-';
+                rangkaInput.value = option.dataset.rangka || '-';
+                mesinInput.value = option.dataset.mesin || '-';
+
                 preview.classList.add('show');
                 submitBtn.disabled = false;
             } else {
+                // Kosongkan field
+                merekInput.value = '';
+                nupInput.value = '';
+                nopolInput.value = '';
+                bpkbInput.value = '';
+                rangkaInput.value = '';
+                mesinInput.value = '';
+
                 preview.classList.remove('show');
                 submitBtn.disabled = true;
             }

@@ -110,6 +110,7 @@
                     <tr>
                         <th>No</th>
                         <th>Detail Kendaraan</th>
+                        <th>No. Polisi</th> <!-- Kolom Baru Nopol -->
                         <th>Peminjam</th>
                         <th>Jadwal Pinjam</th>
                         <th>Status</th>
@@ -125,6 +126,10 @@
                             <div style="font-size:11px; color:var(--muted);">
                                 {{ $item->merek ?? '-' }} | NUP: {{ $item->nup ?? '-' }}
                             </div>
+                        </td>
+                        <td>
+                            <!-- Menampilkan Nopol dari snapshot transaksi -->
+                            <span style="font-weight: 700; color: var(--blue);">{{ $item->nomor_polisi_saat_pinjam ?? '-' }}</span>
                         </td>
                         <td>{{ $item->user->name }}</td>
                         <td>
@@ -149,7 +154,6 @@
                             @if($item->status == 'dibatalkan')
                                 <span style="font-size: 13px; color: var(--muted); font-style: italic;">Tidak ada aksi</span>
                             @else
-                                <!-- Tombol Detail & Cetak -->
                                 <button class="action-btn" onclick="showDetail({{ $item->id }})">
                                     <i class="fas fa-eye"></i> Detail
                                 </button>
@@ -169,8 +173,6 @@
                                     <button class="action-btn upload" onclick="openUploadModal({{ $item->id }})">
                                         <i class="fas fa-upload"></i> Upload Surat
                                     </button>
-                                @elseif($item->status == 'dibatalkan')
-                                    <span class="text-xs text-gray-400 italic">Tidak ada aksi</span>
                                 @endif
 
                                 @if(!empty($item->surat_bast_path))
@@ -180,7 +182,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" style="text-align:center; padding:40px; color:var(--muted);">Belum ada pengajuan kendaraan.</td></tr>
+                    <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--muted);">Belum ada pengajuan kendaraan.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -229,7 +231,7 @@
     </div>
 </div>
 
-<!-- MODAL DETAIL PEMINJAMAN -->
+<!-- MODAL DETAIL PEMINJAMAN ADMIN -->
 <div id="detailModalAdmin" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(4px);">
     <div style="background:#fff; width:90%; max-width:550px; border-radius:16px; padding:24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid #f1f5f9; padding-bottom:12px;">
@@ -265,7 +267,18 @@
                 </div>
             </div>
 
-            <div style="margin-top:15px; padding:15px; background:#f8faff; border-radius:12px; border:1px solid #eef1ff;">
+            <!-- Bagian Tambahan Spesifikasi Lengkap Kendaraan -->
+            <div style="background:#f8faff; padding:12px; border-radius:10px; border:1px solid #eef1ff; margin-bottom:15px;">
+                <label style="font-size:10px; font-weight:700; color:var(--blue); text-transform:uppercase; margin-bottom:8px; display:block;">Spesifikasi Kendaraan</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:12.5px;">
+                    <div><strong>No. Polisi:</strong> <span id="txtNopol">-</span></div>
+                    <div><strong>No. BPKB:</strong> <span id="txtBpkb">-</span></div>
+                    <div><strong>No. Rangka:</strong> <span id="txtRangka">-</span></div>
+                    <div><strong>No. Mesin:</strong> <span id="txtMesin">-</span></div>
+                </div>
+            </div>
+
+            <div style="padding:15px; background:#f8faff; border-radius:12px; border:1px solid #eef1ff;">
                 <label style="font-size:10px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:5px;">Tujuan Penggunaan</label>
                 <div id="txtTujuan" style="font-size:13px; line-height:1.6; color:var(--text);"></div>
             </div>
@@ -311,48 +324,51 @@
     }
 
     function showDetail(id) {
-    const modal = document.getElementById('detailModalAdmin');
-    const loading = document.getElementById('loadingDetail');
-    const content = document.getElementById('contentDetail');
-    
-    modal.style.display = 'flex';
-    loading.style.display = 'block';
-    content.style.display = 'none';
+        const modal = document.getElementById('detailModalAdmin');
+        const loading = document.getElementById('loadingDetail');
+        const content = document.getElementById('contentDetail');
+        
+        modal.style.display = 'flex';
+        loading.style.display = 'block';
+        content.style.display = 'none';
 
-    fetch(`/adminasettetap/peminjaman-kendaraan/${id}/json`)
-        .then(response => {
-            if (!response.ok) throw new Error('Akses ditolak atau data tidak ditemukan');
-            return response.json();
-        })
-        .then(res => {
-            if (res.success) {
-                const data = res.data;
-                
-                // Memotong string agar hanya mengambil tanggal (sebelum huruf 'T')
-                const tglPinjam = data.tanggal_peminjaman ? data.tanggal_peminjaman.split('T')[0] : '-';
-                const tglKembali = data.tanggal_pengembalian ? data.tanggal_pengembalian.split('T')[0] : '-';
+        fetch(`/adminasettetap/peminjaman-kendaraan/${id}/json`)
+            .then(response => {
+                if (!response.ok) throw new Error('Akses ditolak atau data tidak ditemukan');
+                return response.json();
+            })
+            .then(res => {
+                if (res.success) {
+                    const data = res.data;
+                    
+                    const tglPinjam = data.tanggal_peminjaman ? data.tanggal_peminjaman.split('T')[0] : '-';
+                    const tglKembali = data.tanggal_pengembalian ? data.tanggal_pengembalian.split('T')[0] : '-';
 
-                document.getElementById('txtPeminjam').innerText = data.user ? data.user.name : '-';
-                document.getElementById('txtKendaraan').innerText = data.nama_barang;
-                document.getElementById('txtInfo').innerText = (data.merek || '-') + ' | NUP: ' + (data.nup || '-');
-                
-                // Menerapkan variabel yang sudah dipotong ke elemen jadwal
-                document.getElementById('txtJadwal').innerText = tglPinjam + ' s.d ' + tglKembali;
-                
-                document.getElementById('txtTujuan').innerText = data.deskripsi_peruntukan;
+                    document.getElementById('txtPeminjam').innerText = data.user ? data.user.name : '-';
+                    document.getElementById('txtKendaraan').innerText = data.nama_barang;
+                    document.getElementById('txtInfo').innerText = (data.merek || '-') + ' | NUP: ' + (data.nup || '-');
+                    document.getElementById('txtJadwal').innerText = tglPinjam + ' s.d ' + tglKembali;
+                    
+                    // Memasukkan detail spesifikasi kendaraan
+                    document.getElementById('txtNopol').innerText = data.nomor_polisi_saat_pinjam || '-';
+                    document.getElementById('txtBpkb').innerText = data.no_bpkb_saat_pinjam || '-';
+                    document.getElementById('txtRangka').innerText = data.nomor_rangka_saat_pinjam || '-';
+                    document.getElementById('txtMesin').innerText = data.nomor_mesin_saat_pinjam || '-';
 
-                loading.style.display = 'none';
-                content.style.display = 'block';
-            } else {
-                alert(res.message);
+                    document.getElementById('txtTujuan').innerText = data.deskripsi_peruntukan;
+
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                } else {
+                    alert(res.message);
+                    closeDetailModal();
+                }
+            })
+            .catch(err => {
+                alert('Gagal mengambil data: ' + err.message);
                 closeDetailModal();
-            }
-        })
-        .catch(err => {
-            alert('Gagal mengambil data: ' + err.message);
-            closeDetailModal();
-        });
-}
+            });
+    }
 
     function closeDetailModal() {
         document.getElementById('detailModalAdmin').style.display = 'none';
