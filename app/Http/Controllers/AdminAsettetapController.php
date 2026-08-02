@@ -106,17 +106,22 @@ class AdminAsettetapController extends Controller
             'file_excel.max'      => 'Ukuran file maksimal 5MB.'
         ]);
 
-        try {
-            Excel::import(new AsetTetapImport, $request->file('file_excel'));
+        // try {
+        //     Excel::import(new AsetTetapImport, $request->file('file_excel'));
 
-            return redirect()->route('adminasettetap.data-aset-tetap')
-                ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            // Menangkap error jika header file Excel tidak sesuai standar
-            return back()->with('error', 'Gagal mengimpor file! Pastikan format tabel sesuai dengan template.');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
-        }
+        //     return redirect()->route('adminasettetap.data-aset-tetap')
+        //         ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
+        // } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        //     // Menangkap error jika header file Excel tidak sesuai standar
+        //     return back()->with('error', 'Gagal mengimpor file! Pastikan format tabel sesuai dengan template.');
+        // } catch (\Exception $e) {
+        //     return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        // }
+
+        Excel::import(new AsetTetapImport, $request->file('file_excel'));
+
+    return redirect()->route('adminasettetap.data-aset-tetap')
+        ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
     }
 
     // ========== CREATE ==========
