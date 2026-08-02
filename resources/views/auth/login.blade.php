@@ -212,7 +212,7 @@
 
           <!-- Quick fill buttons -->
           {{-- <div class="grid grid-cols-2 gap-2 mb-6">
-            <button type="button" onclick="quickFill('superadmin','super123')"          class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span>Operator</button>
+            <button type="button" onclick="quickFill('Operator','super123')"          class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span>Operator</button>
             <button type="button" onclick="quickFill('kepalabpmp','kepala123')"         class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span>Kepala BPMP</button>
             <button type="button" onclick="quickFill('kasubag','kasubag123')"           class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Kasubag Umum</button>
             <button type="button" onclick="quickFill('adminpersediaan','persediaan123')" class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>Admin Persediaan</button>

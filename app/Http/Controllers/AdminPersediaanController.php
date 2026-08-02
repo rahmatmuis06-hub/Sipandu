@@ -251,7 +251,9 @@ class AdminPersediaanController extends Controller
         ]);
 
         // Cek stok persediaan
-        $persediaan = Persediaan::where('kode_barang', $request->kode_barang)->first();
+        $persediaan = Persediaan::where('kode_kategori', $request ->kode_kategori)
+                                 ->where('kode_barang', $request->kode_barang)
+                                 ->first();
         if (!$persediaan || $persediaan->jumlah < $request->jumlah_keluar) {
             return back()->withErrors(['jumlah_keluar' => 'Stok persediaan tidak mencukupi!'])
                 ->withInput();
@@ -331,8 +333,10 @@ class AdminPersediaanController extends Controller
         ]);
 
         // 🔥 VALIDASI STOK: Cek apakah kode barang berubah
-        $persediaanLama = Persediaan::where('kode_barang', $transaksiKeluar->kode_barang)->first();
-        $persediaanBaru = Persediaan::where('kode_barang', $request->kode_barang)->first();
+        $persediaanLama = Persediaan::where('kode_kategori', $transaksiKeluar->kode_kategori)
+                                      ->where('kode_barang', $transaksiKeluar->kode_barang)->first();
+        $persediaanBaru = Persediaan::where('kode_kategori', $request->kode_kategori)
+                                      ->where('kode_barang', $request->kode_barang)->first();
 
         // Cek stok persediaan BARU
         if (!$persediaanBaru || $persediaanBaru->jumlah < $request->jumlah_keluar) {
@@ -374,7 +378,8 @@ class AdminPersediaanController extends Controller
     public function destroyTransaksiKeluar(TransaksiKeluarPersediaan $transaksiKeluar)
     {
         // Kembalikan stok persediaan
-        $persediaan = Persediaan::where('kode_barang', $transaksiKeluar->kode_barang)->first();
+        $persediaan = Persediaan::where('kode_kategori', $transaksiKeluar->kode_kategori)
+                                  ->where('kode_barang', $transaksiKeluar->kode_barang)->first();
         if ($persediaan) {
             $persediaan->increment('jumlah', $transaksiKeluar->jumlah_keluar);
         }
@@ -451,15 +456,42 @@ class AdminPersediaanController extends Controller
             'satuan'        => 'required|string|max:50', // VALIDASI SATUAN
             'jumlah_masuk'  => 'required|integer|min:1',
             'harga_satuan'  => 'required|numeric|min:0',
+            
         ]);
 
         // 6. Simpan transaksi (Pastikan field total dihitung murni secara otomatis)
         $total = $request->harga_satuan * $request->jumlah_masuk;
         
         \App\Models\TransaksiMasukPersediaan::create($request->all() + [
-            'total' => $total
+            
+            'total' => $total,
+            'user_id'       => auth()->id()
         ]);
+        // 7. SINKRONISASI KE MASTER PERSEDIAAN
+        $persediaan = \App\Models\Persediaan::where('kode_barang', $request->kode_barang)->first();
 
+        if ($persediaan) {
+            // Jika barang sudah ada di master, tambahkan stoknya
+            $persediaan->increment('jumlah', $request->jumlah_masuk);
+            
+            // Update harga total di master persediaan menyesuaikan stok baru
+            $persediaan->update([
+                'harga_total' => $persediaan->jumlah * $persediaan->harga_satuan
+            ]);
+        } else {
+            // Jika barang ini barang baru yang belum ada di master, buat data master baru
+            \App\Models\Persediaan::create([
+                'kode_kategori' => $request->kode_kategori,
+                'kategori'      => $request->kategori,
+                'kode_barang'   => $request->kode_barang,
+                'nama_barang'   => $request->nama_barang,
+                'satuan'        => $request->satuan,
+                'tanggal_masuk' => $request->tanggal_input,
+                'harga_satuan'  => $request->harga_satuan,
+                'jumlah'        => $request->jumlah_masuk,
+                'harga_total'   => $total,
+            ]);
+        }
         return redirect()->route('adminpersediaan.transaksi-masuk')
             ->with('success', 'Transaksi masuk berhasil disimpan!');
     }
@@ -865,7 +897,9 @@ class AdminPersediaanController extends Controller
      */
     public function laporanTransaksiKeluar(Request $request)
     {
-        $query = TransaksiKeluarPersediaan::query();
+        // 1. Tambahkan eager loading 'persediaan' (atau nama relasi master data Anda)
+        // Ini berfungsi agar satuan barang bisa dipanggil di view
+        $query = TransaksiKeluarPersediaan::with('persediaan');
 
         // Filters
         if ($request->filled('search')) {
@@ -886,6 +920,13 @@ class AdminPersediaanController extends Controller
             $query->where('kode_kategori', $request->kode_kategori);
         }
 
+        // 2. Hitung Summary (TOTAL) BERDASARKAN FILTER SEBELUM PAGINATION
+        // Gunakan 'clone' agar kondisi $query (filter) ikut terhitung tapi tidak merusak query utama
+        $totalTransaksi = (clone $query)->count();
+        $totalItem      = (int) (clone $query)->sum('jumlah_keluar');
+        $totalNilai     = (int) (clone $query)->sum('total');
+
+        // 3. Eksekusi Pagination
         $transaksi = $query->latest()->paginate(10);
 
         // 📊 CHART & STATS DATA
@@ -932,15 +973,23 @@ class AdminPersediaanController extends Controller
             ->limit(5)
             ->get();
 
-        // 3. Summary Stats
+        // 3. Summary Stats (Dimasukkan ke chartData jika Anda memakainya di view)
         $chartData['summary'] = [
-            'total_transaksi' => TransaksiKeluarPersediaan::count(),
-            'total_jumlah' => (int)TransaksiKeluarPersediaan::sum('jumlah_keluar'),
-            'total_nilai' => (int)TransaksiKeluarPersediaan::sum('total'),
-            'rata_rata_transaksi' => TransaksiKeluarPersediaan::avg('total'),
+            'total_transaksi'     => $totalTransaksi,
+            'total_jumlah'        => $totalItem,
+            'total_nilai'         => $totalNilai,
+            'rata_rata_transaksi' => $totalTransaksi > 0 ? $totalNilai / $totalTransaksi : 0,
         ];
 
-        return view('adminpersediian.laporan_transaksikeluar', compact('transaksi', 'chartData'));
+        // Pastikan variabel total juga di-passing sebagai variabel terpisah 
+        // agar mudah dipanggil langsung di card Blade Anda
+        return view('adminpersediian.laporan_transaksikeluar', compact(
+            'transaksi', 
+            'chartData',
+            'totalTransaksi',
+            'totalItem',
+            'totalNilai'
+        ));
     }
 
     /**

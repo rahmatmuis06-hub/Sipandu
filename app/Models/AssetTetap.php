@@ -76,5 +76,24 @@ class AssetTetap extends Model
         return $this->hasMany(SurveyKepuasan::class, 'aset_tetap_id');
     }
 
+    // Tambahkan fungsi ini di dalam class AssetTetap
+    public function detailKendaraan()
+    {
+        return $this->hasOne(DetailKendaraan::class, 'aset_tetap_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Event listener saat aset tetap akan dihapus
+        static::deleting(function ($aset) {
+            // Hapus detail kendaraan jika ada
+            if ($aset->detailKendaraan) {
+                $aset->detailKendaraan->delete();
+            }
+        });
+    }
+
 
 }

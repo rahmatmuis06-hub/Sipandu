@@ -9,7 +9,7 @@ use App\Models\PeminjamanBarang;
 use App\Models\PengembalianBarang;
 use App\Models\PeminjamanKendaraan;
 use App\Models\PengembalianKendaraan;
-use App\Models\AssetTetap;           // ✅ IMPORT INI
+use App\Models\AssetTetap;
 use App\Models\PermintaanPersediaan;
 use App\Models\Persediaan;
 use App\Models\User;
@@ -27,69 +27,49 @@ class PegawaiController extends Controller
      */
     public function dashboard()
     {
+        // ... (Kode dashboard Anda tetap sama, tidak ada error di sini) ...
         $userId = Auth::id();
 
-        // 1. Ambil Statistik Peminjaman Barang (Milik Pegawai)
         $statBarang = PeminjamanBarang::where('user_id', $userId)->count();
         $barangPending = PeminjamanBarang::where('user_id', $userId)
             ->whereIn('status', ['pending', 'diteruskan_kasubag'])->count();
         $barangSetuju = PeminjamanBarang::where('user_id', $userId)->where('status', 'disetujui')->count();
 
-        // 2. Ambil Statistik Peminjaman Kendaraan
         $statKendaraan = PeminjamanKendaraan::where('user_id', $userId)->count();
         $kendaraanPending = PeminjamanKendaraan::where('user_id', $userId)->where('status', 'pending')->count();
         $kendaraanSetuju = PeminjamanKendaraan::where('user_id', $userId)->where('status', 'disetujui')->count();
 
-        // 3. (Gedung & Persediaan diset 0 atau sesuaikan dengan model Anda nanti)
-        $statGedung = 0;
-        $gedungPending = 0;
-        $gedungSetuju = 0;
-        $statPersediaan = 0;
-        $persediaanPending = 0;
-        $persediaanSetuju = 0;
+        $statGedung = 0; $gedungPending = 0; $gedungSetuju = 0;
+        $statPersediaan = 0; $persediaanPending = 0; $persediaanSetuju = 0;
 
-        // 4. Riwayat Terbaru (Hanya 5 Terakhir)
         $riwayatBarang = PeminjamanBarang::where('user_id', $userId)
             ->latest()->take(5)->get()->map(function ($item) {
                 return [
                     'tipe' => 'Barang',
-                    'nama_item' => $item->nama_barang, // Asumsi nama kolomnya nama_barang
+                    'nama_item' => $item->nama_barang,
                     'status' => $item->status,
                     'tanggal' => $item->created_at
                 ];
             });
-
 
         $riwayatKendaraan = PeminjamanKendaraan::where('user_id', $userId)
             ->latest()->take(5)->get()->map(function ($item) {
                 return [
                     'tipe' => 'Kendaraan',
-                    'nama_item' => $item->merek ?? $item->nama_barang ?? 'Kendaraan Dinas', // Ambil langsung
+                    'nama_item' => $item->merek ?? $item->nama_barang ?? 'Kendaraan Dinas',
                     'status' => $item->status,
                     'tanggal' => $item->created_at
                 ];
             });
 
-        // Gabungkan riwayat, lalu urutkan dari yang terbaru, dan ambil 5 teratas
         $riwayatTerbaru = collect($riwayatBarang)
             ->merge($riwayatKendaraan)
             ->sortByDesc('tanggal')
             ->take(5);
 
         return view('pegawai.dashbord', compact(
-            'statBarang',
-            'barangPending',
-            'barangSetuju',
-            'statKendaraan',
-            'kendaraanPending',
-            'kendaraanSetuju',
-            'statGedung',
-            'gedungPending',
-            'gedungSetuju',
-            'statPersediaan',
-            'persediaanPending',
-            'persediaanSetuju',
-            'riwayatTerbaru'
+            'statBarang', 'barangPending', 'barangSetuju', 'statKendaraan', 'kendaraanPending', 'kendaraanSetuju',
+            'statGedung', 'gedungPending', 'gedungSetuju', 'statPersediaan', 'persediaanPending', 'persediaanSetuju', 'riwayatTerbaru'
         ));
     }
 
@@ -104,7 +84,6 @@ class PegawaiController extends Controller
             ->orderBy('nama_barang', 'asc')
             ->get();
 
-        // Ambil riwayat peminjaman khusus user yang sedang login
         $riwayat = PeminjamanBarang::where('user_id', Auth::id())
             ->orderBy('created_at', 'desc')
             ->get();
@@ -116,45 +95,64 @@ class PegawaiController extends Controller
     {
        $request->validate([
             'kode_barang' => 'required|exists:aset_tetap,kode_barang',
+            'nup' => 'nullable', // Pastikan form Blade Anda juga mengirimkan input NUP
             'jumlah' => 'required|integer|min:1',
-            'tanggal_peminjaman' => 'required|date|after:today', // 👈 Ubah menjadi after:today
+            'tanggal_peminjaman' => 'required|date|after:today',
             'tanggal_pengembalian' => 'required|date|after_or_equal:tanggal_peminjaman',
             'deskripsi_peruntukan' => 'required|string',
         ], [
-            // 👈 Tambahkan pesan error kustom agar pegawai tidak bingung
             'tanggal_peminjaman.after' => 'Pengajuan peminjaman barang wajib dilakukan maksimal H-1. Anda tidak bisa meminjam untuk hari ini.'
         ]);
 
-        // 1. CEK BENTROK JADWAL BARANG (Karena barang memiliki NUP spesifik / fisik 1)
-        $jadwalBentrok = PeminjamanBarang::where('kode_barang', $request->kode_barang)
-            ->whereIn('status', ['pending', 'diteruskan_kasubag', 'disetujui', 'disetujui_admin'])
+        $statusAktifBarang = ['pending', 'diteruskan_kasubag', 'disetujui', 'disetujui_admin', 'proses_pengembalian'];
+
+        // LAPIS 1: Cek Bentrok Tanggal BERDASARKAN KODE & NUP menggunakan whereDate
+        $bentrokTanggal = PeminjamanBarang::where('kode_barang', $request->kode_barang)
+            ->when($request->nup, function ($query) use ($request) {
+                // Membedakan laptop satu dan lainnya berdasarkan NUP
+                return $query->where('nup', $request->nup);
+            })
+            ->whereIn('status', $statusAktifBarang)
             ->where(function ($query) use ($request) {
-                $query->whereBetween('tanggal_peminjaman', [$request->tanggal_peminjaman, $request->tanggal_pengembalian])
-                      ->orWhereBetween('tanggal_pengembalian', [$request->tanggal_peminjaman, $request->tanggal_pengembalian])
-                      ->orWhere(function ($q) use ($request) {
-                          $q->where('tanggal_peminjaman', '<=', $request->tanggal_peminjaman)
-                            ->where('tanggal_pengembalian', '>=', $request->tanggal_pengembalian);
-                      });
+                $query->whereDate('tanggal_peminjaman', '<=', $request->tanggal_pengembalian)
+                      ->whereDate('tanggal_pengembalian', '>=', $request->tanggal_peminjaman);
             })
             ->exists();
 
-        // Jika bernilai true (ada jadwal yang bersinggungan)
-        if ($jadwalBentrok) {
+        if ($bentrokTanggal) {
             return back()->withErrors([
-                'kode_barang' => 'Maaf, barang ini sudah diajukan atau dipinjam oleh pegawai lain pada rentang tanggal tersebut.'
+                'kode_barang' => 'Maaf, barang ini (NUP: '.($request->nup ?? '-').') sudah dibooking/dipinjam pada rentang tanggal tersebut.'
             ])->withInput();
         }
 
-        // Ambil detail aset dari database berdasarkan kode_barang yang dipilih
-        $aset = AssetTetap::where('kode_barang', $request->kode_barang)->first();
+        // LAPIS 2: Cek Barang Belum Dikembalikan
+        $belumDikembalikan = PeminjamanBarang::where('kode_barang', $request->kode_barang)
+            ->when($request->nup, function ($query) use ($request) {
+                return $query->where('nup', $request->nup);
+            })
+            ->whereIn('status', $statusAktifBarang)
+            ->whereDate('tanggal_pengembalian', '<', $request->tanggal_peminjaman)
+            ->exists();
+
+        if ($belumDikembalikan) {
+            return back()->withErrors([
+                'kode_barang' => 'Tidak bisa dipinjam. Peminjam sebelumnya belum mengembalikan barang ini.'
+            ])->withInput();
+        }
+
+        // AMBIL DETAIL ASET BERDASARKAN KODE & NUP agar tidak salah ambil barang urutan pertama
+        $aset = AssetTetap::where('kode_barang', $request->kode_barang)
+                ->when($request->nup, function ($query) use ($request) {
+                    return $query->where('nup', $request->nup);
+                })->firstOrFail();
 
         // Simpan ke database
         PeminjamanBarang::create([
             'user_id' => Auth::id(),
             'nama_barang' => $aset->nama_barang,
             'kode_barang' => $aset->kode_barang,
-            'nup' => $aset->nup,               // Otomatis tersimpan dari tabel aset
-            'kategori' => $aset->kategori,     // Otomatis tersimpan dari tabel aset
+            'nup' => $aset->nup,
+            'kategori' => $aset->kategori,
             'merek' => $aset->merek,
             'jumlah' => $request->jumlah,
             'request_date' => now(),
@@ -168,18 +166,15 @@ class PegawaiController extends Controller
         if ($adminAset && $adminAset->nomor_telepon) {
             $namaPegawai = Auth::user()->name;
 
-            // Merangkai pesan dengan detail peminjaman
             $pesan = "*Permintaan Peminjaman BARANG Baru*\n\n";
             $pesan .= "Halo Admin Aset Tetap,\n";
             $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan peminjaman dengan detail berikut:\n\n";
-
             $pesan .= "📦 *Nama Barang:* {$aset->nama_barang}\n";
             $pesan .= "🔖 *Kode/NUP:* {$aset->kode_barang} / " . ($aset->nup ?? '-') . "\n";
             $pesan .= "🔢 *Jumlah:* {$request->jumlah}\n";
             $pesan .= "📅 *Tgl Pinjam:* {$request->tanggal_peminjaman}\n";
             $pesan .= "📅 *Tgl Kembali:* {$request->tanggal_pengembalian}\n";
             $pesan .= "📝 *Keperluan:* {$request->deskripsi_peruntukan}\n\n";
-
             $pesan .= "Silakan login ke sistem untuk melakukan review.";
 
             $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
@@ -189,20 +184,15 @@ class PegawaiController extends Controller
         return back()->with('success', 'Permintaan peminjaman aset berhasil dikirim dan sedang menunggu persetujuan Admin.');
     }
 
-    // 3. AJAX Detail Peminjaman (Opsional untuk Modal Detail)
     public function detailPeminjaman($id)
     {
         $peminjaman = PeminjamanBarang::with('user')->findOrFail($id);
-
-        // Pastikan user hanya bisa melihat datanya sendiri
         if ($peminjaman->user_id !== Auth::id()) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
-
         return response()->json(['success' => true, 'data' => $peminjaman]);
     }
 
-    // Fungsi Membatalkan Peminjaman Barang
     public function cancelPeminjaman($id)
     {
         $peminjaman = \App\Models\PeminjamanBarang::where('id', $id)
@@ -210,34 +200,23 @@ class PegawaiController extends Controller
             ->first();
 
         if ($peminjaman) {
-            // 🔥 UBAH BAGIAN INI: Tetapkan langsung nilainya untuk melewati proteksi $fillable
             $peminjaman->status = 'dibatalkan';
-            $peminjaman->save(); // Simpan secara paksa ke database
-
-            return response()->json([
-                'success' => true, 
-                'message' => 'Peminjaman berhasil dibatalkan.'
-            ]);
+            $peminjaman->save(); 
+            return response()->json(['success' => true, 'message' => 'Peminjaman berhasil dibatalkan.']);
         }
 
-        return response()->json([
-            'success' => false, 
-            'message' => 'Data tidak ditemukan.'
-        ], 404);
+        return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
     }
 
     /**
      * Pengembalian Barang
      */
-
     public function pengembalianBarang()
     {
-        // Mengambil barang yang sedang dipinjam dan disetujui (Belum dikembalikan sepenuhnya)
         $peminjamanAktif = PeminjamanBarang::where('user_id', auth()->id())
             ->whereIn('status', ['disetujui', 'disetujui_admin', 'disetujui_kasubag'])
             ->get();
 
-        // Mengambil riwayat pengembalian pegawai
         $riwayat = PengembalianBarang::with('peminjamanBarang')
             ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
@@ -264,13 +243,11 @@ class PegawaiController extends Controller
 
         $peminjaman = PeminjamanBarang::findOrFail($request->peminjaman_barang_id);
 
-        // Upload Foto
         $fotoPath = null;
         if ($request->hasFile('foto_sesudah')) {
             $fotoPath = $request->file('foto_sesudah')->store('foto_pengembalian', 'public');
         }
 
-        // Mapping Kondisi ke enum status_pengembalian
         $statusMap = [
             'baik' => 'lengkap',
             'rusak-ringan' => 'rusak_ringan',
@@ -290,7 +267,6 @@ class PegawaiController extends Controller
             'status_verifikasi' => 'pending',
         ]);
 
-        // Ubah status peminjaman agar tidak bisa dikembalikan 2x jika jumlah penuh
         if ($request->jumlah_dikembalikan >= $peminjaman->jumlah) {
             $peminjaman->update(['status' => 'proses_pengembalian']);
         }
@@ -302,13 +278,11 @@ class PegawaiController extends Controller
             $pesan = "*Laporan Pengembalian BARANG*\n\n";
             $pesan .= "Halo Admin Aset Tetap,\n";
             $pesan .= "Pegawai atas nama *{$namaPegawai}* melaporkan pengembalian barang dengan detail:\n\n";
-
             $pesan .= "📦 *Nama Barang:* {$peminjaman->nama_barang}\n";
             $pesan .= "🔢 *Jumlah Dikembalikan:* {$request->jumlah_dikembalikan}\n";
             $pesan .= "📅 *Tanggal Kembali:* {$request->tanggal_pengembalian_aktual}\n";
             $pesan .= "🔍 *Kondisi:* " . ucfirst($request->kondisi_barang) . "\n";
             $pesan .= "📝 *Catatan:* " . ($request->catatan ?? '-') . "\n\n";
-
             $pesan .= "Silakan login ke sistem untuk melakukan verifikasi foto dan laporan.";
 
             $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
@@ -328,7 +302,6 @@ class PegawaiController extends Controller
     {
         $pengembalian = PengembalianBarang::findOrFail($id);
         if ($pengembalian->status_verifikasi === 'pending') {
-            // Kembalikan status peminjaman
             $pengembalian->peminjamanBarang->update(['status' => 'disetujui']);
             $pengembalian->update([
                 'status_verifikasi' => 'dibatalkan',
@@ -345,11 +318,9 @@ class PegawaiController extends Controller
     public function permintaanPersediaan(Request $request)
     {
         $persediaan = Persediaan::select('id', 'kode_barang', 'nama_barang', 'jumlah', 'satuan')
-            ->where('jumlah', '>', 0) // Hanya barang tersedia
-            ->orderBy('nama_barang')
+            ->where('jumlah', '>', 0)
             ->orderBy('nama_barang')
             ->get();
-
 
         $riwayat = PermintaanPersediaan::where('user_id', Auth::id())
             ->with('persediaan')
@@ -363,43 +334,32 @@ class PegawaiController extends Controller
     public function storePermintaanPersediaan(Request $request)
     {
         $request->validate([
-            'kode_barang' => 'required|string|max:50',
+            'persediaan_id' => 'required|exists:persediaan,id',
             'jumlah_diminta' => 'required|integer|min:1',
-            // 'satuan'            => 'required|string|max:50',
             'tanggal_permintaan' => 'required|date',
             'tujuan_penggunaan' => 'required|string|max:1000',
         ]);
 
-        // Ambil data master persediaan
-        $persediaan = Persediaan::where('kode_barang', $request->kode_barang)->first();
+        $persediaan = Persediaan::find($request->persediaan_id);
 
         if (!$persediaan) {
-            return back()->withErrors([
-                'kode_barang' => 'Barang tidak ditemukan!'
-            ])->withInput();
+            return back()->withErrors(['persediaan_id' => 'Barang tidak ditemukan!'])->withInput();
         }
 
-        // ========================================================
-        // LOGIKA ANTI BENTROK (REAL AVAILABLE STOCK)
-        // ========================================================
-        // Hitung total barang ini yang sedang diajukan (belum diputuskan Kasubag)
-        $jumlahSedangDiproses = PermintaanPersediaan::where('kode_barang', $request->kode_barang)
+        $jumlahSedangDiproses = PermintaanPersediaan::where('persediaan_id', $persediaan->id)
             ->whereIn('status', ['pending', 'dalam_review'])
             ->sum('jumlah_diminta');
 
-        // Sisa stok riil = Stok fisik di gudang - Stok yang sedang diantrekan
         $sisaStokRiil = $persediaan->jumlah - $jumlahSedangDiproses;
 
-        // Cek apakah jumlah yang diminta melebihi sisa stok riil
         if ($request->jumlah_diminta > $sisaStokRiil) {
             return back()->withErrors([
-                'kode_barang' => "Maaf, sisa stok yang bisa diminta saat ini hanya {$sisaStokRiil} unit. (Terdapat {$jumlahSedangDiproses} unit yang sedang dalam antrean pengajuan oleh pegawai lain)."
+                'persediaan_id' => "Maaf, sisa stok yang bisa diminta saat ini hanya {$sisaStokRiil} unit. (Terdapat {$jumlahSedangDiproses} unit yang sedang dalam antrean pengajuan oleh pegawai lain)."
             ])->withInput();
         }
-        // ========================================================
 
         PermintaanPersediaan::create([
-            'kode_barang' => $request->kode_barang,           
+            'kode_barang' => $persediaan->kode_barang,           
             'nama_barang' => $persediaan->nama_barang,
             'persediaan_id' => $persediaan->id,               
             'user_id' => Auth::id(),
@@ -417,12 +377,10 @@ class PegawaiController extends Controller
             $pesan = "*Permintaan PERSEDIAAN Baru*\n\n";
             $pesan .= "Halo Admin Persediaan,\n";
             $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan permintaan barang persediaan:\n\n";
-
             $pesan .= "📦 *Barang:* {$persediaan->nama_barang}\n";
             $pesan .= "🔖 *Kode:* {$request->kode_barang}\n";
             $pesan .= "🔢 *Jumlah:* {$request->jumlah_diminta}\n";
             $pesan .= "📝 *Keperluan:* {$request->tujuan_penggunaan}\n\n";
-
             $pesan .= "Silakan login ke sistem untuk melakukan review permintaan.";
 
             $noHpAdmin = preg_replace('/[^0-9]/', '', $adminPersediaan->nomor_telepon);
@@ -433,9 +391,6 @@ class PegawaiController extends Controller
             ->with('success', 'Permintaan berhasil dikirim! Menunggu persetujuan Admin Persediaan.');
     }
 
-    /**
-     * Riwayat Permintaan
-     */
     public function riwayatPermintaan(Request $request)
     {
         $query = PermintaanPersediaan::where('user_id', Auth::id())
@@ -443,20 +398,15 @@ class PegawaiController extends Controller
             ->latest();
 
         $riwayat = $query->paginate(10);
-
         return view('pegawai.permintaan_persediaan', compact('riwayat'));
     }
 
-    /**
-     * LIHAT DETAIL PERMINTAAN (AJAX)
-     */
     public function detailPermintaanPersediaan($id)
     {
         try {
             $permintaan = PermintaanPersediaan::with(['persediaan', 'user', 'reviewedBy', 'approvedByKasubag'])
                 ->findOrFail($id);
 
-            // Pastikan hanya pemilik akun yang bisa melihat detailnya
             if ($permintaan->user_id !== Auth::id()) {
                 return response()->json(['success' => false, 'message' => 'Anda tidak memiliki akses ke data ini.']);
             }
@@ -474,25 +424,18 @@ class PegawaiController extends Controller
                         'jumlah' => $permintaan->persediaan->jumlah,
                     ] : null,
                     'jumlah_diminta' => $permintaan->jumlah_diminta,
-
-                    // Pengecekan aman agar tidak crash jika tanggal kosong
                     'tanggal_permintaan' => $permintaan->tanggal_permintaan ? \Carbon\Carbon::parse($permintaan->tanggal_permintaan)->format('d M Y') : '-',
                     'tujuan_penggunaan' => $permintaan->tujuan_penggunaan,
                     'status' => $permintaan->status,
-
                     'status_label' => isset($permintaan->status_badge['text']) ? $permintaan->status_badge['text'] : ucfirst($permintaan->status),
                     'created_at' => $permintaan->created_at ? $permintaan->created_at->format('d M Y H:i') : '-',
-
-                    // Kita gunakan ->name (default Laravel), bukan ->nama
                     'admin_approved_by' => $permintaan->reviewedBy?->name ?? null,
                     'kasubag_approved_by' => $permintaan->approvedByKasubag?->name ?? null,
-
                     'komentar_admin' => $permintaan->komentar ?? null,
                     'surat_path' => $permintaan->surat_url ? asset('storage/' . $permintaan->surat_url) : null,
                 ]
             ]);
         } catch (\Exception $e) {
-            // Ubah response code ke 200 agar pesan error ditangkap oleh Javascript dan dimunculkan di Toast Notifikasi
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage() . ' (Baris: ' . $e->getLine() . ' di ' . basename($e->getFile()) . ')'
@@ -500,17 +443,14 @@ class PegawaiController extends Controller
         }
     }
 
-    /**
-     * BATALKAN / HAPUS PERMINTAAN (AJAX)
-     */
     public function cancelPermintaanPersediaan($id)
     {
         $permintaan = PermintaanPersediaan::where('user_id', Auth::id())
-            ->whereIn('status', ['pending']) // Hanya bisa batal jika status masih pending
+            ->whereIn('status', ['pending'])
             ->findOrFail($id);
 
         $permintaan->update([
-            'status' => 'dibatalkan', // Status diubah menjadi dibatalkan
+            'status' => 'dibatalkan',
             'updated_at' => now()
         ]);
 
@@ -522,26 +462,21 @@ class PegawaiController extends Controller
 
     public function showPermintaanPersediaanJson($id)
     {
-        // Pastikan menambahkan ->with('user')
         $permintaan = PermintaanPersediaan::with(['persediaan', 'user'])->find($id);
 
         if (!$permintaan) {
             return response()->json(['success' => false, 'message' => 'Data tidak ditemukan']);
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => $permintaan
-        ]);
+        return response()->json(['success' => true, 'data' => $permintaan]);
     }
 
 
     /**
-     * Peminjaman Kendaraan - Daftar & Verifikasi
+     * Peminjaman Kendaraan
      */
     public function peminjamanKendaraan()
     {
-        // Ambil data kendaraan dari aset tetap (Kategori Kendaraan)
         $kendaraan = AssetTetap::whereIn('kategori', ['Kendaraan', 'ALAT ANGKUTAN BERMOTOR'])
             ->where('status', 'Tersedia')
             ->get();
@@ -555,40 +490,57 @@ class PegawaiController extends Controller
 
     public function storePeminjamanKendaraan(Request $request)
     {
-
         $request->validate([
-        'kode_barang' => 'required',
-        'jumlah' => 'required|integer|min:1',
-        'tanggal_peminjaman' => 'required|date|after:today', // 👈 Ubah menjadi after:today
-        'tanggal_pengembalian' => 'required|date|after_or_equal:tanggal_peminjaman',
-        'deskripsi_peruntukan' => 'required|string',
+            'kode_barang' => 'required',
+            'nup' => 'nullable', // Menambahkan NUP untuk kendaraan jika ada
+            'jumlah' => 'required|integer|min:1',
+            'tanggal_peminjaman' => 'required|date|after:today',
+            'tanggal_pengembalian' => 'required|date|after_or_equal:tanggal_peminjaman',
+            'deskripsi_peruntukan' => 'required|string',
         ], [
-            // 👈 Tambahkan pesan error kustom
             'tanggal_peminjaman.after' => 'Pengajuan peminjaman kendaraan dinas wajib dilakukan maksimal H-1. Anda tidak bisa meminjam untuk hari ini.'
         ]);
 
-        // 1. CEK BENTROK JADWAL KENDARAAN (Mencegah overlapping tanggal)
-        $jadwalBentrok = PeminjamanKendaraan::where('kode_barang', $request->kode_barang)
-            ->whereIn('status', ['pending', 'dalam_review', 'disetujui']) // Cek yang masih aktif
+        $statusAktifKendaraan = ['pending', 'dalam_review', 'disetujui', 'proses_pengembalian'];
+
+        // LAPIS 1: Cek Bentrok Tanggal (Menggunakan NUP + Date)
+        $bentrokTanggal = PeminjamanKendaraan::where('kode_barang', $request->kode_barang)
+            ->when($request->nup, function ($query) use ($request) {
+                return $query->where('nup', $request->nup);
+            })
+            ->whereIn('status', $statusAktifKendaraan)
             ->where(function ($query) use ($request) {
-                $query->whereBetween('tanggal_peminjaman', [$request->tanggal_peminjaman, $request->tanggal_pengembalian])
-                      ->orWhereBetween('tanggal_pengembalian', [$request->tanggal_peminjaman, $request->tanggal_pengembalian])
-                      ->orWhere(function ($q) use ($request) {
-                          $q->where('tanggal_peminjaman', '<=', $request->tanggal_peminjaman)
-                            ->where('tanggal_pengembalian', '>=', $request->tanggal_pengembalian);
-                      });
+                $query->whereDate('tanggal_peminjaman', '<=', $request->tanggal_pengembalian)
+                      ->whereDate('tanggal_pengembalian', '>=', $request->tanggal_peminjaman);
             })
             ->exists();
 
-        // Jika bernilai true (ada jadwal yang bersinggungan)
-        if ($jadwalBentrok) {
+        if ($bentrokTanggal) {
             return back()->withErrors([
-                'kode_barang' => 'Maaf, kendaraan dinas ini sudah diajukan atau dipinjam oleh pegawai lain pada rentang tanggal tersebut.'
+                'kode_barang' => 'Maaf, kendaraan ini sudah dibooking/dipinjam pada rentang tanggal tersebut.'
             ])->withInput();
         }
 
-        // Ambil detail aset dari database berdasarkan kode_barang yang dipilih
-        $aset = AssetTetap::where('kode_barang', $request->kode_barang)->first();
+        // LAPIS 2: Cek Kendaraan Belum Dikembalikan
+        $belumDikembalikan = PeminjamanKendaraan::where('kode_barang', $request->kode_barang)
+            ->when($request->nup, function ($query) use ($request) {
+                return $query->where('nup', $request->nup);
+            })
+            ->whereIn('status', $statusAktifKendaraan)
+            ->whereDate('tanggal_pengembalian', '<', $request->tanggal_peminjaman)
+            ->exists();
+
+        if ($belumDikembalikan) {
+            return back()->withErrors([
+                'kode_barang' => 'Tidak bisa dipinjam. Peminjam sebelumnya belum mengembalikan kendaraan ini.'
+            ])->withInput();
+        }
+
+        $aset = AssetTetap::with('detailKendaraan')
+                ->where('kode_barang', $request->kode_barang)
+                ->when($request->nup, function ($query) use ($request) {
+                    return $query->where('nup', $request->nup);
+                })->firstOrFail();
 
         PeminjamanKendaraan::create([
             'user_id' => auth()->id(),
@@ -601,6 +553,12 @@ class PegawaiController extends Controller
             'tanggal_pengembalian' => $request->tanggal_pengembalian,
             'deskripsi_peruntukan' => $request->deskripsi_peruntukan,
             'status' => 'pending',
+
+            // Tarik data dari relasi master, berikan default '-' jika data master masih kosong
+            'nomor_polisi_saat_pinjam' => $aset->detailKendaraan->nomor_polisi ?? '-',
+            'no_bpkb_saat_pinjam'      => $aset->detailKendaraan->no_bpkb ?? '-',
+            'nomor_rangka_saat_pinjam' => $aset->detailKendaraan->nomor_rangka ?? '-',
+            'nomor_mesin_saat_pinjam'  => $aset->detailKendaraan->nomor_mesin ?? '-',
         ]);
 
         $adminAset = User::where('role', 'adminasettetap')->first();
@@ -610,14 +568,16 @@ class PegawaiController extends Controller
             $pesan = "*Permintaan Peminjaman KENDARAAN Baru*\n\n";
             $pesan .= "Halo Admin Aset Tetap,\n";
             $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan peminjaman kendaraan dinas:\n\n";
-
-            // Menampilkan nama barang dan merek jika ada
             $merek = $aset->merek ? " ({$aset->merek})" : "";
             $pesan .= "🚗 *Kendaraan:* {$aset->nama_barang}{$merek}\n";
+            
+            // Opsional: Tambahkan nomor polisi ke pesan WhatsApp admin agar lebih informatif
+            $platNomor = $aset->detailKendaraan->nomor_polisi ?? '-';
+            $pesan .= "🔢 *Plat Nomor:* {$platNomor}\n";
+            
             $pesan .= "📅 *Tgl Pinjam:* {$request->tanggal_peminjaman}\n";
             $pesan .= "📅 *Tgl Kembali:* {$request->tanggal_pengembalian}\n";
             $pesan .= "📝 *Keperluan:* {$request->deskripsi_peruntukan}\n\n";
-
             $pesan .= "Silakan login ke sistem untuk melakukan review.";
 
             $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
@@ -629,14 +589,10 @@ class PegawaiController extends Controller
 
     public function showPeminjamanKendaraan($id)
     {
-        // Mengambil data peminjaman beserta informasi user terkait
         $data = PeminjamanKendaraan::with('user')->findOrFail($id);
-
-        return response()->json([
-            'success' => true,
-            'data' => $data
-        ]);
+        return response()->json(['success' => true, 'data' => $data]);
     }
+
     public function cancelPeminjamanKendaraan($id)
     {
         $data = PeminjamanKendaraan::where('id', $id)
@@ -644,7 +600,6 @@ class PegawaiController extends Controller
             ->where('status', 'pending')
             ->firstOrFail();
 
-        // ✅ PERBAIKAN: Ubah status menjadi dibatalkan, JANGAN dihapus (delete)
         $data->update([
             'status' => 'dibatalkan',
             'updated_at' => now()
@@ -654,17 +609,14 @@ class PegawaiController extends Controller
     }
 
     /**
-     * Pengembalian Kendaraan - FORM + RIWAYAT (FIXED!)
+     * Pengembalian Kendaraan
      */
-
     public function pengembalianKendaraan()
     {
-        // 1. Ambil peminjaman langsung tanpa with('kendaraan')
         $peminjamanKendaraan = \App\Models\PeminjamanKendaraan::where('user_id', auth()->id())
-            ->whereIn('status', ['disetujui']) // Sesuaikan status peminjaman yang bisa dikembalikan
+            ->whereIn('status', ['disetujui']) 
             ->get();
 
-        // 2. Ambil riwayat pengembalian, cukup panggil 'peminjamanKendaraan'
         $pengembalianKendaraan = \App\Models\PengembalianKendaraan::with('peminjamanKendaraan')
             ->where('user_id', auth()->id())
             ->orderBy('created_at', 'desc')
@@ -691,13 +643,10 @@ class PegawaiController extends Controller
 
         $peminjaman = PeminjamanKendaraan::findOrFail($request->peminjaman_kendaraan_id);
 
-        // ✅ PENCEGAHAN DOUBLE SUBMIT: 
-        // Tolak jika status kendaraan sudah dalam proses pengembalian atau sudah selesai
         if (in_array($peminjaman->status, ['proses_pengembalian', 'selesai', 'diterima'])) {
             return back()->withErrors(['Kendaraan ini sudah dilaporkan untuk dikembalikan.']);
         }
 
-        // Upload Foto
         $fotoSebelum = $request->file('foto_sebelum')->store('pengembalian_kendaraan/sebelum', 'public');
         $fotoSesudah = $request->file('foto_sesudah')->store('pengembalian_kendaraan/sesudah', 'public');
 
@@ -716,14 +665,12 @@ class PegawaiController extends Controller
             'catatan' => $request->catatan,
             'foto_sebelum' => $fotoSebelum,
             'foto_sesudah' => $fotoSesudah,
-            'status_pengembalian' => $statusMap[$request->kondisi_barang] ?? 'lengkap',
+            // 🐛 PERBAIKAN TYPO DI SINI: sebelumnya $request->kondisi_barang
+            'status_pengembalian' => $statusMap[$request->kondisi_kendaraan] ?? 'lengkap', 
             'biaya_denda' => 0,
             'status_verifikasi' => 'pending',
         ]);
 
-
-        // ✅ UBAH STATUS PEMINJAMAN
-        // Agar kendaraan hilang dari opsi dropdown "Pilih Kendaraan yang Dikembalikan"
         $peminjaman->update(['status' => 'proses_pengembalian']);
 
         $adminAset = User::where('role', 'adminasettetap')->first();
@@ -733,12 +680,15 @@ class PegawaiController extends Controller
             $pesan = "*Laporan Pengembalian KENDARAAN*\n\n";
             $pesan .= "Halo Admin Aset Tetap,\n";
             $pesan .= "Pegawai atas nama *{$namaPegawai}* melaporkan pengembalian kendaraan dinas:\n\n";
-
             $pesan .= "🚗 *Kendaraan:* {$peminjaman->nama_barang}\n";
+            
+            // MENAMPILKAN PLAT NOMOR DARI DATA SNAPSHOT
+            $platNomor = $peminjaman->nomor_polisi_saat_pinjam ?? '-';
+            $pesan .= "🔢 *Plat Nomor:* {$platNomor}\n";
+            
             $pesan .= "📅 *Tanggal Kembali:* {$request->tanggal_pengembalian_aktual}\n";
             $pesan .= "🔍 *Kondisi Kendaraan:* " . ucfirst($request->kondisi_kendaraan) . "\n";
             $pesan .= "📝 *Catatan:* " . ($request->catatan ?? '-') . "\n\n";
-
             $pesan .= "Silakan login ke sistem untuk melakukan verifikasi foto kendaraan.";
 
             $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
@@ -757,7 +707,9 @@ class PegawaiController extends Controller
     public function cancelPengembalianKendaraan($id)
     {
         $pengembalian = PengembalianKendaraan::findOrFail($id);
-        if ($pengembalian->status_pengembalian === 'diproses') {
+        
+        // 🐛 PERBAIKAN DI SINI: sebelumnya 'diproses', seharusnya 'pending' sesuai saat create
+        if ($pengembalian->status_verifikasi === 'pending') { 
             $pengembalian->peminjamanKendaraan->update(['status' => 'disetujui']);
             $pengembalian->update([
                 'status_verifikasi' => 'dibatalkan',
@@ -782,20 +734,11 @@ class PegawaiController extends Controller
      */
     public function updateProfile(Request $request)
     {
-        // $request->validate([
-        //     'nama' => 'required|string|max:255',
-        //     'email' => 'required|email|unique:users,email,'.Auth::id(),
-        //     'no_telepon' => 'nullable|string|max:15',
-        // ]);
-
-        // Auth::user()->update($request->only(['nama', 'email', 'no_telepon']));
-        // return redirect()->back()->with('success', 'Profile berhasil diupdate!');
+        // $request->validate([ ... ]);
     }
 
     public function infoMutasi()
     {
-        // Mengambil data mutasi barang yang statusnya sudah disetujui/selesai
-        // Disertai dengan informasi barang terkait
         $mutasiBarang = \App\Models\MutasiBarang::with(['asetTetap', 'user'])
             ->orderBy('tanggal_mutasi', 'desc')
             ->paginate(10);

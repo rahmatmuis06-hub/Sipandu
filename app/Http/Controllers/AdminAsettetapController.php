@@ -26,7 +26,8 @@ use App\Models\{
     PengembalianBarang,
     PeminjamanKendaraan,
     PengembalianKendaraan,
-    AjuanMutasi
+    AjuanMutasi,
+    DetailKendaraan
 };
 use App\Services\FonnteService;
 
@@ -140,8 +141,31 @@ class AdminAsettetapController extends Controller
             'lokasi' => 'required|string|max:100',
             'jumlah' => 'required|integer|min:1',
             'status' => 'required|in:Tersedia,Keluar,Rusak,Dipinjam',
+            'nomor_polisi' => 'nullable|string|max:50',
+            'no_bpkb' => 'nullable|string|max:100',
+            'nomor_rangka' => 'nullable|string|max:100',
+            'nomor_mesin' => 'nullable|string|max:100',
         ]);
 
+        
+        // 1. Simpan Data Aset Tetap Utama
+        $aset = AssetTetap::create($request->only([
+            'tanggal_input', 'kode_barang', 'nup', 'nama_barang', 'merek', 
+            'kategori', 'tanggal_perolehan', 'nilai_perolehan', 'kondisi', 
+            'lokasi', 'jumlah', 'status'
+        ]));
+
+        // 2. LOGIKA PENYIMPANAN DETAIL KENDARAAN (Tambahkan blok ini)
+        $kat = strtolower(trim($request->kategori));
+        if (str_contains($kat, 'kendaraan') || str_contains($kat, 'angkutan bermotor')) {
+            \App\Models\DetailKendaraan::create([
+                'aset_tetap_id' => $aset->id,
+                'nomor_polisi'   => $request->nomor_polisi,
+                'no_bpkb'        => $request->no_bpkb,
+                'nomor_rangka'   => $request->nomor_rangka,
+            'nomor_mesin'    => $request->nomor_mesin,
+        ]);
+    }
         AssetTetap::create($validated);
 
         return redirect()->route('adminasettetap.data-aset-tetap')
@@ -176,7 +200,36 @@ class AdminAsettetapController extends Controller
             'lokasi' => 'required|string|max:100',
             'jumlah' => 'required|integer|min:1',
             'status' => 'required|in:Tersedia,Keluar,Rusak,Dipinjam',
+            'nomor_polisi' => 'nullable|string|max:50',
+            'no_bpkb' => 'nullable|string|max:100',
+            'nomor_rangka' => 'nullable|string|max:100',
+            'nomor_mesin' => 'nullable|string|max:100',
         ]);
+        // 1. Update Data Aset Tetap Utama
+        $aset->update($request->only([
+            'tanggal_input', 'kode_barang', 'nup', 'nama_barang', 'merek', 
+            'kategori', 'tanggal_perolehan', 'nilai_perolehan', 'kondisi', 
+            'lokasi', 'jumlah', 'status'
+        ]));
+
+        // 2. LOGIKA UPDATE DETAIL KENDARAAN (Tambahkan blok ini)
+        $kat = strtolower(trim($request->kategori));
+        if (str_contains($kat, 'kendaraan') || str_contains($kat, 'angkutan bermotor')) {
+            \App\Models\DetailKendaraan::updateOrCreate(
+                ['aset_tetap_id' => $aset->id],
+                [
+                    'nomor_polisi'   => $request->nomor_polisi,
+                    'no_bpkb'        => $request->no_bpkb,
+                    'nomor_rangka'   => $request->nomor_rangka,
+                    'nomor_mesin'    => $request->nomor_mesin,
+                ]
+            );
+        } else {
+            // Bersihkan jika ternyata diganti jadi barang elektronik
+            if ($aset->detailKendaraan) {
+                $aset->detailKendaraan()->delete();
+            }
+        }
 
         $aset->update($validated);
 

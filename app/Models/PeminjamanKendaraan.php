@@ -18,7 +18,7 @@ class PeminjamanKendaraan extends Model
         'user_id', 'nama_barang', 'kode_barang', 'nup', 'merek',
         'jumlah', 'deskripsi_peruntukan', 'request_date',
         'tanggal_peminjaman', 'tanggal_pengembalian', 'komentar',
-        'status', 'surat_bast_path',
+        'status', 'surat_bast_path','nomor_polisi_saat_pinjam','no_bpkb_saat_pinjam','nomor_rangka_saat_pinjam','nomor_mesin_saat_pinjam',
     ];
 
     protected $casts = [

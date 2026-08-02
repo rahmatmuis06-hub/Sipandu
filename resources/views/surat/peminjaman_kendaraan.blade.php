@@ -2,165 +2,157 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Berita Acara Pinjam Pakai Kendaraan</title>
+    <title>Berita Acara Peminjaman Kendaraan - {{ $peminjaman->id }}</title>
     <style>
+        /* KOMPRESI EKSTREM UNTUK 1 HALAMAN */
         @page {
             size: A4 portrait;
-            margin-top: 4cm;
-            margin-bottom: 4cm;
-            margin-left: 3cm;
-            margin-right: 3cm;
+            margin: 1cm 1.5cm; /* Atas-Bawah 1cm, Kiri-Kanan 1.5cm */
         }
-
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 9.5pt;
-            line-height: 1.2;
+            font-size: 9pt; /* Ukuran font diperkecil */
+            line-height: 1.1; /* Spasi antar baris sangat dirapatkan */
             color: #000;
-            background-color: transparent;
         }
-
-        .kop-surat { margin-bottom: 5px; width: 100%; }
-        .kop-surat img { width: 100%; height: auto; display: block; }
-
         .text-center { text-align: center; }
         .text-justify { text-align: justify; }
         .font-bold { font-weight: bold; }
         .italic { font-style: italic; }
-        .underline { text-decoration: underline; }
         
+        .mb-2 { margin-bottom: 2px; }
         .mb-5 { margin-bottom: 3px; }
-        .mb-10 { margin-bottom: 6px; }
+        .mb-10 { margin-bottom: 5px; }
+        .mb-15 { margin-bottom: 10px; }
 
-        .judul-surat {
-            font-size: 10.5pt;
-            margin-bottom: 1px;
-            text-decoration: underline;
-            font-weight: bold;
-        }
+        .kop-surat { width: 100%; margin-bottom: 10px; }
+        .kop-surat img { width: 100%; height: auto; max-height: 2cm; object-fit: contain; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 6px;
-        }
-        td {
-            vertical-align: top;
-            padding: 1px 0;
-        }
-        .td-label { width: 110px; }
+        .judul-surat { font-size: 10pt; font-weight: normal; margin-bottom: 2px; }
+
+        table { width: 100%; border-collapse: collapse; }
+        td { vertical-align: top; padding: 0.5px 0; }
+        .td-label { width: 160px; }
         .td-titikdua { width: 15px; text-align: center; }
 
-        .catatan-container { margin-top: 5px; margin-bottom: 10px; }
-        .catatan-item { font-style: italic; margin-bottom: 1px; text-align: justify; }
+        .table-pihak { width: 95%; margin-left: 5%; margin-bottom: 2px; }
+        .table-barang { width: 100%; margin-bottom: 5px; }
 
-        .ttd-table {
-            width: 100%;
-            text-align: center;
-            margin-top: 5px;
-            page-break-inside: avoid; 
-        }
-        .ttd-table td { width: 50%; padding: 0; vertical-align: bottom; }
-        .ttd-img-container { height: 45px; margin: 1px 0; }
-        .ttd-img-container img { max-height: 45px; max-width: 100px; }
-        .ttd-nama { font-weight: bold; text-decoration: underline; margin-bottom: 1px; }
+        .ketentuan-list { margin-top: 2px; margin-bottom: 5px; padding-left: 20px; text-align: justify; }
+        .ketentuan-list li { margin-bottom: 1px; }
 
-        .footer {
-            position: fixed;
-            bottom: -3cm; left: 0; right: 0;
-            font-size: 8pt; color: #555; text-align: center;
-            border-top: 1px solid #ccc; padding-top: 4px;
-        }
+        .ttd-table { width: 100%; text-align: center; margin-top: 10px; page-break-inside: avoid; }
+        .ttd-table td { width: 50%; padding: 0px; vertical-align: top; }
+        .ttd-img-container { height: 40px; margin: 1px 0; display: block; }
+        .ttd-img-container img { max-height: 40px; max-width: 100px; }
+        .ttd-nama { font-weight: bold; }
     </style>
 </head>
 <body>
+    @php
+        function terbilang($angka) {
+            $angka = abs($angka);
+            $baca = array("", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas");
+            $terbilang = "";
+            if ($angka < 12) { $terbilang = " " . $baca[$angka]; }
+            else if ($angka < 20) { $terbilang = terbilang($angka - 10) . " Belas"; }
+            else if ($angka < 100) { $terbilang = terbilang($angka / 10) . " Puluh" . terbilang($angka % 10); }
+            else if ($angka < 200) { $terbilang = " Seratus" . terbilang($angka - 100); }
+            else if ($angka < 1000) { $terbilang = terbilang($angka / 100) . " Ratus" . terbilang($angka % 100); }
+            else if ($angka < 2000) { $terbilang = " Seribu" . terbilang($angka - 1000); }
+            else if ($angka < 1000000) { $terbilang = terbilang($angka / 1000) . " Ribu" . terbilang($angka % 1000); }
+            return trim($terbilang);
+        }
 
-    {{-- KOP SURAT --}}
+        $tgl = $peminjaman->created_at ?? now();
+        $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
+        $tgl_angka = \Carbon\Carbon::parse($tgl)->format('j');
+        $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');
+        $tahun_angka = \Carbon\Carbon::parse($tgl)->format('Y');
+
+        $nomor_urut = str_pad($peminjaman->id, 3, '0', STR_PAD_LEFT);
+    @endphp
+
     <div class="kop-surat">
-        <img src="{{ storage_path('app/public/kop_surat.png') }}" alt="Kop Surat BPMP Provinsi Gorontalo"> 
+        <img src="{{ public_path('storage/kop_surat.png') }}" alt="Kop Surat BPMP"> 
     </div>
 
-    <!-- JUDUL & NOMOR SURAT -->
-    <div class="text-center mb-10">
-        <div class="judul-surat">BERITA ACARA PINJAM PAKAI</div>
-        @php
-            $nomor_urut = str_pad($peminjaman->id, 3, '0', STR_PAD_LEFT);
-            $tahun_surat = \Carbon\Carbon::parse($peminjaman->created_at)->format('Y');
-        @endphp
-        <div>No: {{ $nomor_urut }}/BA.PK/693228/{{ $tahun_surat }}</div>
+    <div class="text-center mb-15">
+        <div class="judul-surat">BERITA ACARA PEMINJAMAN KENDARAAN</div>
+        <div>No: {{ $nomor_urut }}/LK.01.02/693228/{{ $tahun_angka }}</div>
     </div>
 
-    <!-- PEMBUKA -->
     <div class="text-justify mb-10">
-        @php
-          $tgl = $peminjaman->created_at ?? now();
-          $hari = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('l');
-          
-          $tanggal_angka = \Carbon\Carbon::parse($tgl)->format('j');
-          $tanggal_teks = match($tanggal_angka) {
-              '1' => 'Satu', '2' => 'Dua', '3' => 'Tiga', '4' => 'Empat', '5' => 'Lima',
-              '6' => 'Enam', '7' => 'Tujuh', '8' => 'Delapan', '9' => 'Sembilan', '10' => 'Sepuluh',
-              '11' => 'Sebelas', '12' => 'Dua Belas', '13' => 'Tiga Belas', '14' => 'Empat Belas',
-              '15' => 'Lima Belas', '16' => 'Enam Belas', '17' => 'Tujuh Belas', '18' => 'Delapan Belas',
-              '19' => 'Sembilan Belas', '20' => 'Dua Puluh', '21' => 'Dua Puluh Satu', 
-              '22' => 'Dua Puluh Dua', '23' => 'Dua Puluh Tiga', '24' => 'Dua Puluh Empat',
-              '25' => 'Dua Puluh Lima', '26' => 'Dua Puluh Enam', '27' => 'Dua Puluh Tujuh',
-              '28' => 'Dua Puluh Delapan', '29' => 'Dua Puluh Sembilan', '30' => 'Tiga Puluh',
-              '31' => 'Tiga Puluh Satu', default => $tanggal_angka
-          };
-          
-          $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('F');
-          
-          // Mengubah tahun menjadi format kalimat berdasarkan tahun surat dibuat
-          $tahun_angka = \Carbon\Carbon::parse($tgl)->format('Y');
-          // Jika ingin dinamis, Anda bisa menggunakan package terbilang, namun untuk amannya kita set default
-          $tahun_teks = 'Dua Ribu Dua Puluh Enam'; 
-        @endphp
-        Pada hari ini <span class="font-bold italic">{{ $hari }}</span> tanggal <span class="font-bold italic">{{ $tanggal_teks }}</span> Bulan <span class="font-bold italic">{{ $bulan }} Tahun {{ $tahun_teks }}</span> yang bertanda tangan dibawah ini:
+        Pada hari ini <span class="italic font-bold">{{ $hari }}</span> tanggal <span class="italic font-bold">{{ ucwords(terbilang($tgl_angka)) }}</span> bulan <span class="italic font-bold">{{ $bulan }}</span> tahun <span class="italic font-bold">{{ ucwords(terbilang($tahun_angka)) }}</span> yang bertanda tangan dibawah ini :
     </div>
 
-    <!-- IDENTITAS PEMINJAM (Data Asli dari Database) -->
-    <table>
+    <table class="table-pihak">
         <tr>
+            <td style="width: 20px;">1.</td>
             <td class="td-label">Nama</td>
             <td class="td-titikdua">:</td>
-            <!-- Menggunakan name atau nama_lengkap sesuai kolom di database user Anda -->
-            <td>{{ $peminjaman->user->name ?? '-' }}</td>
+            <td>{{ $admin->name ?? 'Wiwin S. Bokingo, S.H' }}</td>
         </tr>
         <tr>
+            <td></td>
             <td>NIP</td>
             <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->user->nip ?? '-' }}</td>
+            <td>{{ $admin->nip ?? '198001122008101002' }}</td>
         </tr>
         <tr>
+            <td></td>
             <td>Jabatan</td>
             <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->user->jabatan ?? '-' }}</td>
+            <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
         </tr>
         <tr>
-            <td>Alamat</td>
+            <td></td>
+            <td>Instansi</td>
             <td class="td-titikdua">:</td>
-            <td class="font-bold">{{ $peminjaman->user->alamat ?? '-' }}</td>
+            <td>BPMP Provinsi Gorontalo</td>
         </tr>
     </table>
+    <div class="mb-5" style="margin-left: 5%;">Selanjutnya disebut sebagai PIHAK PERTAMA</div>
 
-    <div class="text-justify mb-10">
-        Sesuai dengan <span class="font-bold">PMK Nomor: 115/PMK.06/2020 Tentang Pemanfaatan Barang Milik Negara</span>. Maka demi untuk tertibnya administrasi Berita Acara Pinjam Pakai ini sebagai berikut:
-    </div>
-
-    <!-- DATA KENDARAAN (Data Asli dari Database) -->
-    <table>
+    <table class="table-pihak">
         <tr>
-            <td class="td-label">Nama Kendaraan</td>
+            <td style="width: 20px;">2.</td>
+            <td class="td-label">Nama</td>
             <td class="td-titikdua">:</td>
-            <td class="font-bold">{{ $peminjaman->nama_barang ?? '-' }}</td>
+            <td>{{ $peminjaman->user->name ?? 'Rudi Syaifullah, S.Si., M.M' }}</td>
         </tr>
         <tr>
-            <td>Merek / NUP</td>
+            <td></td>
+            <td>NIP</td>
             <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->merek ?? '-' }} / {{ $peminjaman->nup ?? '-' }}</td>
+            <td>{{ $peminjaman->user->nip ?? '197606272003121002' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Jabatan</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $peminjaman->user->jabatan ?? 'Kepala' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Instansi</td>
+            <td class="td-titikdua">:</td>
+            <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
+        </tr>
+    </table>
+    <div class="mb-10" style="margin-left: 5%;">Selanjutnya disebut sebagai PIHAK KEDUA</div>
+
+    <div class="text-justify mb-10">
+        PIHAK PERTAMA telah menyerahkan kepada PIHAK KEDUA Barang Milik Negara (BMN) sesuai spesifikasi sebagai berikut :
+    </div>
+
+    <table class="table-barang">
+        <tr>
+            <td class="td-label">Jenis Kendaraan</td>
+            <td class="td-titikdua">:</td>
+            <td>Kendaraan Bermotor Roda Empat</td>
         </tr>
         <tr>
             <td>Kode Barang</td>
@@ -168,96 +160,93 @@
             <td>{{ $peminjaman->kode_barang ?? '-' }}</td>
         </tr>
         <tr>
+            <td>Nama Barang /Merek/Type</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $peminjaman->nama_barang }} / {{ $peminjaman->merek ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>NUP</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $peminjaman->nup ?? '-' }}</td>
+        </tr>
+        <tr>
             <td>Jumlah</td>
             <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->jumlah ?? '1' }} Unit</td>
+            <td>{{ $peminjaman->jumlah }} (satu) unit</td>
         </tr>
         <tr>
-            <td>Jangka waktu</td>
+            <td>Nomor Polisi/BPKB</td>
             <td class="td-titikdua">:</td>
-            <td>
-                {{ \Carbon\Carbon::parse($peminjaman->tanggal_peminjaman)->translatedFormat('d M Y') }} s/d 
-                {{ \Carbon\Carbon::parse($peminjaman->tanggal_pengembalian)->translatedFormat('d M Y') }}
-            </td>
+            <td>{{ $peminjaman->nomor_polisi_saat_pinjam ?? '-' }} / {{ $peminjaman->no_bpkb_saat_pinjam ?? '-' }}</td>
         </tr>
         <tr>
-            <td>Untuk Keperluan</td>
+            <td>Nomor Rangka/Mesin</td>
             <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->deskripsi_peruntukan ?? '-' }}</td>
+            <td>{{ $peminjaman->nomor_rangka_saat_pinjam ?? '-' }} / {{ $peminjaman->nomor_mesin_saat_pinjam ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Kondisi</td>
+            <td class="td-titikdua">:</td>
+            <td>Baik</td>
+        </tr>
+        <tr>
+            <td>Peruntukan Peminjaman</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $peminjaman->deskripsi_peruntukan }}</td>
         </tr>
     </table>
         
+    <div class="text-justify">
+        Dengan ketentuan sebagai berikut :
+        <ol class="ketentuan-list">
+            <li>Jangka waktu peminjaman {{ \Carbon\Carbon::parse($peminjaman->tanggal_peminjaman)->locale('id')->isoFormat('D MMMM Y') }} s/d {{ \Carbon\Carbon::parse($peminjaman->tanggal_pengembalian)->locale('id')->isoFormat('D MMMM Y') }}.</li>
+            <li>PIHAK KEDUA wajib menggunakan kendaraan sesuai dengan tujuan peminjaman dan bertanggung jawab penuh terhadap keamanan, kebersihan dan kelengkapan BMN yang dipinjam.</li>
+            <li>PIHAK KEDUA dilarang memindahtangankan, meminjamkan kembali, atau menggunakan BMN untuk kegiatan yang bertentangan dengan peraturan perundang-undangan.</li>
+            <li>Kendaraan dapat ditarik sewaktu-waktu apabila terjadi penyimpangan, penyalahgunaan atau dibutuhkan untuk kepentingan Lembaga/Kantor.</li>
+            <li>Dalam hal terjadi kerusakan, kecelakaan, kehilangan kendaraan atau gangguan lainnya selama masa peminjaman yang disebabkan oleh kelalaian PIHAK KEDUA, maka PIHAK KEDUA bertanggung jawab sesuai dengan ketentuan peraturan perundang-undangan yang berlaku dan wajib menyelesaikan seluruh kewajiban yang timbul akibat kelalaian tersebut.</li>
+        </ol>
+    </div>
+
     <div class="text-justify mb-5">
-        Dengan penuh tanggung jawab, dan apabila dikemudian hari barang tersebut hilang maka sebagai Peminjam bertanggung jawab atas kerugian Aset Negara, sesuai dengan ketentuan <span class="font-bold">Pasal 1740 KUHPerdata.</span>
+        Demikian berita acara ini ditandatangani dengan sebenar-benarnya dan untuk digunakan sebagaimana mestinya.
     </div>
 
-    <div class="text-justify mb-5" style="text-indent: 40px;">
-        Demikian berita acara ini ditanda tangani dengan sebenar-benarnya dan untuk digunakan sebagaimana mestinya.
-    </div>
-
-    <div class="catatan-container">
-        <div class="font-bold italic underline mb-5">Catatan Penting :</div>
-        <div class="catatan-item">1. Kendaraan bisa ditarik sewaktu-waktu apabila terjadi penyimpangan/penyalahgunaan atau dibutuhkan untuk kepentingan Lembaga/Kantor.</div>
-        <div class="catatan-item">2. Kerusakan yang diakibatkan karena kelalaian pengguna maka kerusakan tersebut menjadi tanggung jawab pihak peminjam.</div>
-    </div>
-
-    <!-- TANGGAL SURAT -->
-    @php
-        $tgl = $permintaan->created_at ?? now();
-        $tanggal = \Carbon\Carbon::parse($tgl)->format('j');
-        $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('F');
-        $tahun = \Carbon\Carbon::parse($tgl)->format('Y');
-    @endphp
-    <div style="text-align: right; margin-bottom: 5px; margin-right: 15px;">
-        Gorontalo, {{ $tanggal }} {{ $bulan }} {{ $tahun }}
-    </div>
-    
-    <!-- TANDA TANGAN -->
     <table class="ttd-table">
         <tr>
             <td>
-                <div>Pengadministrasi BMN,</div>
+                <div class="font-bold">PIHAK PERTAMA</div>
                 <div class="ttd-img-container">
                     @if(!empty($ttdAdmin))
                         <img src="{{ $ttdAdmin }}" alt="TTD Admin">
                     @endif
                 </div>
-                <!-- Mengambil data Admin secara dinamis jika diset dari Controller -->
-                <div class="ttd-nama">{{ $admin->name ?? '-' }}</div>
-                <div>NIP. {{ $admin->nip ?? '-' }}</div>
+                <div class="ttd-nama">{{ $admin->name ?? 'Wiwin S. Bokingo, S.H' }}</div>
+                <div class="font-bold">NIP. {{ $admin->nip ?? '198001122008101002' }}</div>
             </td>
             <td>
-                <div>Peminjam,</div>
+                <div class="font-bold">PIHAK KEDUA</div>
                 <div class="ttd-img-container">
                     @if(!empty($ttdPeminjam))
                         <img src="{{ $ttdPeminjam }}" alt="TTD Peminjam">
                     @endif
                 </div>
-                <!-- Peminjam 100% dinamis dari tabel users -->
-                <div class="ttd-nama">{{ $peminjaman->user->name ?? '-' }}</div>
-                <div>NIP. {{ $peminjaman->user->nip ?? '-' }}</div>
+                <div class="ttd-nama">{{ $peminjaman->user->name ?? 'Rudi Syaifullah, S.Si., M.M' }}</div>
+                <div class="font-bold">NIP. {{ $peminjaman->user->nip ?? '197606272003121002' }}</div>
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding-top: 10px;">
-                <div>Mengetahui,</div>
+            <td colspan="2" style="padding-top: 5px;">
+                <div class="font-bold">Mengetahui,</div>
                 <div class="font-bold">Kuasa Pengguna Barang</div>
                 <div class="ttd-img-container">
                     @if(!empty($ttdKepala))
                         <img src="{{ $ttdKepala }}" alt="TTD Kepala">
                     @endif
                 </div>
-                <!-- Mengambil data Kepala BPMP secara dinamis jika diset dari Controller -->
-                <div class="ttd-nama">{{ $kepala->name ?? '-' }}</div>
-                <div>NIP. {{ $kepala->nip ?? '-' }}</div>
+                <div class="ttd-nama">{{ $kepala->name ?? 'Rudi Syaifullah, S.Si., M.M.' }}</div>
+                <div class="font-bold">NIP. {{ $kepala->nip ?? '197606272003121002' }}</div>
             </td>
         </tr>
     </table>
-
-    <div class="footer">
-        Dokumen ini digenerate secara otomatis oleh SIPANDU BPMP Provinsi Gorontalo<br>
-        Dicetak pada: {{ $tanggalCetak ?? now()->translatedFormat('d F Y, H:i') }} WITA
-    </div>
-
 </body>
 </html>

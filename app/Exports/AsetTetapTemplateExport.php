@@ -28,7 +28,11 @@ class AsetTetapTemplateExport implements FromArray, WithHeadings, WithStyles, Sh
             'kondisi',
             'lokasi',
             'jumlah',
-            'status'
+            'status',
+            'Nomor Polisi',
+            'Nomor BPKB',
+            'Nomor Rangka',
+            'Nomor Mesin'
         ];
     }
 
@@ -50,7 +54,11 @@ class AsetTetapTemplateExport implements FromArray, WithHeadings, WithStyles, Sh
                 'baik',
                 'Ruang IT',
                 1,
-                'Tersedia'
+                'Tersedia',
+                'DM 1234 A',
+                'BPKB-99887766',
+                'MHFGB8GS8L090',
+                '2GD-C667811'
             ]
         ];
     }

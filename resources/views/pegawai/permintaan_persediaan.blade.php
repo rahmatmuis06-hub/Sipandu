@@ -162,10 +162,11 @@
             <div class="form-label"><i class="fas fa-box"></i> Pilih Barang <span class="req">*</span></div>
             
             <select class="form-select @error('kode_barang') border-red-500 @enderror" 
-                    name="kode_barang" id="persediaanSelect" required>
+                    name="persediaan_id" id="persediaanSelect" required>
               <option value="">📦 Ketik untuk mencari barang persediaan...</option>
               @foreach($persediaan as $item)
-                <option value="{{ $item->kode_barang }}" 
+                <option value="{{ $item-> id }}" 
+                        data-kode="{{ $item ->kode_barang }}"
                         data-nama="{{ $item->nama_barang }}" 
                         data-kategori="{{ $item->kategori ?? 'Umum' }}"
                         data-satuan="{{ $item->satuan }}"
@@ -174,7 +175,7 @@
                 </option>
               @endforeach
             </select>
-            @error('kode_barang')
+            @error('persediaan_id')
               <div style="font-size:11px;margin-top:4px;color:var(--danger)">{{ $message }}</div>
             @enderror
             
@@ -603,7 +604,7 @@ class PermintaanController {
       }
 
       document.getElementById('fpName').textContent = selectedOption.dataset.nama || 'N/A';
-      document.getElementById('fpKode').textContent = 'Kode: ' + selectedOption.value;
+      document.getElementById('fpKode').textContent = 'Kode: ' + (selectedOption.dataset.kode || selectedOption.value);
       document.getElementById('fpStok').textContent = 'Stok: ' + this.currentStok.toLocaleString();
       
       // 🌟 BARU: Tampilkan satuan yang sedang terpilih ke kotak Preview

@@ -248,55 +248,10 @@
             gap: 16px;
         }
 
-        .notif-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .notif-dot {
-            width: 8px;
-            height: 8px;
-            background: #EF4444;
-            border-radius: 50%;
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            border: 2px solid white;
-        }
-
         .date-text {
             font-size: 13px;
             color: #64748B;
             font-weight: 500;
-        }
-
-        .btn-keluar {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 7px 14px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: #64748B;
-            font-size: 13px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all .15s;
-        }
-
-        .btn-keluar:hover {
-            background: #FEF2F2;
-            color: #EF4444;
         }
 
         .content {
@@ -411,6 +366,7 @@
             cursor: pointer;
             box-shadow: 0 4px 14px rgba(79, 111, 255, .35);
             transition: all .2s;
+            text-decoration: none;
         }
 
         .btn-tambah:hover {
@@ -476,30 +432,6 @@
             outline: none;
         }
 
-        .filter-select:focus {
-            border-color: var(--blue);
-        }
-
-        .btn-filter {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            border-radius: 10px;
-            border: 1.5px solid var(--border);
-            background: var(--bg);
-            font-family: inherit;
-            font-size: 13px;
-            color: #64748B;
-            cursor: pointer;
-            transition: all .15s;
-        }
-
-        .btn-filter:hover {
-            border-color: var(--blue);
-            color: var(--blue);
-        }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -541,28 +473,21 @@
 
         /* STATUS BADGE */
         .status-badge {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .5px;
+            text-transform: capitalize;
+            letter-spacing: .3px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .status-baikk {
-            background: #ECFDF5;
-            color: var(--success);
-        }
-
-        .status-rusak {
-            background: #FEF2F2;
-            color: var(--danger);
-        }
-
-        .status-perawatan {
-            background: #FEF3C7;
-            color: var(--warning);
-        }
+        .status-baik { background: #ECFDF5; color: var(--success); }
+        .status-rusak { background: #FEF2F2; color: var(--danger); }
+        .status-perawatan { background: #FEF3C7; color: var(--warning); }
 
         /* ACTION BUTTONS */
         td:last-child {
@@ -594,10 +519,7 @@
             border-color: var(--danger);
         }
 
-        .action-btn svg {
-            width: 16px;
-            height: 16px;
-        }
+        .action-btn svg { width: 16px; height: 16px; }
 
         /* MODAL */
         .modal-overlay {
@@ -625,7 +547,7 @@
             background: var(--surface);
             border-radius: var(--radius);
             padding: 28px;
-            max-width: 500px;
+            max-width: 600px; /* Diperbesar sedikit agar form kendaraan muat */
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
@@ -709,15 +631,6 @@
             border: 1.5px solid var(--border);
         }
 
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #DC2626;
-        }
-
         .btn-group {
             display: flex;
             gap: 12px;
@@ -735,95 +648,30 @@
             color: var(--muted);
         }
 
-        .pagination {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .page-btn {
-            padding: 6px 12px;
-            border-radius: 8px;
+        .form-kendaraan {
+            background: #F8FAFF;
             border: 1px solid var(--border);
-            background: var(--surface);
-            font-family: inherit;
-            font-size: 13px;
-            color: #64748B;
-            cursor: pointer;
-            transition: all .15s;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none; /* Disembunyikan secara default */
         }
 
-        .page-btn:hover:not(.active) {
-            border-color: var(--blue);
-            color: var(--blue);
-        }
-
-        .page-btn.active {
-            background: var(--blue);
-            border-color: var(--blue);
-            color: white;
+        .form-kendaraan-title {
+            font-size: 14px;
             font-weight: 700;
+            color: var(--blue);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
         }
 
         @media (max-width: 768px) {
-            .main {
-                margin-left: 0;
-            }
-
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .table-toolbar {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-
-            .page-top {
-                flex-direction: column;
-                gap: 16px;
-                align-items: stretch;
-            }
-
-            .topbar {
-                padding-top: 60px;
-            }
-
-            .content {
-                padding: 16px;
-            }
-
-            .table-card {
-                overflow-x: auto;
-            }
-
-            table {
-                min-width: 900px;
-            }
-
-            .table-footer {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: capitalize;
-            letter-spacing: .3px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            .main { margin-left: 0; }
+            .sidebar { transform: translateX(-100%); }
+            .form-row { grid-template-columns: 1fr; }
+            .table-card { overflow-x: auto; }
+            table { min-width: 900px; }
         }
     </style>
 </head>
@@ -836,22 +684,7 @@
         <div class="topbar">
             <span class="topbar-title">Data Aset Tetap</span>
             <div class="topbar-right">
-                {{-- <div class="notif-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748B">
-                        <path
-                            d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
-                    </svg>
-                    <span class="notif-dot"></span>
-                </div> --}}
-                <span
-                    class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-                {{-- <button class="btn-keluar" onclick="document.location='{{ route('admin.logout') }}'"> --}}
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zm-5 11H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2z" />
-                </svg>
-                Keluar
-                </button>
+                <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
             </div>
         </div>
 
@@ -868,8 +701,7 @@
             @if (session('error'))
                 <div class="alert alert-danger">
                     <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
                     </svg>
                     {{ session('error') }}
                 </div>
@@ -887,55 +719,33 @@
                         </svg>
                         Import Excel
                     </button>
+                    <a href="#modal-tambah" class="btn-tambah" onclick="openModal('modal-tambah')">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
+                        </svg>
+                        Tambah Baru
+                    </a>
                 </div>
-                <a href="#modal-tambah" class="btn-tambah" onclick="openModal('modal-tambah')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
-                    </svg>
-                    Tambah Baru
-                </a>
             </div>
 
             <div class="table-card">
                 <div class="table-toolbar">
                     <form method="GET" action="{{ route('adminasettetap.data-aset-tetap') }}" class="search-wrap">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
-                            <path
-                                d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+                            <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
                         </svg>
-                        <input type="text" name="search" placeholder="Cari aset tetap..."
-                            value="{{ request('search') }}">
+                        <input type="text" name="search" placeholder="Cari aset tetap..." value="{{ request('search') }}">
                     </form>
-                    <select name="kategori_id" class="filter-select" onchange="this.form.submit()">
-                        <option value="">Semua Kategori</option>
-                        @foreach ($kategoris ?? [] as $kategori)
-                            <option value="{{ $kategori->id }}"
-                                {{ request('kategori_id') == $kategori->id ? 'selected' : '' }}>
-                                {{ $kategori->nama }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <button type="submit" form="search-form" class="btn-filter">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                            <path
-                                d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39A1 1 0 0018.95 4H5.04a1 1 0 00-.79 1.61z" />
-                        </svg>
-                        Filter
-                    </button>
                 </div>
 
                 <table>
                     <thead>
                         <tr>
                             <th>No</th>
-                            <th>Tanggal Input</th>
                             <th>Kode Barang</th>
-                            <th>NUP</th>
                             <th>Nama Barang</th>
                             <th>Merek</th>
                             <th>Kategori</th>
-                            <th>Tanggal Perolehan</th>
-                            <th>Nilai Perolehan</th>
                             <th>Kondisi</th>
                             <th>Lokasi</th>
                             <th>Jumlah</th>
@@ -947,15 +757,10 @@
                         @forelse($asetTetap as $index => $aset)
                             <tr>
                                 <td><strong>{{ $asetTetap->firstItem() + $index }}</strong></td>
-                                <td>{{ $aset->tanggal_input?->format('d-m-Y') ?? '-' }}</td>
                                 <td><strong>{{ $aset->kode_barang ?? '-' }}</strong></td>
-                                <td>{{ $aset->nup ?? '-' }}</td>
                                 <td>{{ $aset->nama_barang ?? '-' }}</td>
                                 <td>{{ $aset->merek ?? '-' }}</td>
                                 <td>{{ $aset->kategori ?? '-' }}</td>
-                                <td>{{ $aset->tanggal_perolehan?->format('d-m-Y') ?? '-' }}</td>
-                                <td><strong>Rp {{ number_format($aset->nilai_perolehan ?? 0, 0, ',', '.') }}</strong>
-                                </td>
                                 <td>
                                     @php $kondisi = $aset->kondisi ?? 'baik'; @endphp
                                     <span class="status-badge status-{{ str_replace(' ', '-', $kondisi) }}">
@@ -975,35 +780,27 @@
                                         ];
                                         $color = $statusColors[$status] ?? $statusColors['Tersedia'];
                                     @endphp
-                                    <span class="status-badge"
-                                        style="background: {{ $color['bg'] }}; color: {{ $color['text'] }};">
+                                    <span class="status-badge" style="background: {{ $color['bg'] }}; color: {{ $color['text'] }};">
                                         {{ $color['icon'] }} {{ $status }}
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="#modal-detail-{{ $aset->id }}" class="action-btn"
-                                        onclick="openModal('modal-detail-{{ $aset->id }}')" title="Detail">
+                                    <a href="#modal-detail-{{ $aset->id }}" class="action-btn" onclick="openModal('modal-detail-{{ $aset->id }}')" title="Detail">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
-                                            <path
-                                                d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
                                         </svg>
                                     </a>
-                                    <a href="#modal-edit-{{ $aset->id }}" class="action-btn"
-                                        onclick="openModal('modal-edit-{{ $aset->id }}')" title="Edit">
+                                    <a href="#modal-edit-{{ $aset->id }}" class="action-btn" onclick="openModal('modal-edit-{{ $aset->id }}')" title="Edit">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
-                                            <path
-                                                d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm18-11.5c0-.41-.17-.79-.44-1.06l-2.25-2.25a1.5 1.5 0 0 0-2.12 0l-1.83 1.83 3.75 3.75 1.83-1.83c.27-.27.44-.65.44-1.06z" />
+                                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm18-11.5c0-.41-.17-.79-.44-1.06l-2.25-2.25a1.5 1.5 0 0 0-2.12 0l-1.83 1.83 3.75 3.75 1.83-1.83c.27-.27.44-.65.44-1.06z" />
                                         </svg>
                                     </a>
-                                    <form action="{{ route('adminasettetap.data-aset-tetap.destroy', $aset->id) }}"
-                                        method="POST" class="d-inline"
-                                        onsubmit="return confirm('Hapus aset tetap ini?')">
+                                    <form action="{{ route('adminasettetap.data-aset-tetap.destroy', $aset->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus aset tetap ini?')">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="action-btn danger" title="Hapus">
                                             <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
-                                                <path
-                                                    d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
+                                                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                                             </svg>
                                         </button>
                                     </form>
@@ -1015,24 +812,26 @@
                                 <div class="modal">
                                     <h2 class="modal-title">Detail Aset Tetap</h2>
 
-                                    <div class="form-group">
-                                        <div class="form-label">Tanggal Input</div>
-                                        <div>{{ $aset->tanggal_input?->format('d F Y') ?? '-' }}</div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <div class="form-label">Tanggal Input</div>
+                                            <div>{{ $aset->tanggal_input?->format('d F Y') ?? '-' }}</div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="form-label">Kode Barang</div>
+                                            <div><strong>{{ $aset->kode_barang ?? '-' }}</strong></div>
+                                        </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <div class="form-label">Kode Barang</div>
-                                        <div><strong>{{ $aset->kode_barang ?? '-' }}</strong></div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <div class="form-label">NUP</div>
-                                        <div><strong>{{ $aset->nup ?? '-' }}</strong></div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <div class="form-label">Nama Barang</div>
-                                        <div><strong>{{ $aset->nama_barang ?? '-' }}</strong></div>
+                                    <div class="form-row">
+                                        <div class="form-group">
+                                            <div class="form-label">Nama Barang</div>
+                                            <div><strong>{{ $aset->nama_barang ?? '-' }}</strong></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="form-label">NUP</div>
+                                            <div><strong>{{ $aset->nup ?? '-' }}</strong></div>
+                                        </div>
                                     </div>
 
                                     <div class="form-row">
@@ -1046,237 +845,185 @@
                                         </div>
                                     </div>
 
+                                    {{-- INFO DETAIL KENDARAAN JIKA KATEGORI = KENDARAAN ATAU ALAT ANGKUTAN BERMOTOR --}}
+                                    @php
+                                        $katDetail = strtolower($aset->kategori ?? '');
+                                        $isKendaraan = (str_contains($katDetail, 'kendaraan') || str_contains($katDetail, 'angkutan bermotor'));
+                                    @endphp
+                                    @if($isKendaraan && $aset->detailKendaraan)
+                                    <div class="form-kendaraan" style="display: block;">
+                                        <div class="form-kendaraan-title">Spesifikasi Kendaraan</div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <div class="form-label">Nomor Polisi</div>
+                                                <div><strong>{{ $aset->detailKendaraan->nomor_polisi ?? '-' }}</strong></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="form-label">Nomor BPKB</div>
+                                                <div><strong>{{ $aset->detailKendaraan->no_bpkb ?? '-' }}</strong></div>
+                                            </div>
+                                        </div>
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <div class="form-label">Nomor Rangka</div>
+                                                <div><strong>{{ $aset->detailKendaraan->nomor_rangka ?? '-' }}</strong></div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="form-label">Nomor Mesin</div>
+                                                <div><strong>{{ $aset->detailKendaraan->nomor_mesin ?? '-' }}</strong></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
                                     <div class="form-row">
                                         <div class="form-group">
                                             <div class="form-label">Tanggal Perolehan</div>
                                             <div>{{ $aset->tanggal_perolehan?->format('d F Y') ?? '-' }}</div>
                                         </div>
                                         <div class="form-group">
+                                            <div class="form-label">Nilai Perolehan</div>
+                                            <div><strong>Rp {{ number_format($aset->nilai_perolehan ?? 0, 0, ',', '.') }}</strong></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="form-group">
                                             <div class="form-label">Kondisi</div>
                                             <div>
                                                 @php $kondisi = $aset->kondisi ?? 'baik'; @endphp
-                                                <span
-                                                    class="status-badge status-{{ str_replace(' ', '-', $kondisi) }}">
+                                                <span class="status-badge status-{{ str_replace(' ', '-', $kondisi) }}">
                                                     {{ ucwords(str_replace(['rusak ringan', 'rusak berat'], ['rusak ringan', 'rusak berat'], $kondisi)) }}
                                                 </span>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-row">
                                         <div class="form-group">
-                                            <div class="form-label">Nilai Perolehan</div>
-                                            <div><strong>Rp
-                                                    {{ number_format($aset->nilai_perolehan ?? 0, 0, ',', '.') }}</strong>
-                                            </div>
+                                            <div class="form-label">Jumlah / Lokasi</div>
+                                            <div><strong>{{ $aset->jumlah ?? 0 }} Unit</strong> ({{ $aset->lokasi ?? '-' }})</div>
                                         </div>
-                                        <div class="form-group">
-                                            <div class="form-label">Jumlah</div>
-                                            <div><strong>{{ $aset->jumlah ?? 0 }}
-                                                    {{ $aset->jumlah > 1 ? 'unit' : 'unit' }}</strong></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <div class="form-label">Lokasi</div>
-                                        <div>{{ $aset->lokasi ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <div class="form-label">Dibuat</div>
-                                        <div>{{ $aset->created_at?->format('d F Y H:i') ?? '-' }}</div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <div class="form-label">Diupdate</div>
-                                        <div>{{ $aset->updated_at?->format('d F Y H:i') ?? '-' }}</div>
                                     </div>
 
                                     <div class="btn-group">
-                                        <a href="{{ route('adminasettetap.data-aset-tetap.edit', $aset->id) }}"
-                                            class="btn btn-primary">
-                                            Edit Aset
-                                        </a>
-                                        <button class="btn btn-secondary"
-                                            onclick="closeModal('modal-detail-{{ $aset->id }}')">Tutup</button>
+                                        <button class="btn btn-secondary" onclick="closeModal('modal-detail-{{ $aset->id }}')">Tutup</button>
                                     </div>
                                 </div>
                             </div>
-
-
 
                             {{-- MODAL EDIT --}}
                             <div id="modal-edit-{{ $aset->id }}" class="modal-overlay">
                                 <div class="modal">
                                     <h2 class="modal-title">Edit Aset Tetap</h2>
-                                    <form action="{{ route('adminasettetap.data-aset-tetap.update', $aset->id) }}"
-                                        method="POST">
+                                    <form action="{{ route('adminasettetap.data-aset-tetap.update', $aset->id) }}" method="POST">
                                         @csrf
                                         @method('PUT')
 
                                         <div class="form-row">
                                             <div class="form-group">
-                                                <label class="form-label">Tanggal Input <span
-                                                        class="text-red-500">*</span></label>
-                                                <input type="date" name="tanggal_input"
-                                                    class="form-input @error('tanggal_input') border-red-300 @enderror"
-                                                    value="{{ old('tanggal_input', $aset->tanggal_input) }}" required>
-                                                @error('tanggal_input')
-                                                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                                                @enderror
+                                                <label class="form-label">Tanggal Input <span class="text-red-500">*</span></label>
+                                                <input type="date" name="tanggal_input" class="form-input" value="{{ old('tanggal_input', $aset->tanggal_input?->format('Y-m-d')) }}" required>
                                             </div>
                                             <div class="form-group">
-                                                <label class="form-label">Kode Barang <span
-                                                        class="text-red-500">*</span></label>
-                                                <input type="text" name="kode_barang"
-                                                    class="form-input @error('kode_barang') border-red-300 @enderror"
-                                                    value="{{ old('kode_barang', $aset->kode_barang) }}" required>
-                                                @error('kode_barang')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">NUP <span
-                                                        class="text-red-500">*</span></label>
-                                                <input type="text" name="nup"
-                                                    class="form-input @error('nup') border-red-300 @enderror"
-                                                    value="{{ old('nup', $aset->nup) }}" required>
-                                                @error('nup')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
+                                                <label class="form-label">Kode Barang <span class="text-red-500">*</span></label>
+                                                <input type="text" name="kode_barang" class="form-input" value="{{ old('kode_barang', $aset->kode_barang) }}" required>
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label class="form-label">Nama Barang <span
-                                                    class="text-red-500">*</span></label>
-                                            <input type="text" name="nama_barang"
-                                                class="form-input @error('nama_barang') border-red-300 @enderror"
-                                                value="{{ old('nama_barang', $aset->nama_barang) }}" required>
-                                            @error('nama_barang')
-                                                <span class="text-red-500 text-sm">{{ $message }}</span>
-                                            @enderror
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">NUP <span class="text-red-500">*</span></label>
+                                                <input type="text" name="nup" class="form-input" value="{{ old('nup', $aset->nup) }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Nama Barang <span class="text-red-500">*</span></label>
+                                                <input type="text" name="nama_barang" class="form-input" value="{{ old('nama_barang', $aset->nama_barang) }}" required>
+                                            </div>
                                         </div>
 
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label class="form-label">Merek</label>
-                                                <input type="text" name="merek"
-                                                    class="form-input @error('merek') border-red-300 @enderror"
-                                                    value="{{ old('merek', $aset->merek) }}">
-                                                @error('merek')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
+                                                <input type="text" name="merek" class="form-input" value="{{ old('merek', $aset->merek) }}">
                                             </div>
                                             <div class="form-group">
-                                                <label class="form-label">Kategori</label>
-                                                <input type="text" name="kategori"
-                                                    class="form-input @error('kategori') border-red-300 @enderror"
-                                                    value="{{ old('kategori', $aset->kategori) }}"
-                                                    placeholder="Elektronik/Furniture">
-                                                @error('kategori')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
+                                                <label class="form-label">Kategori <span class="text-red-500">*</span></label>
+                                                <!-- Kategori menggunakan input text dengan trigger oninput JS -->
+                                                <input type="text" name="kategori" class="form-input" value="{{ old('kategori', $aset->kategori) }}" required oninput="toggleKendaraanFields(this, 'kendaraan_fields_edit_{{ $aset->id }}')" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR">
+                                            </div>
+                                        </div>
+
+                                        <!-- AREA DETAIL KENDARAAN (Muncul otomatis saat kategori mengandung "Kendaraan" atau "Angkutan Bermotor") -->
+                                        @php
+                                            $katEdit = strtolower(old('kategori', $aset->kategori ?? ''));
+                                            $showEdit = (str_contains($katEdit, 'kendaraan') || str_contains($katEdit, 'angkutan bermotor')) ? 'block' : 'none';
+                                        @endphp
+                                        <div id="kendaraan_fields_edit_{{ $aset->id }}" class="form-kendaraan" style="display: {{ $showEdit }};">
+                                            <div class="form-kendaraan-title">Informasi Detail Kendaraan</div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label class="form-label">Nomor Polisi</label>
+                                                    <input type="text" name="nomor_polisi" class="form-input" value="{{ old('nomor_polisi', $aset->detailKendaraan->nomor_polisi ?? '') }}" placeholder="Contoh: DM 1234 A">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Nomor BPKB</label>
+                                                    <input type="text" name="no_bpkb" class="form-input" value="{{ old('no_bpkb', $aset->detailKendaraan->no_bpkb ?? '') }}">
+                                                </div>
+                                            </div>
+                                            <div class="form-row">
+                                                <div class="form-group">
+                                                    <label class="form-label">Nomor Rangka</label>
+                                                    <input type="text" name="nomor_rangka" class="form-input" value="{{ old('nomor_rangka', $aset->detailKendaraan->nomor_rangka ?? '') }}">
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="form-label">Nomor Mesin</label>
+                                                    <input type="text" name="nomor_mesin" class="form-input" value="{{ old('nomor_mesin', $aset->detailKendaraan->nomor_mesin ?? '') }}">
+                                                </div>
                                             </div>
                                         </div>
 
                                         <div class="form-row">
                                             <div class="form-group">
                                                 <label class="form-label">Tanggal Perolehan</label>
-                                                <input type="date" name="tanggal_perolehan"
-                                                    class="form-input @error('tanggal_perolehan') border-red-300 @enderror"
-                                                    value="{{ old('tanggal_perolehan', $aset->tanggal_perolehan?->format('Y-m-d')) }}">
-                                                @error('tanggal_perolehan')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
+                                                <input type="date" name="tanggal_perolehan" class="form-input" value="{{ old('tanggal_perolehan', $aset->tanggal_perolehan?->format('Y-m-d')) }}">
                                             </div>
                                             <div class="form-group">
-                                                <label class="form-label">Kondisi <span
-                                                        class="text-red-500">*</span></label>
-                                                <select name="kondisi"
-                                                    class="form-select @error('kondisi') border-red-300 @enderror"
-                                                    required>
-                                                    <option value="">Pilih Kondisi</option>
-                                                    <option value="baik"
-                                                        {{ old('kondisi', $aset->kondisi) == 'baik' ? 'selected' : '' }}>
-                                                        Baik</option>
-                                                    <option value="rusak ringan"
-                                                        {{ old('kondisi', $aset->kondisi) == 'rusak ringan' ? 'selected' : '' }}>
-                                                        Rusak Ringan</option>
-                                                    <option value="rusak berat"
-                                                        {{ old('kondisi', $aset->kondisi) == 'rusak berat' ? 'selected' : '' }}>
-                                                        Rusak Berat</option>
+                                                <label class="form-label">Kondisi <span class="text-red-500">*</span></label>
+                                                <select name="kondisi" class="form-select" required>
+                                                    <option value="baik" {{ old('kondisi', $aset->kondisi) == 'baik' ? 'selected' : '' }}>Baik</option>
+                                                    <option value="rusak ringan" {{ old('kondisi', $aset->kondisi) == 'rusak ringan' ? 'selected' : '' }}>Rusak Ringan</option>
+                                                    <option value="rusak berat" {{ old('kondisi', $aset->kondisi) == 'rusak berat' ? 'selected' : '' }}>Rusak Berat</option>
                                                 </select>
-                                                @error('kondisi')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
                                             </div>
                                         </div>
 
                                         <div class="form-row">
                                             <div class="form-group">
-                                                <label class="form-label">Status <span
-                                                        class="text-red-500">*</span></label>
-                                                <select name="status"
-                                                    class="form-select @error('status') border-red-300 @enderror"
-                                                    required>
-                                                    <option value="">Pilih Status</option>
-                                                    <option value="Tersedia"
-                                                        {{ old('status', $aset->status) == 'Tersedia' ? 'selected' : '' }}>
-                                                        🟢 Tersedia</option>
-                                                    <option value="Dipinjam"
-                                                        {{ old('status', $aset->status) == 'Dipinjam' ? 'selected' : '' }}>
-                                                        🔵 Dipinjam</option>
-                                                    <option value="Keluar"
-                                                        {{ old('status', $aset->status) == 'Keluar' ? 'selected' : '' }}>
-                                                        🟡 Keluar</option>
-                                                    <option value="Rusak"
-                                                        {{ old('status', $aset->status) == 'Rusak' ? 'selected' : '' }}>
-                                                        🔴 Rusak</option>
+                                                <label class="form-label">Status <span class="text-red-500">*</span></label>
+                                                <select name="status" class="form-select" required>
+                                                    <option value="Tersedia" {{ old('status', $aset->status) == 'Tersedia' ? 'selected' : '' }}>🟢 Tersedia</option>
+                                                    <option value="Dipinjam" {{ old('status', $aset->status) == 'Dipinjam' ? 'selected' : '' }}>🔵 Dipinjam</option>
+                                                    <option value="Keluar" {{ old('status', $aset->status) == 'Keluar' ? 'selected' : '' }}>🟡 Keluar</option>
+                                                    <option value="Rusak" {{ old('status', $aset->status) == 'Rusak' ? 'selected' : '' }}>🔴 Rusak</option>
                                                 </select>
-                                                @error('status')
-                                                    <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                                                @enderror
                                             </div>
-                                        </div>
-
-                                        <div class="form-row">
                                             <div class="form-group">
                                                 <label class="form-label">Nilai Perolehan (Rp)</label>
-                                                <input type="number" name="nilai_perolehan"
-                                                    class="form-input @error('nilai_perolehan') border-red-300 @enderror"
-                                                    value="{{ old('nilai_perolehan', $aset->nilai_perolehan) }}"
-                                                    step="0.01" min="0">
-                                                @error('nilai_perolehan')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
-                                            </div>
-                                            <div class="form-group">
-                                                <label class="form-label">Jumlah <span
-                                                        class="text-red-500">*</span></label>
-                                                <input type="number" name="jumlah"
-                                                    class="form-input @error('jumlah') border-red-300 @enderror"
-                                                    value="{{ old('jumlah', $aset->jumlah) }}" min="0"
-                                                    required>
-                                                @error('jumlah')
-                                                    <span class="text-red-500 text-sm">{{ $message }}</span>
-                                                @enderror
+                                                <input type="number" name="nilai_perolehan" class="form-input" value="{{ old('nilai_perolehan', $aset->nilai_perolehan) }}" step="0.01" min="0">
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label class="form-label">Lokasi</label>
-                                            <input type="text" name="lokasi"
-                                                class="form-input @error('lokasi') border-red-300 @enderror"
-                                                value="{{ old('lokasi', $aset->lokasi) }}"
-                                                placeholder="Ruang Server / Gudang Utama">
-                                            @error('lokasi')
-                                                <span class="text-red-500 text-sm">{{ $message }}</span>
-                                            @enderror
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Jumlah <span class="text-red-500">*</span></label>
+                                                <input type="number" name="jumlah" class="form-input" value="{{ old('jumlah', $aset->jumlah) }}" min="0" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Lokasi</label>
+                                                <input type="text" name="lokasi" class="form-input" value="{{ old('lokasi', $aset->lokasi) }}" placeholder="Ruang Server / Gudang Utama">
+                                            </div>
                                         </div>
 
                                         <div class="btn-group">
-                                            <button type="button" class="btn btn-secondary"
-                                                onclick="closeModal('modal-edit-{{ $aset->id }}')">Batal</button>
+                                            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-{{ $aset->id }}')">Batal</button>
                                             <button type="submit" class="btn btn-primary">Update Aset</button>
                                         </div>
                                     </form>
@@ -1284,18 +1031,9 @@
                             </div>
                         @empty
                             <tr>
-                                <td colspan="13" class="text-center py-8">
+                                <td colspan="10" class="text-center py-8">
                                     <div class="text-center py-12">
-                                        <svg width="64" height="64" viewBox="0 0 24 24" fill="#94A3B8"
-                                            style="margin: 0 auto 16px;">
-                                            <path
-                                                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                        </svg>
-                                        <h3 class="text-lg font-semibold text-gray-500 mb-2">Tidak ada data</h3>
-                                        <p class="text-sm text-gray-400 mb-4">Belum ada data aset tetap yang ditemukan
-                                        </p>
-                                        <a href="#modal-tambah" class="btn-tambah inline-flex"
-                                            onclick="openModal('modal-tambah')">Tambah Aset Pertama</a>
+                                        <h3 style="color:var(--muted); text-align: center; width: 100%;">Belum ada data aset tetap yang ditemukan</h3>
                                     </div>
                                 </td>
                             </tr>
@@ -1305,8 +1043,7 @@
 
                 <div class="table-footer">
                     @if ($asetTetap->hasPages())
-                        <span>Menampilkan {{ $asetTetap->firstItem() }}–{{ $asetTetap->lastItem() }} dari
-                            {{ $asetTetap->total() }} data</span>
+                        <span>Menampilkan {{ $asetTetap->firstItem() }}–{{ $asetTetap->lastItem() }} dari {{ $asetTetap->total() }} data</span>
                     @else
                         <span>Menampilkan {{ $asetTetap->total() }} data</span>
                     @endif
@@ -1318,48 +1055,34 @@
 
     {{-- MODAL IMPORT EXCEL --}}
     <div id="modal-import" class="modal-overlay">
-        <div class="modal" style="max-width: 480px;">
+        <div class="modal">
             <h2 class="modal-title">Import Data Excel</h2>
-
-            <form action="{{ route('adminasettetap.data-aset-tetap.import') }}" method="POST"
-                enctype="multipart/form-data">
+            <form action="{{ route('adminasettetap.data-aset-tetap.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-
-                <div class="form-group">
-                    <label class="form-label">Pilih File Data Aset <span class="text-red-500">*</span></label>
-
-                    <div class="upload-area">
-                        <svg width="40" height="40" viewBox="0 0 24 24" fill="var(--blue)"
-                            style="opacity: 0.7; margin: 0 auto 12px;">
-                            <path
-                                d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
-                        </svg>
-                        <input type="file" name="file_excel" id="file_excel" accept=".xlsx, .xls, .csv"
-                            class="form-input" style="background: white;" required>
-                    </div>
-
-                    <p style="font-size: 12.5px; color: var(--muted); line-height: 1.6;">
-                        Unggah file dengan ekstensi <strong>.xlsx</strong> atau
-                        <strong>.csv</strong>. Pastikan format kolom sesuai dengan standar
-                        sistem.
-                        <br>
-                        <a href="{{ route('adminasettetap.data-aset-tetap.template') }}"
-                            style="color: var(--blue); text-decoration: none; font-weight: 700; display: inline-block; margin-top: 6px;">
-                            ↓ Unduh Template Excel
-                        </a>
-                    </p>
+                <div class="upload-area">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="#94A3B8" style="margin-bottom: 12px;">
+                        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z" />
+                    </svg>
+                    <p style="font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 8px;">Pilih file Excel untuk diupload</p>
+                    <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">Format yang didukung: .xlsx, .xls</p>
+                    <input type="file" name="file" accept=".xlsx, .xls" required style="font-size: 13px; max-width: 100%;">
                 </div>
-
-                <div class="btn-group" style="margin-top: 24px;">
-                    <button type="button" class="btn btn-secondary"
-                        onclick="closeModal('modal-import')">Batal</button>
-                    <button type="submit" class="btn btn-primary" onclick="this.innerHTML='Mengunggah...';">Mulai
-                        Import</button>
+                <div style="margin-bottom: 20px;">
+                    <a href="{{ route('adminasettetap.data-aset-tetap.template') }}" style="font-size: 13px; color: var(--blue); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                        </svg>
+                        Download Template Excel
+                    </a>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-import')">Batal</button>
+                    <button type="submit" class="btn btn-primary">Upload & Import</button>
                 </div>
             </form>
         </div>
     </div>
-
+    
     {{-- MODAL TAMBAH --}}
     <div id="modal-tambah" class="modal-overlay">
         <div class="modal">
@@ -1370,140 +1093,110 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tanggal Input <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal_input"
-                            class="form-input  @error('tanggal_input') border-red-300 @enderror"
-                            value="{{ old('tanggal_input') }}" required>
+                        <input type="date" name="tanggal_input" class="form-input" value="{{ old('tanggal_input') }}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Kode Barang <span class="text-red-500">*</span></label>
-                        <input type="text" name="kode_barang"
-                            class="form-input @error('kode_barang') border-red-300 @enderror"
-                            value="{{ old('kode_barang') }}" required>
-                        @error('kode_barang')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">NUP <span class="text-red-500">*</span></label>
-                        <input type="text" name="nup"
-                            class="form-input @error('nup') border-red-300 @enderror" value="{{ old('nup') }}"
-                            required>
-                        @error('nup')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
+                        <input type="text" name="kode_barang" class="form-input" value="{{ old('kode_barang') }}" required>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Nama Barang <span class="text-red-500">*</span></label>
-                    <input type="text" name="nama_barang"
-                        class="form-input @error('nama_barang') border-red-300 @enderror"
-                        value="{{ old('nama_barang') }}" required>
-                    @error('nama_barang')
-                        <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                    @enderror
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">NUP <span class="text-red-500">*</span></label>
+                        <input type="text" name="nup" class="form-input" value="{{ old('nup') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Barang <span class="text-red-500">*</span></label>
+                        <input type="text" name="nama_barang" class="form-input" value="{{ old('nama_barang') }}" required>
+                    </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Merek</label>
-                        <input type="text" name="merek"
-                            class="form-input @error('merek') border-red-300 @enderror" value="{{ old('merek') }}">
-                        @error('merek')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
+                        <input type="text" name="merek" class="form-input" value="{{ old('merek') }}">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Kategori</label>
-                        <input type="text" name="kategori"
-                            class="form-input @error('kategori') border-red-300 @enderror"
-                            value="{{ old('kategori') }}" placeholder="Elektronik / Furniture / Kendaraan">
-                        @error('kategori')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
+                        <label class="form-label">Kategori <span class="text-red-500">*</span></label>
+                        <!-- Pilihan kategori dirubah menjadi input teks dengan event listener oninput -->
+                        <input type="text" name="kategori" class="form-input" value="{{ old('kategori') }}" required oninput="toggleKendaraanFields(this, 'kendaraan_fields_tambah')" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR">
+                    </div>
+                </div>
+
+                <!-- AREA DETAIL KENDARAAN (Muncul otomatis saat kategori "Kendaraan" atau "Angkutan Bermotor" diketik) -->
+                @php
+                    $katTambah = strtolower(old('kategori') ?? '');
+                    $showTambah = (str_contains($katTambah, 'kendaraan') || str_contains($katTambah, 'angkutan bermotor')) ? 'block' : 'none';
+                @endphp
+                <div id="kendaraan_fields_tambah" class="form-kendaraan" style="display: {{ $showTambah }};">
+                    <div class="form-kendaraan-title">Informasi Detail Kendaraan</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nomor Polisi</label>
+                            <input type="text" name="nomor_polisi" class="form-input" value="{{ old('nomor_polisi') }}" placeholder="Contoh: DM 1234 A">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor BPKB</label>
+                            <input type="text" name="no_bpkb" class="form-input" value="{{ old('no_bpkb') }}" placeholder="Contoh: BPKB-12345">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nomor Rangka</label>
+                            <input type="text" name="nomor_rangka" class="form-input" value="{{ old('nomor_rangka') }}" placeholder="Nomor Rangka">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor Mesin</label>
+                            <input type="text" name="nomor_mesin" class="form-input" value="{{ old('nomor_mesin') }}" placeholder="Nomor Mesin">
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tanggal Perolehan</label>
-                        <input type="date" name="tanggal_perolehan"
-                            class="form-input @error('tanggal_perolehan') border-red-300 @enderror"
-                            value="{{ old('tanggal_perolehan') }}">
-                        @error('tanggal_perolehan')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
+                        <input type="date" name="tanggal_perolehan" class="form-input" value="{{ old('tanggal_perolehan') }}">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Kondisi <span class="text-red-500">*</span></label>
-                        <select name="kondisi" class="form-select @error('kondisi') border-red-300 @enderror"
-                            required>
-                            <option value="">Pilih Kondisi</option>
+                        <select name="kondisi" class="form-select" required>
                             <option value="baik" {{ old('kondisi') == 'baik' ? 'selected' : '' }}>Baik</option>
-                            <option value="rusak ringan" {{ old('kondisi') == 'rusak ringan' ? 'selected' : '' }}>
-                                Rusak Ringan</option>
-                            <option value="rusak berat" {{ old('kondisi') == 'rusak berat' ? 'selected' : '' }}>Rusak
-                                Berat</option>
+                            <option value="rusak ringan" {{ old('kondisi') == 'rusak ringan' ? 'selected' : '' }}>Rusak Ringan</option>
+                            <option value="rusak berat" {{ old('kondisi') == 'rusak berat' ? 'selected' : '' }}>Rusak Berat</option>
                         </select>
-                        @error('kondisi')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
                     </div>
                 </div>
-                {{-- Tambahkan SEBELUM <div class="btn-group"> --}}
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Status <span class="text-red-500">*</span></label>
-                        <select name="status" class="form-select @error('status') border-red-300 @enderror"
-                            required>
-                            <option value="">Pilih Status</option>
-                            <option value="Tersedia" {{ old('status') == 'Tersedia' ? 'selected' : '' }}>🟢 Tersedia
-                            </option>
-                            <option value="Dipinjam" {{ old('status') == 'Dipinjam' ? 'selected' : '' }}>🔵 Dipinjam
-                            </option>
-                            <option value="Keluar" {{ old('status') == 'Keluar' ? 'selected' : '' }}>🟡 Keluar
-                            </option>
+                        <select name="status" class="form-select" required>
+                            <option value="Tersedia" {{ old('status') == 'Tersedia' ? 'selected' : '' }}>🟢 Tersedia</option>
+                            <option value="Dipinjam" {{ old('status') == 'Dipinjam' ? 'selected' : '' }}>🔵 Dipinjam</option>
+                            <option value="Keluar" {{ old('status') == 'Keluar' ? 'selected' : '' }}>🟡 Keluar</option>
                             <option value="Rusak" {{ old('status') == 'Rusak' ? 'selected' : '' }}>🔴 Rusak</option>
                         </select>
-                        @error('status')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
                     </div>
-                </div>
-                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Nilai Perolehan (Rp)</label>
-                        <input type="number" name="nilai_perolehan"
-                            class="form-input @error('nilai_perolehan') border-red-300 @enderror"
-                            value="{{ old('nilai_perolehan') }}" step="0.01" min="0">
-                        @error('nilai_perolehan')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Jumlah <span class="text-red-500">*</span></label>
-                        <input type="number" name="jumlah"
-                            class="form-input @error('jumlah') border-red-300 @enderror"
-                            value="{{ old('jumlah') }}" min="0" required>
-                        @error('jumlah')
-                            <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                        @enderror
+                        <input type="number" name="nilai_perolehan" class="form-input" value="{{ old('nilai_perolehan') }}" step="0.01" min="0">
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Lokasi</label>
-                    <input type="text" name="lokasi"
-                        class="form-input @error('lokasi') border-red-300 @enderror" value="{{ old('lokasi') }}"
-                        placeholder="Ruang Server / Gudang Utama / Ruang Rapat">
-                    @error('lokasi')
-                        <span class="text-red-500 text-sm mt-1">{{ $message }}</span>
-                    @enderror
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Jumlah <span class="text-red-500">*</span></label>
+                        <input type="number" name="jumlah" class="form-input" value="{{ old('jumlah') }}" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Lokasi</label>
+                        <input type="text" name="lokasi" class="form-input" value="{{ old('lokasi') }}" placeholder="Ruang Server / Gudang Utama">
+                    </div>
                 </div>
 
                 <div class="btn-group">
-                    <button type="button" class="btn btn-secondary"
-                        onclick="closeModal('modal-tambah')">Batal</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-tambah')">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan Aset</button>
                 </div>
             </form>
@@ -1521,7 +1214,19 @@
             document.body.style.overflow = 'auto';
         }
 
-        // Close modal on overlay click
+        // FUNGSI JS UNTUK SHOW/HIDE FORM KENDARAAN BERDASARKAN KATEGORI YANG DIKETIK
+        function toggleKendaraanFields(inputElement, containerId) {
+            var container = document.getElementById(containerId);
+            var val = inputElement.value.toLowerCase().trim();
+            
+            // Logika baru: jika teks mengandung kata 'kendaraan' atau 'angkutan bermotor'
+            if(val.includes('kendaraan') || val.includes('angkutan bermotor')) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
         document.querySelectorAll('.modal-overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
                 if (e.target === overlay) {
@@ -1531,7 +1236,6 @@
             });
         });
 
-        // Close modal on Escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 document.querySelectorAll('.modal-overlay.show').forEach(overlay => {
@@ -1541,7 +1245,5 @@
             }
         });
     </script>
-
 </body>
-
 </html>

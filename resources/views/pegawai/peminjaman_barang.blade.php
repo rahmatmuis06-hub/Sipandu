@@ -1058,7 +1058,7 @@
                   data-stok="{{ $aset->jumlah }}"
                   data-kategori="{{ $aset->kategori }}"
                   data-nup="{{ $aset->nup }}">
-                  {{ $aset->kode_barang }} - {{ $aset->nama_barang }}
+                  {{ $aset->kode_barang }} - (NUP: {{ $aset->nup }}) {{ $aset->nama_barang }} 
                 </option>
                 @endforeach
               </select>

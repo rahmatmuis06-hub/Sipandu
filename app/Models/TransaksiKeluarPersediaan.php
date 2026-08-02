@@ -80,4 +80,19 @@ class TransaksiKeluarPersediaan extends Model
     {
         return $query->where('kategori', 'like', "%{$kategori}%");
     }
+
+    /**
+     * Relasi ke tabel master persediaan
+     */
+    public function persediaan()
+    {
+        // Ganti 'kode_barang' dengan nama kolom yang benar-benar Anda 
+        // gunakan di database untuk menghubungkan transaksi dengan master barang.
+        
+        // Opsi 1: Jika relasinya menggunakan kode_barang
+        // return $this->belongsTo(Persediaan::class, 'kode_barang', 'kode_barang');
+        
+        // Opsi 2: Jika relasinya menggunakan ID (uncomment baris di bawah dan hapus Opsi 1 jika ini yang benar)
+        return $this->belongsTo(Persediaan::class, 'id_barang', 'id');
+    }
 }

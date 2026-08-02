@@ -17,7 +17,9 @@ class PersediaanImport implements ToModel, WithHeadingRow
         }
 
         try {
-            $persediaan = Persediaan::where('kode_barang', $row['kode_barang'])->first();
+           $persediaan = Persediaan::where('kode_kategori', $row['kode_kategori'])
+                        ->where('kode_barang', $row['kode_barang'])
+                        ->first();
 
             $hargaSatuan = floatval(preg_replace('/[^\d.]/', '', $row['harga_satuan'] ?? 0));
             $jumlah = intval($row['jumlah'] ?? 1);

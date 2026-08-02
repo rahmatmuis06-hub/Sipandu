@@ -26,7 +26,7 @@ class UserSeeder extends Seeder
         $users = [
             // ── Super Admin ──────────────────────────────────────────────
             [
-                'name'     => 'Super Administrator',
+                'name'     => 'Rasyid Hidayat, S.Kom',
                 'username' => 'Operator',
                 'email'    => 'superadmin@bpmpgorontalo.id',
                 'password' => Hash::make('super123'),

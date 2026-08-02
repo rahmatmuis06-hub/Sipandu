@@ -197,10 +197,6 @@
 <div class="topbar">
   <span class="topbar-title">Laporan Transaksi Keluar</span>
   <div class="topbar-right">
-    {{-- <div class="notif-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="#64748B"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
-      <span class="notif-dot"></span>
-    </div> --}}
     <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
     <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
       @csrf
@@ -248,7 +244,7 @@
     </form>
   </div>
 
-  {{-- STATS --}}
+  {{-- STATS CARDS --}}
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-header">
@@ -257,7 +253,8 @@
         </div>
         <span class="stat-label-sm">Total Transaksi Keluar</span>
       </div>
-      <div class="stat-value text-danger">{{ number_format($stats['total_transaksi'] ?? 0, 0, ',', '.') }}</div>
+      <!-- Diubah dari $stats['total_transaksi'] menjadi $totalTransaksi -->
+      <div class="stat-value text-danger">{{ number_format($totalTransaksi ?? 0, 0, ',', '.') }}</div>
       <div class="stat-sub">Data sesuai filter</div>
     </div>
     <div class="stat-card">
@@ -267,7 +264,8 @@
         </div>
         <span class="stat-label-sm">Total Nilai Keluar</span>
       </div>
-      <div class="stat-value" style="font-size:24px; color:var(--amber);">Rp {{ number_format($stats['total_nilai'] ?? 0, 0, ',', '.') }}</div>
+      <!-- Diubah dari $stats['total_nilai'] menjadi $totalNilai -->
+      <div class="stat-value" style="font-size:24px; color:var(--amber);">Rp {{ number_format($totalNilai ?? 0, 0, ',', '.') }}</div>
       <div class="stat-sub">Data sesuai filter</div>
     </div>
     <div class="stat-card">
@@ -277,8 +275,9 @@
         </div>
         <span class="stat-label-sm">Total Item Keluar</span>
       </div>
-      <div class="stat-value" style="color:var(--blue);">{{ number_format($stats['total_item'] ?? 0, 0, ',', '.') }}</div>
-      <div class="stat-sub">Unit / Pcs</div>
+      <!-- Diubah dari $stats['total_item'] menjadi $totalItem -->
+      <div class="stat-value" style="color:var(--blue);">{{ number_format($totalItem ?? 0, 0, ',', '.') }}</div>
+      <div class="stat-sub">Semua Satuan</div>
     </div>
   </div>
 
@@ -318,7 +317,10 @@
               <td>{{ $item->kategori ?? '-' }}</td>
               <td class="font-mono"><strong>{{ $item->kode_barang ?? '-' }}</strong></td>
               <td>{{ Str::limit($item->nama_barang ?? '-', 35) }}</td>
-              <td class="text-danger"><strong>{{ number_format($item->jumlah_keluar ?? 0, 0, ',', '.') }}</strong></td>
+              <!-- Diubah: Menambahkan pemanggilan relasi satuan ke persediaan ($item->persediaan->satuan) -->
+              <td class="text-danger">
+                  <strong>{{ number_format($item->jumlah_keluar ?? 0, 0, ',', '.') }} {{ $item->satuan }}</strong>
+              </td>
               <td class="font-mono">Rp {{ number_format($item->harga ?? 0, 0, ',', '.') }}</td>
               <td class="font-mono text-danger"><strong>Rp {{ number_format($item->total ?? 0, 0, ',', '.') }}</strong></td>
             </tr>

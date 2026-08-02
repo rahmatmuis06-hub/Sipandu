@@ -162,11 +162,16 @@
               <select class="form-select" name="kode_barang" id="kendaraanSelect" required>
                 <option value="">-- Ketik untuk mencari kendaraan... --</option>
                 @foreach($kendaraan as $k)
+                <!-- Tambahkan atribut data-nopol, data-bpkb, data-rangka, data-mesin -->
                 <option value="{{ $k->kode_barang }}"
                   data-nama="{{ $k->nama_barang }}"
                   data-merek="{{ $k->merek }}"
-                  data-nup="{{ $k->nup }}">
-                  {{ $k->nama_barang }} ({{ $k->merek }})
+                  data-nup="{{ $k->nup }}"
+                  data-nopol="{{ $k->detailKendaraan->nomor_polisi ?? '-' }}"
+                  data-bpkb="{{ $k->detailKendaraan->no_bpkb ?? '-' }}"
+                  data-rangka="{{ $k->detailKendaraan->nomor_rangka ?? '-' }}"
+                  data-mesin="{{ $k->detailKendaraan->nomor_mesin ?? '-' }}">
+                  {{ $k->nama_barang }} ({{ $k->merek }}) - Plat: {{ $k->detailKendaraan->nomor_polisi ?? 'Belum ada plat' }}
                 </option>
                 @endforeach
               </select>
@@ -190,6 +195,30 @@
               <div class="form-group">
                 <div class="form-label"><i class="fas fa-barcode"></i> NUP</div>
                 <input type="text" class="form-input" id="nupInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+              </div>
+            </div>
+
+            <!-- BARIS BARU UNTUK NOPOL DAN BPKB -->
+            <div class="input-row">
+              <div class="form-group">
+                <div class="form-label"><i class="fas fa-id-card"></i> Nomor Polisi</div>
+                <input type="text" class="form-input" id="nopolInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+              </div>
+              <div class="form-group">
+                <div class="form-label"><i class="fas fa-file-alt"></i> Nomor BPKB</div>
+                <input type="text" class="form-input" id="bpkbInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+              </div>
+            </div>
+
+            <!-- BARIS BARU UNTUK NOMOR RANGKA DAN MESIN -->
+            <div class="input-row">
+              <div class="form-group">
+                <div class="form-label"><i class="fas fa-cogs"></i> Nomor Rangka</div>
+                <input type="text" class="form-input" id="rangkaInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+              </div>
+              <div class="form-group">
+                <div class="form-label"><i class="fas fa-wrench"></i> Nomor Mesin</div>
+                <input type="text" class="form-input" id="mesinInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
               </div>
             </div>
 
@@ -278,7 +307,7 @@
                 </button>
 
                 @if($item->status == 'pending')
-                <button class="card-btn cancel" onclick="cancelPeminjaman({{ $item->id }}, this)">
+                <button class="card-btn cancel" onclick="cancelPeminjamanKendaraan({{ $item->id }}, this)">
                   <i class="fas fa-xmark"></i> Batalkan
                 </button>
                 @endif
@@ -379,18 +408,36 @@
 
       const merekInput = document.getElementById('merekInput');
       const nupInput = document.getElementById('nupInput');
+      
+      // Definisikan elemen input baru
+      const nopolInput = document.getElementById('nopolInput');
+      const bpkbInput = document.getElementById('bpkbInput');
+      const rangkaInput = document.getElementById('rangkaInput');
+      const mesinInput = document.getElementById('mesinInput');
 
       if (select.value !== "") {
         document.getElementById('previewNama').innerText = selected.getAttribute('data-nama');
         
         merekInput.value = selected.getAttribute('data-merek') || '-';
         nupInput.value = selected.getAttribute('data-nup') || '-';
+        
+        // Memasukkan value dari atribut data-* ke kolom input
+        nopolInput.value = selected.getAttribute('data-nopol') || '-';
+        bpkbInput.value = selected.getAttribute('data-bpkb') || '-';
+        rangkaInput.value = selected.getAttribute('data-rangka') || '-';
+        mesinInput.value = selected.getAttribute('data-mesin') || '-';
 
         previewBox.style.display = 'flex';
       } else {
         previewBox.style.display = 'none';
         merekInput.value = '';
         nupInput.value = '';
+        
+        // Mengosongkan kolom saat opsi dibatalkan
+        nopolInput.value = '';
+        bpkbInput.value = '';
+        rangkaInput.value = '';
+        mesinInput.value = '';
       }
     }
 
@@ -450,14 +497,12 @@
     }
 
     function cancelPeminjamanKendaraan(id, btnElement) {
-      // Ubah teks konfirmasi agar tidak menyebutkan penghapusan data
       if (!confirm('Apakah Anda yakin ingin membatalkan peminjaman kendaraan ini?')) return;
 
       const originalText = btnElement.innerHTML;
       btnElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Batal...';
       btnElement.disabled = true;
 
-      // Pastikan URL fetch mengarah ke rute kendaraan
       fetch(`/pegawai/peminjaman-kendaraan/${id}/cancel`, {
           method: 'DELETE',
           headers: {
@@ -469,20 +514,13 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            // 1. Cari elemen card dari tombol yang diklik
             const card = btnElement.closest('.req-card');
-            
-            // 2. Cari elemen badge status, ubah class dan teksnya menjadi Dibatalkan
             const statusBadge = card.querySelector('.status-badge');
             if (statusBadge) {
-                statusBadge.className = 'status-badge rejected'; // Menggunakan class rejected agar berwarna merah
+                statusBadge.className = 'status-badge rejected';
                 statusBadge.innerHTML = '<i class="fas fa-ban"></i> Dibatalkan';
             }
-
-            // 3. Hapus tombol "Batalkan" agar tidak bisa diklik lagi
             btnElement.remove();
-
-            // Tampilkan notifikasi sukses
             if (typeof showToast === 'function') showToast('Peminjaman kendaraan berhasil dibatalkan!', 'success');
             else alert('Peminjaman kendaraan berhasil dibatalkan!');
           } else {

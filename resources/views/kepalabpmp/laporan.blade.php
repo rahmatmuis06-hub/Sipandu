@@ -117,10 +117,10 @@
                     <div class="dl-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"><i class="fas fa-building"></i></div>
                     <div class="dl-info"><span class="dl-title">Laporan Sarpras</span><span class="dl-desc">Gedung, kerusakan & peminjaman</span></div>
                 </a>
-                <a href="{{ route('kepalabpmp.laporan.download-lengkap', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
+                {{-- <a href="{{ route('kepalabpmp.laporan.download-lengkap', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
                     <div class="dl-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"><i class="fas fa-file-pdf"></i></div>
                     <div class="dl-info"><span class="dl-title">Laporan Lengkap</span><span class="dl-desc">Semua data dalam 1 dokumen</span></div>
-                </a>
+                </a> --}}
             </div>
         </div>
 

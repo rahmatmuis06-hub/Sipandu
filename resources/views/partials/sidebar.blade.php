@@ -334,19 +334,19 @@
                     'icon' => 'fas fa-wrench',
                     'route' => 'adminsarpras.data-kerusakan',
                 ],
-                [
-                    'href' => route('adminsarpras.daftar-peminjaman'),
-                    'label' => 'Daftar Peminjaman',
-                    'icon' => 'fas fa-door-open',
-                    'route' => 'adminsarpras.daftar-peminjaman',
-                ],
+                // [
+                //     'href' => route('adminsarpras.daftar-peminjaman'),
+                //     'label' => 'Daftar Peminjaman',
+                //     'icon' => 'fas fa-door-open',
+                //     'route' => 'adminsarpras.daftar-peminjaman',
+                // ],
                 // ['href' => route('adminsarpras.daftar-pengembalian'), 'label' => 'Daftar Pengembalian', 'icon' => 'fas fa-undo', 'route' => 'adminsarpras.daftar-pengembalian'],
-                [
-                    'href' => route('adminsarpras.laporan-peminjaman-gedung'),
-                    'label' => 'Laporan Peminjaman Gedung',
-                    'icon' => 'fas fa-file-alt',
-                    'route' => 'adminsarpras.laporan-peminjaman-gedung',
-                ],
+                // [
+                //     'href' => route('adminsarpras.laporan-peminjaman-gedung'),
+                //     'label' => 'Laporan Peminjaman Gedung',
+                //     'icon' => 'fas fa-file-alt',
+                //     'route' => 'adminsarpras.laporan-peminjaman-gedung',
+                // ],
                 [
                     'href' => route('adminsarpras.laporan-kerusakan'),
                     'label' => 'Laporan Kerusakan',
@@ -380,11 +380,11 @@
                     'icon' => 'fas fa-check-square',
                     'route' => 'NONE',
                     'children' => [
-                        [
-                            'href' => route('kasubag.persetujuan-peminjaman-gedung'),
-                            'label' => 'Peminjaman Gedung',
-                            'route' => 'kasubag.persetujuan-peminjaman-gedung',
-                        ],
+                        // [
+                        //     'href' => route('kasubag.persetujuan-peminjaman-gedung'),
+                        //     'label' => 'Peminjaman Gedung',
+                        //     'route' => 'kasubag.persetujuan-peminjaman-gedung',
+                        // ],
                         [
                             'href' => route('kasubag.persetujuan-peminjaman-barang'),
                             'label' => 'Peminjaman Barang',

@@ -2,104 +2,119 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Surat Pengembalian Barang</title>
+    <title>Berita Acara Pengembalian Peminjaman - {{ $pengembalian->id }}</title>
     <style>
-        /* 1. PENGATURAN KERTAS A4 & MARGIN */
+        /* 1. PENGATURAN HALAMAN */
         @page {
             size: A4 portrait;
-            margin-top: 2cm;
-            margin-bottom: 1.5cm;
-            margin-left: 2.5cm;
-            margin-right: 2.5cm;
+            /* Margin diperkecil secara maksimal agar muat 1 halaman */
+            margin-top: 1.5cm;
+            margin-bottom: 1cm;
+            margin-left: 2cm;
+            margin-right: 2cm;
         }
 
-        /* 2. TYPOGRAPHY & SPACING DASAR */
+        /* 2. TYPOGRAPHY */
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 11pt; 
-            line-height: 1.3;
+            font-size: 10pt; /* Ukuran font dioptimalkan agar hemat ruang */
+            line-height: 1.2;
             color: #000;
         }
 
+        .text-center { text-align: center; }
+        .text-justify { text-align: justify; }
+        .font-bold { font-weight: bold; }
+        .italic { font-style: italic; }
+        
+        .mb-2 { margin-bottom: 2px; }
+        .mb-5 { margin-bottom: 5px; }
+        .mb-10 { margin-bottom: 10px; }
+        .mb-15 { margin-bottom: 15px; }
+
         /* 3. KOP SURAT */
         .kop-surat {
-            margin-bottom: 15px;
             width: 100%;
+            margin-bottom: 15px;
         }
         .kop-surat img {
             width: 100%; 
             height: auto;
-            display: block;
+            max-height: 2.5cm;
+            object-fit: contain;
         }
 
-        /* 4. JUDUL SURAT */
-        .judul-container {
-            text-align: center;
-            margin-bottom: 15px;
-        }
         .judul-surat {
             font-size: 11pt;
-            font-weight: bold;
-            text-decoration: underline;
-            text-transform: uppercase;
-        }
-        .nomor-surat {
-            font-size: 11pt;
+            font-weight: normal;
+            margin-bottom: 2px;
         }
 
-        /* 5. TYPOGRAPHY KUSTOM */
-        .text-justify { text-align: justify; }
-        .font-bold { font-weight: bold; }
-        .italic { font-style: italic; }
-
-        /* 6. TABEL DATA */
-        table.data-table {
+        /* 4. TABEL DATA */
+        table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            margin-bottom: 15px;
         }
-        table.data-table td {
+        td {
             vertical-align: top;
-            padding: 3px 0;
+            padding: 1px 0;
         }
-        .td-label { width: 160px; }
+        .td-label { width: 120px; }
         .td-titikdua { width: 15px; text-align: center; }
 
-        /* 7. TABEL TANDA TANGAN */
-        table.ttd-table {
+        /* TABEL PIHAK & BARANG */
+        .table-pihak {
+            width: 95%;
+            margin-left: 5%;
+            margin-bottom: 5px;
+        }
+        
+        .table-barang {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        /* 6. TANDA TANGAN */
+        .ttd-table {
             width: 100%;
             text-align: center;
-            margin-top: 20px;
-            page-break-inside: avoid; 
+            margin-top: 15px;
+            page-break-inside: avoid; /* Memaksa tabel ttd tidak terpotong ke halaman baru */
         }
-        table.ttd-table td {
+        .ttd-table td {
+            width: 50%;
+            padding: 2px 5px;
             vertical-align: top;
-            padding: 0;
         }
-        .ttd-space { height: 55px; } 
+        .ttd-img-container {
+            height: 50px;
+            margin: 2px 0;
+            display: block;
+        }
+        .ttd-img-container img {
+            max-height: 50px;
+            max-width: 100px;
+        }
         .ttd-nama {
             font-weight: bold;
-            text-decoration: underline;
-            margin-bottom: 2px;
         }
     </style>
 </head>
-<>
+<body>
 
     @php
-        // LOGIKA PENANGGALAN OTOMATIS (FORMAT ANGKA)
+        // LOGIKA PENANGGALAN OTOMATIS
         $tgl = $pengembalian->tanggal_pengembalian_aktual ?? now();
-        $hari = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('l');
-        $tanggal_angka = \Carbon\Carbon::parse($tgl)->format('j');
-        $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('F');
-        $tahun_angka = \Carbon\Carbon::parse($tgl)->format('Y');
+        $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
+        $tanggal_teks = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('D');
+        $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');
+        $tahun = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('Y');
 
-        // FORMAT NOMOR SURAT
-        $nomor_urut = str_pad($pengembalian->id, 4, '0', STR_PAD_LEFT);
-        $nomor_surat = "{$nomor_urut}/BA.KB/693228/{$tahun_angka}";
+        // FORMAT NOMOR SURAT AUTOINCREMENT 3 DIGIT
+        $nomor_urut = str_pad($pengembalian->id, 3, '0', STR_PAD_LEFT);
+        $tahun_angka = \Carbon\Carbon::parse($tgl)->format('Y');
     @endphp
 
     {{-- KOP SURAT --}}
@@ -107,111 +122,153 @@
         <img src="{{ storage_path('app/public/kop_surat.png') }}" alt="Kop Surat BPMP Provinsi Gorontalo"> 
     </div>
 
-    {{-- JUDUL SURAT --}}
-    <div class="judul-container">
-        <div class="judul-surat">PENGEMBALIAN PEMINJAMAN</div>
-        <div class="nomor-surat">No: {{ $nomor_surat }}</div>
+    <!-- JUDUL & NOMOR SURAT -->
+    <div class="text-center mb-15">
+        <div class="judul-surat">BERITA ACARA PENGEMBALIAN PEMINJAMAN</div>
+        <div>No: {{ $nomor_urut }}/LK.01.02/893228/{{ $tahun_angka }}</div>
     </div>
 
-    {{-- PARAGRAF PEMBUKA --}}
-    <div class="text-justify">
-        Pada hari ini <span class="font-bold italic">{{ str_pad('', 15, '.') }}{{ $hari }}{{ str_pad('', 15, '.') }}</span> tanggal <span class="font-bold italic">{{ str_pad('', 15, '.') }}{{ $tanggal_angka }}{{ str_pad('', 15, '.') }}</span> Bulan <span class="font-bold italic">{{ str_pad('', 15, '.') }}{{ $bulan }}{{ str_pad('', 15, '.') }} Tahun {{ $tahun_angka }}</span> yang bertanda tangan dibawah ini :
+    <!-- PEMBUKA -->
+    <div class="text-justify mb-10">
+        Pada hari ini <span class="italic font-bold">{{ $hari }}</span> tanggal <span class="italic font-bold">{{ $tanggal_teks }}</span> bulan <span class="italic font-bold">{{ $bulan }}</span> tahun <span class="italic font-bold">{{ $tahun }}</span> bertempat di Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo, yang bertanda tangan dibawah ini :
     </div>
 
-    {{-- TABEL IDENTITAS & BARANG --}}
-    <table class="data-table">
+    <!-- IDENTITAS PIHAK PERTAMA -->
+    <table class="table-pihak">
         <tr>
+            <td style="width: 20px;">1.</td>
+            <td class="td-label">Nama</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $admin->name ?? 'Wiwin Suriadi Bokingo' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>NIP</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $admin->nip ?? '198001122008101002' }}</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Jabatan</td>
+            <td class="td-titikdua">:</td>
+            <td>Pengadministrasi Barang / Admin Aset Tetap</td>
+        </tr>
+        <tr>
+            <td></td>
+            <td>Instansi</td>
+            <td class="td-titikdua">:</td>
+            <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
+        </tr>
+    </table>
+    <div class="mb-10" style="margin-left: 5%;">Selanjutnya disebut sebagai <b>PIHAK PERTAMA</b></div>
+
+    <!-- IDENTITAS PIHAK KEDUA -->
+    <table class="table-pihak">
+        <tr>
+            <td style="width: 20px;">2.</td>
             <td class="td-label">Nama</td>
             <td class="td-titikdua">:</td>
             <td>{{ $pengembalian->user->name ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="td-label">NIP</td>
+            <td></td>
+            <td>NIP</td>
             <td class="td-titikdua">:</td>
             <td>{{ $pengembalian->user->nip ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="td-label">Jabatan</td>
+            <td></td>
+            <td>Jabatan</td>
             <td class="td-titikdua">:</td>
             <td>{{ $pengembalian->user->jabatan ?? '-' }}</td>
         </tr>
-    </table>
-
-        <div class="text-justify">
-        Bermaksud mengembalikan Barang Milik Negara (BMN) yang sebelumnya saya pinjam berdasarkan Surat Izin Peminjaman nomor {{ $nomor_surat = "{$nomor_urut}/BA.PB/693228/{$tahun_angka}"  }} dengan rincian sebagai berikut:
-        </div>
-       
-    <table class="data-table">
         <tr>
-            <td class="td-label">Nama Barang</td>
+            <td></td>
+            <td>Instansi</td>
+            <td class="td-titikdua">:</td>
+            <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
+        </tr>
+    </table>
+    <div class="mb-10" style="margin-left: 5%;">Selanjutnya disebut sebagai <b>PIHAK KEDUA</b></div>
+
+    <!-- TRANSISI BARANG -->
+    <div class="text-justify mb-10">
+        <b>PIHAK KEDUA</b> telah menyerahkan kepada <b>PIHAK PERTAMA</b> Barang Milik Negara (BMN) sesuai spesifikasi sebagai berikut :
+    </div>
+
+    <!-- DATA BARANG -->
+    <table class="table-barang">
+        <tr>
+            <td class="td-label">Kode Barang</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanBarang->kode_barang ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Nama Barang</td>
             <td class="td-titikdua">:</td>
             <td>{{ $pengembalian->peminjamanBarang->nama_barang ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="td-label">Merk/Type</td>
+            <td>Merek/Type</td>
             <td class="td-titikdua">:</td>
             <td>{{ $pengembalian->peminjamanBarang->merek ?? '-' }}</td>
         </tr>
         <tr>
-            <td class="td-label">Jumlah</td>
+            <td>NUP</td>
+            <td class="td-titikdua">:</td>
+            <td>{{ $pengembalian->peminjamanBarang->nup ?? '-' }}</td>
+        </tr>
+        <tr>
+            <td>Jumlah</td>
             <td class="td-titikdua">:</td>
             <td>{{ $pengembalian->jumlah_dikembalikan ?? '0' }} Unit</td>
         </tr>
-         <tr>
-            <td class="td-label">Kondisi Saat Ini</td>
+        <tr>
+            <td>Kondisi</td>
             <td class="td-titikdua">:</td>
             <td>{{ ucwords(str_replace('-', ' ', $pengembalian->kondisi_barang)) }}</td>
         </tr>
-        <tr>
-            <td class="td-label">Alasan Pengembalian</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $pengembalian->catatan ?? 'Selesai digunakan' }}</td>
-        </tr>
     </table>
-
-    {{-- PARAGRAF PENUTUP --}}
-    {{-- <div class="text-justify">
-        Bahwa barang tersebut telah selesai di pergunakan dan di kembalikan sebagaimana Terlampir bahwa barang tersebut masih dalam keadaan baik dan lengkap.
-    </div> --}}
-    <div class="text-justify" style="text-indent: 40px; margin-top: 10px;">
+        
+    <div class="text-justify mb-15">
         Demikian berita acara ini ditandatangani dengan sebenar-benarnya dan untuk digunakan sebagaimana mestinya.
     </div>
 
-    {{-- AREA TANDA TANGAN --}}
+    <!-- TANDA TANGAN -->
     <table class="ttd-table">
         <tr>
-            <td width="50%">
-                <div class="font-bold">Pengadministrasi BMN</div>
-                <div class="ttd-space">
+            <td>
+                <div class="font-bold">PIHAK PERTAMA</div>
+                <div class="ttd-img-container">
                     @if(!empty($ttdAdmin))
-                        <img src="{{ $ttdAdmin }}" alt="TTD Admin" style="max-height: 55px; margin-top: 5px;">
+                        <img src="{{ $ttdAdmin }}" alt="TTD Admin">
                     @endif
                 </div>
                 <div class="ttd-nama">{{ $admin->name ?? 'Wiwin Suriadi Bokingo' }}</div>
-                <div>NIP. {{ $admin->nip ?? '198001122008101002' }}</div>
+                <div class="font-bold">NIP. {{ $admin->nip ?? '198001122008101002' }}</div>
             </td>
-            <td width="50%">
-                <div class="font-bold">Peminjam</div>
-                <div class="ttd-space">
+            <td>
+                <div class="font-bold">PIHAK KEDUA</div>
+                <div class="ttd-img-container">
                     @if(!empty($ttdPeminjam))
-                        <img src="{{ $ttdPeminjam }}" alt="TTD Peminjam" style="max-height: 55px; margin-top: 5px;">
+                        <img src="{{ $ttdPeminjam }}" alt="TTD Peminjam">
                     @endif
                 </div>
-                <div class="ttd-nama">{{ $pengembalian->user->name ?? '...................................................' }}</div>
-                <div>NIP. {{ $pengembalian->user->nip ?? '....................................' }}</div>
+                <div class="ttd-nama">{{ $pengembalian->user->name ?? '.......................................' }}</div>
+                <div class="font-bold">NIP. {{ $pengembalian->user->nip ?? '.......................................' }}</div>
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding-top: 25px;">
+            <td colspan="2" style="padding-top: 15px;">
                 <div class="font-bold">Mengetahui,</div>
                 <div class="font-bold">Kuasa Pengguna Barang</div>
-                <div class="ttd-space">
+                <div class="ttd-img-container">
                     @if(!empty($ttdKepala))
-                        <img src="{{ $ttdKepala }}" alt="TTD Kepala" style="max-height: 55px; margin-top: 5px;">
+                        <img src="{{ $ttdKepala }}" alt="TTD Kepala">
                     @endif
                 </div>
                 <div class="ttd-nama">{{ $kepala->name ?? 'Rudi Syaifullah, S. SI,M,M.' }}</div>
-                <div>NIP. {{ $kepala->nip ?? '197606272003121002' }}</div>
+                <div class="font-bold">NIP. {{ $kepala->nip ?? '197606272003121002' }}</div>
             </td>
         </tr>
     </table>
