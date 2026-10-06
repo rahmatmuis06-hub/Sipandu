@@ -53,7 +53,7 @@
             <thead>
                 <tr>
                     <th style="width: 4%;" class="text-center">No</th>
-                    <th style="width: 12%;">Kode Barang</th>
+                    <th style="width: 16%;">Kode Unik Barang</th>
                     <th>Nama Barang</th>
                     <th>Kategori</th>
                     <th style="width: 10%;" class="text-center">Sisa Stok</th>
@@ -65,7 +65,7 @@
             @forelse($persediaan as $i => $item)
                 <tr>
                     <td class="text-center">{{ $i+1 }}</td>
-                    <td>{{ $item->kode_barang }}</td>
+                    <td>{{ $item->kode_unik_barang }}</td>
                     <td><strong>{{ $item->nama_barang }}</strong></td>
                     <td>{{ $item->kategori }}</td>
                     <td class="text-center">{{ $item->jumlah }}</td>
@@ -86,7 +86,7 @@
                 <tr>
                     <th style="width: 4%;" class="text-center">No</th>
                     <th style="width: 12%;" class="text-center">Tanggal</th>
-                    <th style="width: 12%;">Kode Barang</th>
+                    <th style="width: 16%;">Kode Unik Barang</th>
                     <th>Nama Barang</th>
                     <th style="width: 10%;" class="text-center">Vol Masuk</th>
                     <th style="width: 15%;" class="text-right">Harga Satuan</th>
@@ -98,7 +98,7 @@
                 <tr>
                     <td class="text-center">{{ $i+1 }}</td>
                     <td class="text-center">{{ $item->tanggal_input ? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $item->kode_barang }}</td>
+                    <td>{{ $item->kode_unik_barang }}</td>
                     <td>{{ $item->nama_barang }}</td>
                     <td class="text-center">{{ $item->jumlah_masuk }}</td>
                     <td class="text-right">Rp {{ number_format($item->harga_satuan ?? 0,0,',','.') }}</td>
@@ -118,7 +118,7 @@
                 <tr>
                     <th style="width: 4%;" class="text-center">No</th>
                     <th style="width: 12%;" class="text-center">Tanggal</th>
-                    <th style="width: 12%;">Kode Barang</th>
+                    <th style="width: 16%;">Kode Unik Barang</th>
                     <th>Nama Barang</th>
                     <th style="width: 10%;" class="text-center">Vol Keluar</th>
                     <th style="width: 15%;" class="text-right">Total Nilai</th>
@@ -130,7 +130,7 @@
                 <tr>
                     <td class="text-center">{{ $i+1 }}</td>
                     <td class="text-center">{{ $item->tanggal_input ? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $item->kode_barang }}</td>
+                    <td>{{ $item->kode_unik_barang }}</td>
                     <td>{{ $item->nama_barang }}</td>
                     <td class="text-center">{{ $item->jumlah_keluar }}</td>
                     <td class="text-right">Rp {{ number_format($item->total ?? 0,0,',','.') }}</td>
@@ -166,7 +166,7 @@
                     <td>{{ $item->user->name ?? $item->nama_lengkap ?? '-' }}</td>
                     <td>
                         {{ $item->persediaan->nama_barang ?? $item->nama_barang }}
-                        <br><span style="font-size: 8px; color: #64748b;">Kode: {{ $item->persediaan->kode_barang ?? $item->kode_barang ?? '-' }}</span>
+                        <br><span style="font-size: 8px; color: #64748b;">Kode: {{ $item->persediaan->kode_unik_barang ?? (($item->kode_kategori ?? '').'-'.($item->kode_barang ?? '')) }}</span>
                     </td>
                     <td class="text-center">{{ $item->jumlah_diminta }}</td>
                     <td class="text-center"><strong>{{ $item->jumlah_disetujui ?? 0 }}</strong></td>

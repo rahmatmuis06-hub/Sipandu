@@ -103,7 +103,7 @@
                 </td>
                 <td>
                     {{ $item->persediaan->nama_barang ?? $item->nama_barang }}<br>
-                    <span style="font-size: 9px; color: #555;">Kode: {{ $item->persediaan->kode_barang ?? $item->kode_barang ?? '-' }}</span>
+                    <span style="font-size: 9px; color: #555;">Kode: {{ $item->persediaan->kode_unik_barang ?? (($item->kode_kategori ?? '').'-'.($item->kode_barang ?? '')) }}</span>
                 </td>
                 <td class="text-center"><b>{{ $item->jumlah_diminta }}</b> Unit</td>
                 <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d/m/Y') }}</td>

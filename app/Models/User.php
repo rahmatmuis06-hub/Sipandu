@@ -135,12 +135,6 @@ class User extends Authenticatable
         return $this->role === 'pegawai';
     }
 
-    /** Apakah user adalah Tamu? */
-    public function isTamu(): bool
-    {
-        return $this->role === 'tamu';
-    }
-
     /**
      * Cek apakah user memiliki salah satu dari peran yang diberikan.
      *
@@ -164,7 +158,6 @@ class User extends Authenticatable
             'adminsarpras'    => 'Admin Sarana Prasarana',
             'adminasettetap'  => 'Admin Aset Tetap',
             'pegawai'         => 'Pegawai',
-            'tamu'            => 'Tamu',
             default           => ucfirst($this->role),
         };
     }

@@ -534,6 +534,11 @@
                             style="width: 100%;">
                             @csrf
                             <input type="hidden" name="action" value="setuju">
+                            <label for="tanggal-penerimaan-{{ $item->id }}"
+                                style="display:block; margin-bottom:4px; font-size:12px; font-weight:700;">Tanggal Penerimaan</label>
+                            <input id="tanggal-penerimaan-{{ $item->id }}" type="date" name="tanggal_penerimaan"
+                                value="{{ old('tanggal_penerimaan', now()->format('Y-m-d')) }}" required
+                                style="width:100%; padding:9px; margin-bottom:8px; border:1px solid var(--gray-200); border-radius:8px;">
                             <button type="submit" class="btn btn-approve"
                                 onclick="return confirm('Yakin ingin MENYETUJUI permintaan ini?')">
                                 <svg viewBox="0 0 24 24">
@@ -560,6 +565,11 @@
                             style="background: var(--gray-100); color: var(--gray-600); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 700; border: 1px dashed var(--gray-200); margin-top: auto;">
                             Telah Diproses
                         </div>
+                        @if($item->tanggal_penerimaan)
+                            <div style="font-size:12px; text-align:center; margin-top:6px;">
+                                Diterima: <strong>{{ $item->tanggal_penerimaan->translatedFormat('d F Y') }}</strong>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>

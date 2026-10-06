@@ -159,6 +159,38 @@ body {
         </div>
       </div>
 
+      @if($permintaan->items && $permintaan->items->count() > 0)
+      <div class="detail-box full-width" style="background: #fff;">
+        <div class="label" style="margin-bottom: 12px;"><i class="fas fa-list-check" style="color: var(--primary); margin-right: 4px;"></i> Rincian Barang Diminta (Multi-Item)</div>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                <th style="padding: 8px 10px;">No</th>
+                <th style="padding: 8px 10px;">Nama Barang</th>
+                <th style="padding: 8px 10px;">Kode Barang</th>
+                <th style="padding: 8px 10px;">Satuan</th>
+                <th style="padding: 8px 10px;">Jumlah Diminta</th>
+                <th style="padding: 8px 10px;">Stok Gudang</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($permintaan->items as $idx => $it)
+              <tr style="border-bottom: 1px solid #edf2f7;">
+                <td style="padding: 8px 10px;">{{ $idx + 1 }}</td>
+                <td style="padding: 8px 10px; font-weight: 600;">{{ $it->nama_barang }}</td>
+                <td style="padding: 8px 10px; font-family: monospace;">{{ $it->kode_barang }}</td>
+                <td style="padding: 8px 10px;">{{ $it->satuan ?? ($it->persediaan->satuan ?? '-') }}</td>
+                <td style="padding: 8px 10px; font-weight: 700; color: var(--primary);">{{ $it->jumlah_diminta }}</td>
+                <td style="padding: 8px 10px;">{{ $it->persediaan->jumlah ?? '-' }}</td>
+              </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      </div>
+      @endif
+
       <!-- Tujuan Penggunaan -->
       <div class="detail-box full-width">
         <div class="label"><i class="fas fa-bullseye" style="color: var(--danger); margin-right: 4px;"></i> Tujuan Penggunaan</div>

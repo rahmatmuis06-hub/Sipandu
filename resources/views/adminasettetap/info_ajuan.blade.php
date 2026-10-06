@@ -20,7 +20,10 @@
         <span class="topbar-title">Admin Aset Tetap- Info Ajuan</span>
         <div class="topbar-right d-flex align-items-center gap-3">
             <span style="font-size: 13px; color: var(--gray-600)">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-            <button class="btn btn-sm btn-outline-danger" onclick="document.location='{{ route('logout') }}'"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+<form method="POST" action="{{ route('logout', [], false) }}" style="display:inline; margin:0;">
+@csrf
+<button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+</form>
         </div>
     </div>
 

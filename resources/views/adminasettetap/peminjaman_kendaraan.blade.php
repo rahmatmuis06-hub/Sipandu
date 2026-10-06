@@ -151,16 +151,24 @@
                             <span class="status-badge {{ $statusClass }}">{{ str_replace('_', ' ', ucfirst($statusText)) }}</span>
                         </td>
                         <td>
-                            @if($item->status == 'dibatalkan')
-                                <span style="font-size: 13px; color: var(--muted); font-style: italic;">Tidak ada aksi</span>
+                            @if(in_array($item->status, ['dibatalkan', 'ditolak']))
+                                <button class="action-btn" onclick="showDetail({{ $item->id }})">
+                                    <i class="fas fa-eye"></i> Detail
+                                </button>
+                                <span style="font-size: 12px; color: var(--muted); font-style: italic; margin-left: 6px;">
+                                    {{ $item->status == 'ditolak' ? 'Ditolak' : 'Dibatalkan' }}
+                                </span>
                             @else
                                 <button class="action-btn" onclick="showDetail({{ $item->id }})">
                                     <i class="fas fa-eye"></i> Detail
                                 </button>
 
-                                <a href="{{ route('adminasettetap.peminjaman-kendaraan.print', $item->id) }}" target="_blank" class="action-btn" style="color: var(--purple);">
-                                    <i class="fas fa-file-pdf"></i> Cetak
-                                </a>
+                                @if(in_array($item->status, ['disetujui', 'diteruskan_kasubag', 'dikembalikan']))
+                                <form action="{{ route('adminasettetap.peminjaman-kendaraan.print', $item->id) }}" method="GET" target="_blank" style="display:inline-flex; gap:4px; align-items:center;">
+                                    <input type="date" name="tanggal_surat" value="{{ now()->format('Y-m-d') }}" required title="Tanggal surat" style="padding:5px; max-width:135px;">
+                                    <button type="submit" class="action-btn" style="color: var(--purple);"><i class="fas fa-file-pdf"></i> Cetak</button>
+                                </form>
+                                @endif
 
                                 @if($item->status == 'pending')
                                     <button class="action-btn teruskan" onclick="openReviewModal({{ $item->id }}, 'teruskan')">

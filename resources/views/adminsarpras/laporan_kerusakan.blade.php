@@ -248,10 +248,13 @@
         <span class="notif-dot"></span>
       </div> --}}
       <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-      <a href="{{ route('logout') }}" class="btn-keluar">
+<form method="POST" action="{{ route('logout', [], false) }}" style="display:inline; margin:0;">
+@csrf
+<button type="submit" class="btn-keluar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zm-5 11H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2z"/></svg>
         Keluar
-      </a>
+      </button>
+</form>
     </div>
   </div>
 
@@ -392,25 +395,7 @@
     </div>
 
     <!-- CHARTS ROW -->
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Tren Pelaporan Kerusakan</div>
-        <div class="chart-sub">Perbandingan bulanan tahun ini</div>
-        <div class="bar-chart">
-          <div class="bar-col"><div class="bar-val">2</div><div class="bar-wrap"><div class="bar" style="height:20%"></div></div><div class="bar-lbl">Jan</div></div>
-          <div class="bar-col"><div class="bar-val">5</div><div class="bar-wrap"><div class="bar amber" style="height:50%"></div></div><div class="bar-lbl">Feb</div></div>
-          <div class="bar-col"><div class="bar-val">8</div><div class="bar-wrap"><div class="bar red" style="height:80%"></div></div><div class="bar-lbl">Mar</div></div>
-          <div class="bar-col"><div class="bar-val">12</div><div class="bar-wrap"><div class="bar red" style="height:100%"></div></div><div class="bar-lbl">Apr</div></div>
-          <div class="bar-col"><div class="bar-val">7</div><div class="bar-wrap"><div class="bar amber" style="height:70%"></div></div><div class="bar-lbl">Mei</div></div>
-          <div class="bar-col"><div class="bar-val">3</div><div class="bar-wrap"><div class="bar green" style="height:30%"></div></div><div class="bar-lbl">Jun</div></div>
-        </div>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Baik</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Rusak Ringan</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Rusak Berat</div>
-        </div>
-      </div>
-
+    <div style="margin-bottom: 20px; max-width: 420px;">
       <div class="chart-card">
         <div class="chart-title">Distribusi Kondisi</div>
         <div class="chart-sub">Komposisi per tingkat kerusakan</div>

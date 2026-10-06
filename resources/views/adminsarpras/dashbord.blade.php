@@ -119,7 +119,7 @@
   .hero-btn:hover { background: rgba(255,255,255,0.28); }
 
   /* Stat Cards */
-  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
   .stat-card {
     background: var(--card-bg); border-radius: 16px;
     padding: 20px; border: 1px solid var(--border);
@@ -243,6 +243,9 @@
     .card { overflow-x: auto; }
     table { min-width: 500px; }
   }
+  @media (max-width: 640px) {
+    .stats-grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -302,25 +305,6 @@
       <div class="stat-sub">{{ $gedungTersedia }} tersedia</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon" style="background:#fff4ec">
-        <i class="fas fa-clipboard-list" style="color:#f4a261;font-size:20px"></i>
-      </div>
-      @if($peminjamanBulanIni > 0)
-        <div class="badge badge-orange">+{{ $peminjamanBulanIni }}</div>
-      @endif
-      <div class="stat-value">{{ $totalPeminjaman }}</div>
-      <div class="stat-label">Total Peminjaman</div>
-      <div class="stat-sub">{{ $peminjamanAktif }} menunggu proses</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon" style="background:#e8faf9">
-        <i class="fas fa-check-circle" style="color:#2ec4b6;font-size:20px"></i>
-      </div>
-      <div class="stat-value">{{ $peminjamanDisetujui }}</div>
-      <div class="stat-label">Disetujui</div>
-      <div class="stat-sub">{{ $peminjamanDitolak }} ditolak</div>
-    </div>
-    <div class="stat-card">
       <div class="stat-icon" style="background:#fdecea">
         <i class="fas fa-exclamation-triangle" style="color:#e63946;font-size:20px"></i>
       </div>
@@ -361,44 +345,6 @@
     </div>
   </div>
 
-  <!-- Chart + Activity -->
-  <div class="bottom-grid animate d3">
-    <div class="card">
-      <div class="card-title"><i class="fas fa-chart-bar"></i> Statistik Peminjaman {{ now()->year }}</div>
-      <div class="chart-wrap">
-        @foreach($chartBars as $bar)
-          <div class="bar-group">
-            <div class="bar-count">{{ $bar['count'] > 0 ? $bar['count'] : '' }}</div>
-            <div class="bar" style="height:{{ max($bar['height'], 3) }}%"
-                 title="{{ $bar['label'] }}: {{ $bar['count'] }} peminjaman"></div>
-            <span class="bar-label">{{ $bar['label'] }}</span>
-          </div>
-        @endforeach
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><i class="fas fa-clock-rotate-left"></i> Aktivitas Terbaru</div>
-      <div class="activity-list">
-        @forelse($aktivitasTerbaru as $akt)
-          <div class="activity-item">
-            <div class="act-icon" style="background:{{ $akt['bg'] }}">
-              <i class="fas {{ $akt['icon'] }}" style="color:{{ $akt['color'] }};font-size:14px"></i>
-            </div>
-            <div class="act-text">
-              <p>{{ $akt['text'] }}</p>
-              <span class="act-by">{{ $akt['by'] }}</span> · <span>{{ $akt['time'] }}</span>
-            </div>
-          </div>
-        @empty
-          <div class="empty-state">
-            <i class="fas fa-inbox"></i>
-            <div>Belum ada aktivitas</div>
-          </div>
-        @endforelse
-      </div>
-    </div>
-  </div>
 
   <!-- Recent Table -->
   <div class="card animate d4">

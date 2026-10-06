@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PermintaanPersediaan extends Model
 {
@@ -22,6 +23,7 @@ class PermintaanPersediaan extends Model
         'jumlah_disetujui',
         'satuan',
         'tanggal_permintaan',
+        'tanggal_penerimaan',
         'tanggal_dibutuhkan',
         'tujuan_penggunaan',
         'surat_bast_path',
@@ -35,6 +37,7 @@ class PermintaanPersediaan extends Model
 
     protected $casts = [
         'tanggal_permintaan' => 'date',
+        'tanggal_penerimaan' => 'date',
         'tanggal_dibutuhkan' => 'date',
         'jumlah_diminta' => 'integer',
     ];
@@ -60,6 +63,11 @@ class PermintaanPersediaan extends Model
         return $this->belongsTo(User::class, 'approved_by_kasubag_id');
     }
 
+    public function items(): HasMany
+    {
+        return $this->hasMany(DetailPermintaanPersediaan::class, 'permintaan_persediaan_id');
+    }
+
     // Scopes Workflow
     public function scopePending($query)
     {
@@ -81,12 +89,12 @@ class PermintaanPersediaan extends Model
     {
         return match($this->status) {
             'pending' => ['text' => 'Pending', 'color' => 'warning', 'icon' => 'fa-clock'],
-            'dalam_review' => ['text' => 'Dalam Review', 'color' => 'info', 'icon' => 'fa-eye'],
+            'dalam_review', 'diteruskan_kasubag' => ['text' => 'Diteruskan ke Kasubag', 'color' => 'info', 'icon' => 'fa-paper-plane'],
             'disetujui_kasubag' => ['text' => 'Disetujui Kasubag', 'color' => 'success', 'icon' => 'fa-check-circle'],
-            'disetujui' => ['text' => 'Disetujui', 'color' => 'success', 'icon' => 'fa-thumbs-up'],
-            'ditolak' => ['text' => 'Ditolak', 'color' => 'danger', 'icon' => 'fa-times-circle'],
-            'dibatalkan' => ['text' => 'Dibatalkan', 'color' => 'secondary', 'icon' => 'fa-ban'],
-            default => ['text' => 'Unknown', 'color' => 'secondary']
+            'disetujui', 'disetujui_admin', 'selesai' => ['text' => 'Disetujui', 'color' => 'success', 'icon' => 'fa-thumbs-up'],
+            'ditolak', 'rejected' => ['text' => 'Ditolak', 'color' => 'danger', 'icon' => 'fa-times-circle'],
+            'dibatalkan', 'cancelled' => ['text' => 'Dibatalkan', 'color' => 'secondary', 'icon' => 'fa-ban'],
+            default => ['text' => ucfirst($this->status ?? 'Unknown'), 'color' => 'secondary', 'icon' => 'fa-question-circle']
         };
     }
 

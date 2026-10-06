@@ -63,7 +63,7 @@
             return trim($terbilang);
         }
 
-        $tgl = $pengembalian->tanggal_pengembalian_aktual ?? now();
+        $tgl = $tanggalSurat ?? $pengembalian->tanggal_pengembalian_aktual ?? now();
         $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
         $tgl_angka = \Carbon\Carbon::parse($tgl)->format('j');
         $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');

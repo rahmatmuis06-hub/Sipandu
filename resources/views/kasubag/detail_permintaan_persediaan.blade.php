@@ -107,26 +107,67 @@
         <div class="detail-label">Tanggal Dibutuhkan</div>
         <div class="detail-value">{{ \Carbon\Carbon::parse($permintaan->tanggal_dibutuhkan)->format('d M Y') }}</div>
       </div>
+      @if($permintaan->items && $permintaan->items->count() > 0)
+      <div class="detail-item full" style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div class="detail-label" style="font-size: 14px; font-weight: 700; color: #1e293b; margin-bottom: 10px;">
+          <i class="fas fa-list-check" style="color: #2563eb;"></i> Rincian Barang Diminta (Multi-Item)
+        </div>
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1; text-align: left;">
+                <th style="padding: 8px 10px;">No</th>
+                <th style="padding: 8px 10px;">Nama Barang</th>
+                <th style="padding: 8px 10px;">Kode Barang</th>
+                <th style="padding: 8px 10px;">Satuan</th>
+                <th style="padding: 8px 10px;">Jumlah Diminta</th>
+                <th style="padding: 8px 10px;">Sisa Stok Fisik</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach($permintaan->items as $idx => $it)
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 8px 10px;">{{ $idx + 1 }}</td>
+                <td style="padding: 8px 10px; font-weight: 600;">{{ $it->nama_barang }}</td>
+                <td style="padding: 8px 10px; font-family: monospace;">{{ $it->kode_barang }}</td>
+                <td style="padding: 8px 10px;">{{ $it->satuan ?? ($it->persediaan->satuan ?? '-') }}</td>
+                <td style="padding: 8px 10px; font-weight: 700; color: #2563eb;">{{ $it->jumlah_diminta }}</td>
+                <td style="padding: 8px 10px;">{{ $it->persediaan->jumlah ?? '-' }}</td>
+              </tr>
+              @endforeach
+            </tbody>
+          </table>
+        </div>
+      </div>
+      @endif
+
       <div class="detail-item full">
         <div class="detail-label">Tujuan Penggunaan</div>
         <div class="detail-value" style="font-weight: 400; line-height: 1.6;">{{ $permintaan->tujuan_penggunaan }}</div>
       </div>
     </div>
 
-  @if($item->status == 'diteruskan_kasubag')
-    <form action="{{ route('kasubag.approve-permintaan', $item->id) }}" method="POST" class="d-inline">
+  @if($permintaan->status == 'diteruskan_kasubag')
+    <form action="{{ route('kasubag.approve-permintaan', $permintaan->id) }}" method="POST" class="d-inline">
         @csrf
         <input type="hidden" name="action" value="setuju">
+        <label for="tanggal_penerimaan">Tanggal Penerimaan</label>
+        <input id="tanggal_penerimaan" type="date" name="tanggal_penerimaan"
+          value="{{ old('tanggal_penerimaan', now()->format('Y-m-d')) }}" required>
         <button type="submit" class="btn btn-success btn-sm">Setuju</button>
     </form>
     
-    <form action="{{ route('kasubag.approve-permintaan', $item->id) }}" method="POST" class="d-inline">
+    <form action="{{ route('kasubag.approve-permintaan', $permintaan->id) }}" method="POST" class="d-inline">
         @csrf
         <input type="hidden" name="action" value="tolak">
         <button type="submit" class="btn btn-danger btn-sm">Tolak</button>
     </form>
     @else
         <button class="btn btn-secondary btn-sm" disabled>Sudah Diproses</button>
+        @if($permintaan->tanggal_penerimaan)
+          <div class="detail-label">Tanggal Penerimaan</div>
+          <div class="detail-value">{{ $permintaan->tanggal_penerimaan->translatedFormat('d F Y') }}</div>
+        @endif
   @endif
   </div>
 </main>

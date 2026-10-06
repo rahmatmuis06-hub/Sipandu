@@ -474,6 +474,314 @@
     border-radius: 10px; margin-top: 4px;
     border: 1px solid var(--border);
   }
+
+  /* ===== POPUP PILIH BARANG ===== */
+  .modal-picker {
+    width: 860px !important;
+    max-width: 95vw !important;
+  }
+  .asset-picker-card {
+    background: linear-gradient(135deg, #eef4ff 0%, #f0fdf4 100%);
+    border: 1.5px dashed #93c5fd;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .picker-card-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .picker-card-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .picker-card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3a8a;
+  }
+  .picker-card-subtitle {
+    font-size: 11.5px;
+    color: #64748b;
+  }
+  .btn-picker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+    box-shadow: 0 2px 6px rgba(59,107,218,.25);
+  }
+  .btn-picker-trigger:hover {
+    background: var(--primary-d);
+    transform: translateY(-1px);
+  }
+  .quick-link-picker {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary);
+    background: #eef2ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 2px 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .quick-link-picker:hover {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+  }
+
+  .picker-body {
+    padding: 16px 20px 20px;
+  }
+  .picker-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  .picker-search-input-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 260px;
+  }
+  .picker-search-input-wrap svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+  }
+  .picker-search-input-wrap input {
+    width: 100%;
+    padding: 10px 36px 10px 36px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border .15s, box-shadow .15s;
+    box-sizing: border-box;
+  }
+  .picker-search-input-wrap input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59,107,218,.12);
+  }
+  .picker-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px;
+  }
+  .picker-search-clear:hover { color: var(--text-primary); }
+
+  .picker-loader {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .spinner-small {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(59,107,218,.25);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spinSmall .6s linear infinite;
+  }
+  @keyframes spinSmall { to { transform: rotate(360deg); } }
+
+  .picker-table-wrap {
+    max-height: 380px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+  }
+  .picker-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .picker-table thead th {
+    background: #f8faff;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .picker-table tbody td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .picker-table tbody tr:last-child td { border-bottom: none; }
+  .picker-table tbody tr:hover {
+    background: #f8faff;
+  }
+  .picker-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #475569;
+    background: #f1f5fb;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 3px;
+  }
+  .btn-choose {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all .15s;
+    box-shadow: 0 1px 3px rgba(16,185,129,.2);
+    white-space: nowrap;
+  }
+  .btn-choose:hover {
+    background: #059669;
+    transform: translateY(-1px);
+  }
+  .btn-choose.disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  .picker-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .picker-count {
+    font-size: 12.5px;
+    color: var(--text-tertiary);
+  }
+  .picker-pagination {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .picker-page-btn {
+    padding: 5px 11px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .picker-page-btn:hover:not(:disabled) {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .picker-page-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+  .picker-page-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+
+  /* Flash Highlight Animation */
+  @keyframes fieldHighlight {
+    0% { background-color: #d1fae5; border-color: #10b981; }
+    50% { background-color: #ecfdf5; border-color: #34d399; }
+    100% { background-color: #fff; border-color: var(--border); }
+  }
+  .field-highlight {
+    animation: fieldHighlight 1.8s ease forwards;
+  }
+
+  /* Toast Notification */
+  .picker-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #0f172a;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 10px 25px rgba(0,0,0,.2);
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .25s ease;
+    pointer-events: none;
+  }
+  .picker-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 <body>
@@ -491,12 +799,15 @@
         <span class="notif-dot"></span>
       </div> --}}
       <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-      <a href="{{ route('logout') }}" class="btn-keluar">
+<form method="POST" action="{{ route('logout', [], false) }}" style="display:inline; margin:0;">
+@csrf
+<button type="submit" class="btn-keluar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
           <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zm-5 11H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2z"/>
         </svg>
         Keluar
-      </a>
+      </button>
+</form>
     </div>
   </div>
 
@@ -629,6 +940,7 @@
             <td style="color:var(--text-secondary);">{{ $kerusakan->lokasi }}</td>
             <td>
               <div class="action-btns">
+                <a href="{{ route('adminsarpras.kerusakan.riwayat', $kerusakan) }}" title="Riwayat kerusakan dan perbaikan" style="padding:6px;color:#2256c7;">Riwayat</a>
                 <button class="act-btn view" title="Lihat Detail"
                         onclick="openModal('view', {{ $kerusakan->id }})">
                   <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -710,15 +1022,44 @@
         </div>
       </div>
 
+      {{-- BANNER PILIH DARI MASTER ASET --}}
+      <div class="asset-picker-card">
+        <div class="picker-card-left">
+          <div class="picker-card-icon">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="picker-card-title">Pilih dari Master Data Aset</div>
+            <div class="picker-card-subtitle">Isi otomatis nama, kode, NUP, & lokasi</div>
+          </div>
+        </div>
+        <button type="button" class="btn-picker-trigger" onclick="openPilihBarangModal()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.3">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          Pilih Barang
+        </button>
+      </div>
+
       <div class="form-group">
-        <label class="form-label" for="nama_barang">Nama Barang</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <label class="form-label" for="nama_barang" style="margin-bottom:0;">Nama Barang</label>
+          <button type="button" onclick="openPilihBarangModal()" class="quick-link-picker" title="Pilih dari daftar aset">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            Cari di Aset
+          </button>
+        </div>
         <input type="text" name="nama_barang" id="nama_barang"
                class="form-input" placeholder="Contoh: Meja Belajar" required>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="kode_barang">Kode Barang</label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <label class="form-label" for="kode_barang" style="margin-bottom:0;">Kode Barang</label>
+          </div>
           <input type="text" name="kode_barang" id="kode_barang"
                  class="form-input" placeholder="MB-0012" required>
         </div>
@@ -816,6 +1157,78 @@
       <button type="button" class="btn-cancel" onclick="closeDetailModal()">Tutup</button>
     </div>
   </div>
+</div>
+
+{{-- ============================================================ --}}
+{{--  MODAL POPUP PILIH BARANG (DARI MASTER ASET TETAP)            --}}
+{{-- ============================================================ --}}
+<div class="modal-overlay" id="pilihBarangModal" style="z-index: 350;">
+  <div class="modal modal-picker">
+    <div class="modal-header">
+      <div>
+        <h3 class="modal-title" style="display:flex;align-items:center;gap:8px;">
+          <svg width="19" height="19" fill="none" stroke="var(--primary)" viewBox="0 0 24 24" stroke-width="2.2">
+            <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+          Pilih Barang dari Data Aset
+        </h3>
+        <p style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">
+          Cari dan klik tombol "Pilih" untuk mengisi otomatis formulir kerusakan
+        </p>
+      </div>
+      <button class="close-btn" onclick="closePilihBarangModal()" aria-label="Tutup">&times;</button>
+    </div>
+
+    <div class="picker-body">
+      {{-- Search bar & Loader --}}
+      <div class="picker-search-bar">
+        <div class="picker-search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          <input type="text" id="pickerSearchInput" placeholder="Cari nama barang, kode barang, NUP, merek, atau lokasi..." oninput="handlePickerSearch(this.value)">
+          <button type="button" class="picker-search-clear" id="pickerSearchClear" onclick="clearPickerSearch()" style="display:none;" title="Hapus pencarian">&times;</button>
+        </div>
+        <div id="pickerLoading" class="picker-loader" style="display:none;">
+          <div class="spinner-small"></div>
+          <span>Mencari data...</span>
+        </div>
+      </div>
+
+      {{-- Table --}}
+      <div class="picker-table-wrap">
+        <table class="picker-table">
+          <thead>
+            <tr>
+              <th style="width: 42px; text-align:center;">No</th>
+              <th style="width: 130px;">Kode Barang</th>
+              <th style="width: 65px;">NUP</th>
+              <th>Nama Barang</th>
+              <th>Lokasi</th>
+              <th style="width: 95px; text-align: center;">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="pickerTableBody">
+            {{-- Data dimasukkan secara dinamis via JavaScript --}}
+          </tbody>
+        </table>
+      </div>
+
+      {{-- Footer & Pagination --}}
+      <div class="picker-footer">
+        <div class="picker-count" id="pickerCountText">Memuat data barang...</div>
+        <div class="picker-pagination" id="pickerPagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- TOAST NOTIFIKASI PILIH BARANG --}}
+<div class="picker-toast" id="pickerToast">
+  <svg width="18" height="18" fill="none" stroke="#10b981" viewBox="0 0 24 24" stroke-width="2.5">
+    <path d="M20 6L9 17l-5-5"/>
+  </svg>
+  <span id="pickerToastText">Barang berhasil dipilih!</span>
 </div>
 
 {{-- ============================================================ --}}
@@ -985,6 +1398,226 @@ document.getElementById('crudModal').addEventListener('click', function (e) {
 });
 document.getElementById('detailModal').addEventListener('click', function (e) {
   if (e.target === this) closeDetailModal();
+});
+
+/* ============================================================ */
+/*  POPUP PILIH BARANG (ASET TETAP) LOGIC                       */
+/* ============================================================ */
+let pickerSearchTimer = null;
+let pickerCurrentPage = 1;
+let pickerCurrentQuery = '';
+let pickerDataLoaded = false;
+
+function openPilihBarangModal() {
+  const modal = document.getElementById('pilihBarangModal');
+  modal.classList.add('open');
+
+  const searchInput = document.getElementById('pickerSearchInput');
+  setTimeout(() => { searchInput.focus(); }, 100);
+
+  if (!pickerDataLoaded || searchInput.value.trim() !== '') {
+    fetchBarangList(1);
+  }
+}
+
+function closePilihBarangModal() {
+  document.getElementById('pilihBarangModal').classList.remove('open');
+}
+
+function handlePickerSearch(val) {
+  const clearBtn = document.getElementById('pickerSearchClear');
+  clearBtn.style.display = val ? 'block' : 'none';
+
+  clearTimeout(pickerSearchTimer);
+  pickerSearchTimer = setTimeout(() => {
+    pickerCurrentQuery = val.trim();
+    fetchBarangList(1);
+  }, 300);
+}
+
+function clearPickerSearch() {
+  const input = document.getElementById('pickerSearchInput');
+  input.value = '';
+  document.getElementById('pickerSearchClear').style.display = 'none';
+  pickerCurrentQuery = '';
+  fetchBarangList(1);
+  input.focus();
+}
+
+function fetchBarangList(page = 1) {
+  pickerCurrentPage = page;
+  const loader = document.getElementById('pickerLoading');
+  const tbody  = document.getElementById('pickerTableBody');
+  const countEl= document.getElementById('pickerCountText');
+  const pagEl  = document.getElementById('pickerPagination');
+
+  loader.style.display = 'flex';
+
+  const url = `{{ route('adminsarpras.kerusakan.pilih-barang') }}?q=${encodeURIComponent(pickerCurrentQuery)}&page=${page}`;
+
+  fetch(url)
+    .then(res => {
+      if (!res.ok) throw new Error('Network error');
+      return res.json();
+    })
+    .then(data => {
+      loader.style.display = 'none';
+      pickerDataLoaded = true;
+
+      const items = data.items || [];
+      const total = data.total || 0;
+      const lastPage = data.last_page || 1;
+      const startNum = ((page - 1) * data.per_page) + 1;
+      const endNum = Math.min(page * data.per_page, total);
+
+      if (total === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 40px 16px; color: var(--text-tertiary);">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:8px; display:inline-block;">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <div style="font-weight: 600; color: var(--text-secondary); font-size: 14px;">Barang tidak ditemukan</div>
+              <div style="font-size: 12px; margin-top: 4px;">Coba gunakan kata kunci lain atau periksa kembali ejaan.</div>
+            </td>
+          </tr>
+        `;
+        countEl.textContent = 'Tidak ada barang yang cocok';
+        pagEl.innerHTML = '';
+        return;
+      }
+
+      countEl.textContent = `Menampilkan ${startNum}–${endNum} dari ${total.toLocaleString('id-ID')} barang aset`;
+
+      // Render rows
+      let html = '';
+      items.forEach((item, index) => {
+        const rowNum = startNum + index;
+        const itemJson = JSON.stringify(item).replace(/"/g, '&quot;');
+        const badgeSudahAda = item.sudah_ada 
+          ? `<span style="font-size:10px; background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:1px 6px; border-radius:4px; margin-left:6px; font-weight:600;">Sudah Dicatat</span>` 
+          : '';
+
+        html += `
+          <tr>
+            <td style="text-align: center; color: var(--text-tertiary); font-weight: 600;">${rowNum}</td>
+            <td>
+              <span style="font-family: monospace; font-size: 11.5px; font-weight: 700; background: var(--bg); padding: 3px 7px; border-radius: 6px; border: 1px solid var(--border); color: var(--text-secondary); display: inline-block;">
+                ${escapeHtml(item.kode_barang)}
+              </span>
+            </td>
+            <td style="color: var(--text-secondary); font-weight: 600; font-size: 12.5px;">${item.nup || '—'}</td>
+            <td>
+              <div style="font-weight: 600; color: var(--text-primary); font-size: 13.5px;">
+                ${escapeHtml(item.nama_barang)}
+                ${badgeSudahAda}
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center; margin-top: 3px; flex-wrap: wrap;">
+                ${item.merek ? `<span class="picker-tag">Merek: ${escapeHtml(item.merek)}</span>` : ''}
+                ${item.kategori ? `<span class="picker-tag" style="background:#eef2ff; color:#3b6bda;">${escapeHtml(item.kategori)}</span>` : ''}
+              </div>
+            </td>
+            <td style="color: var(--text-secondary); font-size: 12.5px;">
+              ${item.lokasi ? `<span style="display:flex;align-items:center;gap:4px;"><svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>${escapeHtml(item.lokasi)}</span>` : '—'}
+            </td>
+            <td style="text-align: center;">
+              <button type="button" class="btn-choose" onclick='pilihBarangItem(${itemJson})' title="Pilih barang ini">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                Pilih
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+
+      // Render pagination
+      renderPickerPagination(page, lastPage);
+    })
+    .catch(err => {
+      loader.style.display = 'none';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="text-align: center; padding: 25px; color: var(--danger);">
+            Gagal memuat data barang. Silakan periksa koneksi atau coba lagi.
+          </td>
+        </tr>
+      `;
+      countEl.textContent = 'Gagal memuat data';
+      pagEl.innerHTML = '';
+      console.error(err);
+    });
+}
+
+function renderPickerPagination(current, last) {
+  const pagEl = document.getElementById('pickerPagination');
+  if (last <= 1) {
+    pagEl.innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  html += `<button type="button" class="picker-page-btn" ${current === 1 ? 'disabled' : ''} onclick="fetchBarangList(${current - 1})">&laquo; Prev</button>`;
+
+  // Tampilkan max 5 halaman
+  let start = Math.max(1, current - 2);
+  let end = Math.min(last, start + 4);
+  if (end - start < 4) start = Math.max(1, end - 4);
+
+  for (let p = start; p <= end; p++) {
+    html += `<button type="button" class="picker-page-btn ${p === current ? 'active' : ''}" onclick="fetchBarangList(${p})">${p}</button>`;
+  }
+
+  html += `<button type="button" class="picker-page-btn" ${current === last ? 'disabled' : ''} onclick="fetchBarangList(${current + 1})">Next &raquo;</button>`;
+  pagEl.innerHTML = html;
+}
+
+function pilihBarangItem(item) {
+  // Masukkan nilai ke form
+  const inputNama = document.getElementById('nama_barang');
+  const inputKode = document.getElementById('kode_barang');
+  const inputNup  = document.getElementById('nup');
+  const inputLok  = document.getElementById('lokasi');
+
+  inputNama.value = item.nama_barang || '';
+  inputKode.value = item.kode_barang || '';
+  inputNup.value  = item.nup || '';
+  inputLok.value  = item.lokasi || '';
+
+  // Efek highlight
+  [inputNama, inputKode, inputNup, inputLok].forEach(el => {
+    el.classList.remove('field-highlight');
+    void el.offsetWidth; // trigger reflow
+    el.classList.add('field-highlight');
+  });
+
+  closePilihBarangModal();
+  showPickerToast(`Barang "${item.nama_barang}" berhasil dipilih!`);
+}
+
+function showPickerToast(msg) {
+  const toast = document.getElementById('pickerToast');
+  const toastText = document.getElementById('pickerToastText');
+  toastText.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3200);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/* Close picker modal on backdrop click */
+document.getElementById('pilihBarangModal').addEventListener('click', function (e) {
+  if (e.target === this) closePilihBarangModal();
 });
 </script>
 

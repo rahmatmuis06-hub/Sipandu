@@ -158,83 +158,85 @@
         @csrf
         <div class="form-body">
           
-          <div class="form-group">
-            <div class="form-label"><i class="fas fa-box"></i> Pilih Barang <span class="req">*</span></div>
-            
-            <select class="form-select @error('kode_barang') border-red-500 @enderror" 
-                    name="persediaan_id" id="persediaanSelect" required>
-              <option value="">📦 Ketik untuk mencari barang persediaan...</option>
-              @foreach($persediaan as $item)
-                <option value="{{ $item-> id }}" 
-                        data-kode="{{ $item ->kode_barang }}"
-                        data-nama="{{ $item->nama_barang }}" 
-                        data-kategori="{{ $item->kategori ?? 'Umum' }}"
-                        data-satuan="{{ $item->satuan }}"
-                        data-stok="{{ $item->jumlah }}">
-                  {{ $item->kode_barang }} - {{ $item->nama_barang }} (Satuan: {{ $item->satuan }}) (Stok: {{ number_format($item->jumlah) }})
-                </option>
-              @endforeach
-            </select>
-            @error('persediaan_id')
-              <div style="font-size:11px;margin-top:4px;color:var(--danger)">{{ $message }}</div>
-            @enderror
-            
-            <div class="facility-preview" id="facilityPreview">
-              <div class="fp-icon" id="fpIcon"><i class="fas fa-box"></i></div>
-              <div>
-                <div class="fp-name" id="fpName">-</div>
-                <div class="fp-details">
-                  <span class="fp-tag" id="fpKode">-</span>
-                  <span class="fp-tag" id="fpSatuan" style="background:rgba(59,130,246,0.1);color:var(--primary)">-</span>
-                  <span class="fp-tag" id="fpStok" style="background:rgba(16,185,129,0.1);color:var(--success)">-</span>
+          <!-- PEMILIHAN BARANG PERSEDIAAN (BISA MULTI-ITEM) -->
+          <div style="background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 12px; padding: 16px; margin-bottom: 18px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+              <i class="fas fa-plus-circle" style="color: var(--primary);"></i> Pilih Barang Persediaan
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <div class="form-label"><i class="fas fa-box"></i> Pilih Barang</div>
+              <select class="form-select" id="persediaanSelect">
+                <option value="">📦 Ketik untuk mencari barang persediaan...</option>
+                @foreach($persediaan as $item)
+                  <option value="{{ $item->id }}" 
+                          data-kode="{{ $item->kode_barang }}"
+                          data-nama="{{ $item->nama_barang }}" 
+                          data-kategori="{{ $item->kategori ?? 'Umum' }}"
+                          data-satuan="{{ $item->satuan }}"
+                          data-stok="{{ $item->jumlah }}">
+                    {{ $item->kode_barang }} - {{ $item->nama_barang }} (Satuan: {{ $item->satuan }}) (Stok: {{ number_format($item->jumlah) }})
+                  </option>
+                @endforeach
+              </select>
+              
+              <div class="facility-preview" id="facilityPreview" style="margin-top: 10px;">
+                <div class="fp-icon" id="fpIcon"><i class="fas fa-box"></i></div>
+                <div>
+                  <div class="fp-name" id="fpName">-</div>
+                  <div class="fp-details">
+                    <span class="fp-tag" id="fpKode">-</span>
+                    <span class="fp-tag" id="fpSatuan" style="background:rgba(59,130,246,0.1);color:var(--primary)">-</span>
+                    <span class="fp-tag" id="fpStok" style="background:rgba(16,185,129,0.1);color:var(--success)">-</span>
+                  </div>
                 </div>
               </div>
             </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+              <div class="form-label"><i class="fas fa-hashtag"></i> Jumlah Diminta</div>
+              <input type="number" class="form-input" id="jumlah_diminta" min="1" max="999999" value="1" placeholder="1">
+              <small id="stok-info" class="text-muted" style="font-size:11px;margin-top:4px;display:block;"></small>
+              <div id="peringatan-stok" style="display: none; font-size:11px;margin-top:4px;color:var(--danger);background:rgba(239,68,68,0.1);padding:6px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.2);">
+                <i class="fas fa-exclamation-triangle" style="font-size:10px;margin-right:4px;"></i>
+                Jumlah permintaan melebihi stok yang tersedia!
+              </div>
+            </div>
+
+            <button type="button" onclick="tambahItemKeDaftarPermintaan()" class="btn" style="background: #EEF2FF; color: var(--primary); border: 1.5px solid #C7D2FE; font-weight: 700; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; transition: all .15s;">
+              <i class="fas fa-cart-plus"></i> + Tambahkan ke Daftar Permintaan
+            </button>
           </div>
 
-          <div class="form-group">
-            <div class="form-label"><i class="fas fa-hashtag"></i> Jumlah Diminta <span class="req">*</span></div>
-            <input type="number" 
-                   class="form-input @error('jumlah_diminta') border-red-500 @enderror" 
-                   name="jumlah_diminta" 
-                   id="jumlah_diminta" 
-                   min="1" 
-                   max="999999"
-                   value="{{ old('jumlah_diminta', 1) }}" 
-                   placeholder="1" 
-                   required>
-            
-            @error('jumlah_diminta')
-              <div class="text-danger" style="font-size:11px;margin-top:4px;color:var(--danger)">{{ $message }}</div>
-            @enderror
-          <small id="stok-info" class="text-muted" style="font-size:11px;margin-top:4px;display:block;"></small>
-            <div id="peringatan-stok" style="display: none; font-size:11px;margin-top:4px;color:var(--danger);background:rgba(239,68,68,0.1);padding:6px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.2);">
-              <i class="fas fa-exclamation-triangle" style="font-size:10px;margin-right:4px;"></i>
-              Jumlah permintaan melebihi stok yang tersedia!
+          <!-- TABEL DAFTAR BARANG PERSEDIAAN YANG DIMINTA -->
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+              <span><i class="fas fa-list-check"></i> Daftar Permintaan Persediaan (<span id="totalItemCountP">0</span> barang)</span>
+              <span style="font-size: 11px; color: var(--muted); font-weight: 400;">Bisa meminta banyak barang persediaan sekaligus</span>
+            </div>
+
+            <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #FFF;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;" id="tabelBarangPermintaan">
+                <thead>
+                  <tr style="background: #F8FAFC; border-bottom: 1px solid var(--border); text-align: left;">
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 35px;">No</th>
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569;">Nama Barang</th>
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569;">Kode</th>
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 80px;">Satuan</th>
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 70px;">Jumlah</th>
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 45px; text-align: center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyBarangPermintaan">
+                  <tr id="emptyRowPermintaan">
+                    <td colspan="6" style="text-align: center; padding: 22px; color: var(--muted); font-style: italic;">
+                      Belum ada barang di daftar. Pilih barang di atas lalu klik "+ Tambahkan ke Daftar Permintaan".
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-
-          <input type="hidden" name="satuan" id="hiddenSatuan" value="">
-          
-          {{-- <div class="form-group">
-              <div class="form-label"><i class="fas fa-balance-scale"></i> Satuan <span class="req">*</span></div>
-              <select class="form-select @error('satuan') border-red-500 @enderror" name="satuan" required>
-                <option value="" disabled selected>-- Pilih Satuan --</option>
-                <option value="Lusin" {{ old('satuan') == 'Lusin' ? 'selected' : '' }}>Lusin</option>
-                <option value="Rim" {{ old('satuan') == 'Rim' ? 'selected' : '' }}>Rim</option>
-                <option value="Buah" {{ old('satuan') == 'Buah' ? 'selected' : '' }}>Buah</option>
-                <option value="Dos" {{ old('satuan') == 'Dos' ? 'selected' : '' }}>Dos</option>
-                <option value="Paket" {{ old('satuan') == 'Paket' ? 'selected' : '' }}>Paket</option>
-                <option value="Pak" {{ old('satuan') == 'Pak' ? 'selected' : '' }}>Pak</option>
-                <option value="Unit" {{ old('satuan') == 'Unit' ? 'selected' : '' }}>Unit</option>
-                <option value="Karton" {{ old('satuan') == 'Karton' ? 'selected' : '' }}>Karton</option>
-                <option value="Box" {{ old('satuan') == 'Box' ? 'selected' : '' }}>Box</option>
-                <option value="Set" {{ old('satuan') == 'Set' ? 'selected' : '' }}>Set</option>
-              </select>
-              @error('satuan')
-                <div class="text-danger" style="font-size:11px;margin-top:4px;color:var(--danger)">{{ $message }}</div>
-              @enderror
-            </div> --}}
           <div class="input-row">
             <div class="form-group">
               <div class="form-label"><i class="fas fa-calendar"></i> Tanggal Permintaan <span class="req">*</span></div>
@@ -437,6 +439,25 @@
               <div id="detailJumlah" style="font-size: 16px; font-weight: 700; color: var(--primary);">-</div>
             </div>
           </div>
+
+          <!-- Rincian Multi-Item Persediaan -->
+          <div id="detailMultiItemsWrapper" style="display: none; margin-top: 16px; border-top: 1px solid #eef1ff; padding-top: 14px;">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 8px;">Daftar Rincian Barang Diminta:</div>
+            <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead style="background: #edf2f7; text-align: left;">
+                  <tr>
+                    <th style="padding: 6px 10px;">No</th>
+                    <th style="padding: 6px 10px;">Nama Barang</th>
+                    <th style="padding: 6px 10px;">Kode</th>
+                    <th style="padding: 6px 10px;">Satuan</th>
+                    <th style="padding: 6px 10px;">Jumlah</th>
+                  </tr>
+                </thead>
+                <tbody id="detailMultiItemsBody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -523,6 +544,107 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
+let daftarPermintaan = [];
+
+function tambahItemKeDaftarPermintaan() {
+  const select = document.getElementById('persediaanSelect');
+  if (!select.value) {
+    alert('Silakan pilih barang persediaan terlebih dahulu!');
+    return;
+  }
+  const selected = select.options[select.selectedIndex];
+  const persediaanId = select.value;
+  const kode = selected.getAttribute('data-kode');
+  const nama = selected.getAttribute('data-nama');
+  const satuan = selected.getAttribute('data-satuan') || 'Unit';
+  const stok = parseInt(selected.getAttribute('data-stok')) || 0;
+  const jumlahInput = document.getElementById('jumlah_diminta');
+  const jumlah = parseInt(jumlahInput.value) || 1;
+
+  if (jumlah <= 0) {
+    alert('Jumlah diminta minimal 1!');
+    return;
+  }
+
+  if (stok > 0 && jumlah > stok) {
+    alert(`Jumlah melebihi stok yang tersedia (${stok} ${satuan})!`);
+    return;
+  }
+
+  const existingIdx = daftarPermintaan.findIndex(item => item.persediaan_id == persediaanId);
+  if (existingIdx !== -1) {
+    if (confirm(`Barang "${nama}" sudah ada di daftar. Apakah Anda ingin memperbarui jumlahnya menjadi ${jumlah} ${satuan}?`)) {
+      daftarPermintaan[existingIdx].jumlah_diminta = jumlah;
+      renderTabelPermintaan();
+    }
+    return;
+  }
+
+  daftarPermintaan.push({
+    persediaan_id: persediaanId,
+    kode_barang: kode,
+    nama_barang: nama,
+    satuan: satuan,
+    jumlah_diminta: jumlah
+  });
+
+  renderTabelPermintaan();
+
+  // Reset form pilihan barang
+  $('#persediaanSelect').val('').trigger('change');
+  jumlahInput.value = 1;
+}
+
+function hapusItemPermintaan(idx) {
+  daftarPermintaan.splice(idx, 1);
+  renderTabelPermintaan();
+}
+
+function renderTabelPermintaan() {
+  const tbody = document.getElementById('tbodyBarangPermintaan');
+  const totalCount = document.getElementById('totalItemCountP');
+  if (totalCount) totalCount.innerText = daftarPermintaan.length;
+
+  if (!tbody) return;
+
+  if (daftarPermintaan.length === 0) {
+    tbody.innerHTML = `
+      <tr id="emptyRowPermintaan">
+        <td colspan="6" style="text-align: center; padding: 22px; color: var(--muted); font-style: italic;">
+          Belum ada barang di daftar. Pilih barang di atas lalu klik "+ Tambahkan ke Daftar Permintaan".
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  let html = '';
+  daftarPermintaan.forEach((item, i) => {
+    html += `
+      <tr style="border-bottom: 1px solid var(--border);">
+        <td style="padding: 10px 12px; font-weight: 700; color: var(--muted);">${i + 1}</td>
+        <td style="padding: 10px 12px;">
+          <div style="font-weight: 700; color: var(--text);">${item.nama_barang}</div>
+          <input type="hidden" name="items[${i}][persediaan_id]" value="${item.persediaan_id}">
+          <input type="hidden" name="items[${i}][kode_barang]" value="${item.kode_barang}">
+          <input type="hidden" name="items[${i}][nama_barang]" value="${item.nama_barang}">
+          <input type="hidden" name="items[${i}][satuan]" value="${item.satuan}">
+          <input type="hidden" name="items[${i}][jumlah_diminta]" value="${item.jumlah_diminta}">
+        </td>
+        <td style="padding: 10px 12px; font-family: monospace; font-size: 11.5px; color: #1E293B;">${item.kode_barang}</td>
+        <td style="padding: 10px 12px; color: var(--primary); font-weight: 600;">${item.satuan}</td>
+        <td style="padding: 10px 12px; font-weight: 700; color: #10B981;">${item.jumlah_diminta}</td>
+        <td style="padding: 10px 12px; text-align: center;">
+          <button type="button" onclick="hapusItemPermintaan(${i})" style="background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Hapus dari daftar">
+            <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
 class PermintaanController {
   constructor() {
     this.currentStok = 0;
@@ -678,28 +800,21 @@ class PermintaanController {
   }
 
   handleFormSubmit(e) {
-    const persediaanSelect = document.getElementById('persediaanSelect');
-    const jumlahInput = document.getElementById('jumlah_diminta');
-    
-    if (!persediaanSelect?.value) {
-      e.preventDefault();
-      this.showToast('❌ Silakan pilih barang terlebih dahulu!', 'error');
-      // Fokus ke search box Select2
-      $('#persediaanSelect').select2('open');
-      return false;
-    }
-    
-    const jumlah = parseInt(jumlahInput?.value) || 0;
-    if (jumlah > this.currentStok || this.currentStok === 0) {
-      e.preventDefault();
-      this.showToast(`❌ Jumlah ${jumlah.toLocaleString()} melebihi stok ${this.currentStok.toLocaleString()}!`, 'error');
-      jumlahInput?.focus();
-      return false;
+    if (daftarPermintaan.length === 0) {
+      const persediaanSelect = document.getElementById('persediaanSelect');
+      if (persediaanSelect && persediaanSelect.value) {
+        tambahItemKeDaftarPermintaan();
+      } else {
+        e.preventDefault();
+        this.showToast('❌ Silakan tambahkan minimal 1 barang persediaan ke daftar permintaan!', 'error');
+        $('#persediaanSelect').select2('open');
+        return false;
+      }
     }
     
     const submitBtn = document.getElementById('submitBtn');
     if (submitBtn) {
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim Permintaan...';
       submitBtn.disabled = true;
     }
   }
@@ -859,7 +974,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('detailKategori').textContent = data.persediaan?.kategori || 'Umum';
     document.getElementById('detailJumlah').textContent = data.jumlah_diminta + ' ' + (data.satuan || 'Unit');
     
-    document.getElementById('detailTglPermintaan').textContent = data.tanggal_permintaan ? new Date(data.tanggal_permintaan).toLocaleDateString('id-ID') : '-';
+    // Multi-item persediaan rincian
+    const multiWrap = document.getElementById('detailMultiItemsWrapper');
+    const multiBody = document.getElementById('detailMultiItemsBody');
+    if (multiWrap && multiBody) {
+      if (data.items && data.items.length > 0) {
+        let mRows = '';
+        data.items.forEach((it, idx) => {
+          mRows += `
+            <tr style="border-bottom: 1px solid #eef1ff;">
+              <td style="padding: 6px 10px;">${idx + 1}</td>
+              <td style="padding: 6px 10px; font-weight: 600;">${it.nama_barang}</td>
+              <td style="padding: 6px 10px; font-family: monospace;">${it.kode_barang}</td>
+              <td style="padding: 6px 10px;">${it.satuan || '-'}</td>
+              <td style="padding: 6px 10px; font-weight: 700; color: var(--primary);">${it.jumlah_diminta}</td>
+            </tr>
+          `;
+        });
+        multiBody.innerHTML = mRows;
+        multiWrap.style.display = 'block';
+      } else {
+        multiWrap.style.display = 'none';
+      }
+    }
+
+    if (data.tanggal_permintaan) {
+      const dt = new Date(data.tanggal_permintaan);
+      document.getElementById('detailTglPermintaan').textContent = isNaN(dt.getTime()) ? data.tanggal_permintaan : dt.toLocaleDateString('id-ID');
+    } else {
+      document.getElementById('detailTglPermintaan').textContent = '-';
+    }
     
     document.getElementById('detailTujuan').textContent = data.tujuan_penggunaan || '-';
     
@@ -884,9 +1028,14 @@ document.addEventListener('DOMContentLoaded', () => {
       komentarWrap.style.display = 'block';
     }
     
-    document.getElementById('detailCreatedAt').textContent = data.created_at ? new Date(data.created_at).toLocaleDateString('id-ID', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
-    }) : '-';
+    if (data.created_at) {
+      const dc = new Date(data.created_at);
+      document.getElementById('detailCreatedAt').textContent = isNaN(dc.getTime()) ? data.created_at : dc.toLocaleDateString('id-ID', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    } else {
+      document.getElementById('detailCreatedAt').textContent = '-';
+    }
     
     const suratLink = document.getElementById('detailSuratLink');
     if (data.surat_bast_path) {

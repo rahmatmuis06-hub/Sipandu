@@ -76,6 +76,24 @@
             margin-bottom: 5px;
         }
 
+        .table-list-barang {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            margin-bottom: 6px;
+            font-size: 8.5pt;
+        }
+        .table-list-barang th, .table-list-barang td {
+            border: 1px solid #333;
+            padding: 3px 5px;
+            vertical-align: middle;
+        }
+        .table-list-barang th {
+            background-color: #f1f5f9;
+            font-weight: bold;
+            text-align: center;
+        }
+
         /* 5. LIST KETENTUAN */
         .ketentuan-list {
             margin-top: 3px;
@@ -138,7 +156,7 @@
         <div class="judul-surat">BERITA ACARA PEMINJAMAN BMN</div>
         @php
             $nomor_urut = str_pad($peminjaman->id, 3, '0', STR_PAD_LEFT);
-            $tahun_surat = \Carbon\Carbon::parse($peminjaman->created_at)->format('Y');
+            $tahun_surat = \Carbon\Carbon::parse($tanggalSurat ?? $peminjaman->created_at)->format('Y');
         @endphp
         <div>No: {{ $nomor_urut }}/LK.01.02/693228/{{ $tahun_surat }}</div>
     </div>
@@ -146,7 +164,7 @@
     <!-- PEMBUKA -->
     <div class="text-justify mb-10">
         @php
-          $tgl = $peminjaman->created_at ?? now();
+          $tgl = $tanggalSurat ?? $peminjaman->created_at ?? now();
           $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
           $tanggal_teks = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('D');
           $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');
@@ -218,41 +236,50 @@
         <b>PIHAK PERTAMA</b> telah menyerahkan kepada <b>PIHAK KEDUA</b> Barang Milik Negara (BMN) sesuai spesifikasi sebagai berikut :
     </div>
 
-    <!-- DATA BARANG -->
-    <table class="table-barang">
+    <!-- DATA BARANG (TABEL DAFTAR BARANG) -->
+    <table class="table-list-barang">
+        <thead>
+            <tr>
+                <th style="width: 25px;">No</th>
+                <th>Nama Barang</th>
+                <th style="width: 105px;">Kode Barang</th>
+                <th style="width: 55px;">NUP</th>
+                <th style="width: 90px;">Merek/Type</th>
+                <th style="width: 55px;">Jumlah</th>
+                <th style="width: 55px;">Kondisi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(isset($peminjaman->items) && $peminjaman->items->count() > 0)
+                @foreach($peminjaman->items as $idx => $it)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td>{{ $it->nama_barang }}</td>
+                        <td class="text-center">{{ $it->kode_barang }}</td>
+                        <td class="text-center">{{ $it->nup ?? '-' }}</td>
+                        <td class="text-center">{{ $it->merek ?? '-' }}</td>
+                        <td class="text-center">{{ $it->jumlah }} Unit</td>
+                        <td class="text-center">Baik</td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td class="text-center">1</td>
+                    <td>{{ $peminjaman->nama_barang }}</td>
+                    <td class="text-center">{{ $peminjaman->kode_barang }}</td>
+                    <td class="text-center">{{ $peminjaman->nup ?? '-' }}</td>
+                    <td class="text-center">{{ $peminjaman->merek ?? '-' }}</td>
+                    <td class="text-center">{{ $peminjaman->jumlah }} Unit</td>
+                    <td class="text-center">Baik</td>
+                </tr>
+            @endif
+        </tbody>
+    </table>
+
+    <table style="width: 100%; margin-bottom: 5px; font-size: 9pt;">
         <tr>
-            <td class="td-label">Kode Barang</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->kode_barang }}</td>
-        </tr>
-        <tr>
-            <td>Nama Barang</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->nama_barang }}</td>
-        </tr>
-        <tr>
-            <td>Merek/Type</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->merek ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td>NUP</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->nup ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td>Jumlah</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjaman->jumlah }} Unit</td>
-        </tr>
-        <tr>
-            <td>Kondisi</td>
-            <td class="td-titikdua">:</td>
-            <td>Baik</td>
-        </tr>
-        <tr>
-            <td>Peruntukan</td>
-            <td class="td-titikdua">:</td>
+            <td style="width: 75px; font-weight: bold;">Peruntukan</td>
+            <td style="width: 15px; text-align: center;">:</td>
             <td>{{ $peminjaman->deskripsi_peruntukan }}</td>
         </tr>
     </table>

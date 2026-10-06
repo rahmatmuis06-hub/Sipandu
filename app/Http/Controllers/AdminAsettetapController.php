@@ -1,4 +1,4 @@
-<?php
+.<?php
 
 namespace App\Http\Controllers;
 
@@ -109,21 +109,33 @@ class AdminAsettetapController extends Controller
         ]);
 
         try {
-            Excel::import(new AsetTetapImport, $request->file('file_excel'));
+            $import = new AsetTetapImport();
+            Excel::import($import, $request->file('file_excel'));
 
-            return redirect()->route('adminasettetap.data-aset-tetap')
-                ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
+            $total = $import->insertedCount + $import->updatedCount;
+            if ($total === 0) {
+                if (!empty($import->lastError)) {
+                    return back()->with('error', 'Gagal menyimpan baris data ke database: ' . $import->lastError);
+                } elseif ($import->rowsCount === 0) {
+                    return back()->with('error', 'File Excel terbaca kosong (0 baris data). Pastikan data berada di Sheet pertama (Sheet 1) dan bukan di Sheet 2.');
+                } else {
+                    $keys = !empty($import->debugKeys) ? implode(', ', $import->debugKeys) : 'tidak ada';
+                    return back()->with('error', "Terbaca {$import->rowsCount} baris di Excel, tetapi tidak ada nama barang yang valid. Kolom terbaca: [{$keys}].");
+                }
+            }
+
+            $pesan = "Berhasil memproses {$total} data aset tetap ({$import->insertedCount} baru ditambahkan, {$import->updatedCount} diperbarui)";
+            if ($import->skippedCount > 0) {
+                $pesan .= ", {$import->skippedCount} baris kosong/tidak valid dilewati";
+            }
+            $pesan .= "!";
+
+            return redirect()->route('adminasettetap.data-aset-tetap')->with('success', $pesan);
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            // Menangkap error jika header file Excel tidak sesuai standar
             return back()->with('error', 'Gagal mengimpor file! Pastikan format tabel sesuai dengan template.');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
-
-        
-
-    return redirect()->route('adminasettetap.data-aset-tetap')
-        ->with('success', 'Data Aset Tetap berhasil diimport secara massal!');
     }
 
     // ========== CREATE ==========
@@ -132,9 +144,67 @@ class AdminAsettetapController extends Controller
         return view('adminasettetap.data_asettetap_create');
     }
 
-    // ========== w2 DATA ASET TETAP (Method yang hilang) ==========
+    // ========== DATA ASET TETAP - STORE (Multi-Item Supported) ==========
     public function storeDataAsetTetap(Request $request)
     {
+        // Cek jika multi-item
+        if ($request->has('items') && is_array($request->items)) {
+            $request->validate([
+                'tanggal_input' => 'required|date|before_or_equal:today',
+                'items' => 'required|array|min:1',
+                'items.*.kode_barang' => 'required|string|max:50',
+                'items.*.nup' => 'nullable|string|max:50',
+                'items.*.nama_barang' => 'required|string|max:255',
+                'items.*.merek' => 'nullable|string|max:100',
+                'items.*.kategori' => 'required|string|max:100',
+                'items.*.tanggal_perolehan' => 'nullable|date',
+                'items.*.nilai_perolehan' => 'nullable|numeric|min:0',
+                'items.*.kondisi' => 'required|in:baik,rusak ringan,rusak berat',
+                'items.*.lokasi' => 'nullable|string|max:100',
+                'items.*.jumlah' => 'required|integer|min:1',
+                'items.*.status' => 'required|in:Tersedia,Keluar,Rusak,Dipinjam',
+                'items.*.nomor_polisi' => 'nullable|string|max:50',
+                'items.*.no_bpkb' => 'nullable|string|max:100',
+                'items.*.nomor_rangka' => 'nullable|string|max:100',
+                'items.*.nomor_mesin' => 'nullable|string|max:100',
+            ]);
+
+            DB::transaction(function () use ($request) {
+                foreach ($request->items as $itemData) {
+                    $aset = AssetTetap::create([
+                        'tanggal_input'     => $request->tanggal_input,
+                        'kode_barang'       => $itemData['kode_barang'],
+                        'nup'               => $itemData['nup'] ?? null,
+                        'nama_barang'       => $itemData['nama_barang'],
+                        'merek'             => $itemData['merek'] ?? null,
+                        'kategori'          => $itemData['kategori'],
+                        'tanggal_perolehan' => $itemData['tanggal_perolehan'] ?? null,
+                        'nilai_perolehan'   => $itemData['nilai_perolehan'] ?? 0,
+                        'kondisi'           => $itemData['kondisi'] ?? 'baik',
+                        'lokasi'            => $itemData['lokasi'] ?? '-',
+                        'jumlah'            => $itemData['jumlah'] ?? 1,
+                        'status'            => $itemData['status'] ?? 'Tersedia',
+                    ]);
+
+                    $kat = strtolower(trim($itemData['kategori']));
+                    if (str_contains($kat, 'kendaraan') || str_contains($kat, 'angkutan bermotor')) {
+                        \App\Models\DetailKendaraan::create([
+                            'aset_tetap_id' => $aset->id,
+                            'nomor_polisi'  => $itemData['nomor_polisi'] ?? null,
+                            'no_bpkb'       => $itemData['no_bpkb'] ?? null,
+                            'nomor_rangka'  => $itemData['nomor_rangka'] ?? null,
+                            'nomor_mesin'   => $itemData['nomor_mesin'] ?? null,
+                        ]);
+                    }
+                }
+            });
+
+            $count = count($request->items);
+            return redirect()->route('adminasettetap.data-aset-tetap')
+                ->with('success', "Berhasil menambahkan {$count} data aset tetap!");
+        }
+
+        // Single item fallback
         $validated = $request->validate([
             'tanggal_input' => 'required|date|before_or_equal:today',
             'kode_barang' => 'required|string|max:50',
@@ -143,9 +213,9 @@ class AdminAsettetapController extends Controller
             'merek' => 'nullable|string|max:100',
             'kategori' => 'required|string|max:100',
             'tanggal_perolehan' => 'nullable|date',
-            'nilai_perolehan' => 'required|numeric|min:0',
+            'nilai_perolehan' => 'nullable|numeric|min:0',
             'kondisi' => 'required|in:baik,rusak ringan,rusak berat',
-            'lokasi' => 'required|string|max:100',
+            'lokasi' => 'nullable|string|max:100',
             'jumlah' => 'required|integer|min:1',
             'status' => 'required|in:Tersedia,Keluar,Rusak,Dipinjam',
             'nomor_polisi' => 'nullable|string|max:50',
@@ -154,15 +224,21 @@ class AdminAsettetapController extends Controller
             'nomor_mesin' => 'nullable|string|max:100',
         ]);
 
-        
-        // 1. Simpan Data Aset Tetap Utama
-        $aset = AssetTetap::create($request->only([
-            'tanggal_input', 'kode_barang', 'nup', 'nama_barang', 'merek', 
-            'kategori', 'tanggal_perolehan', 'nilai_perolehan', 'kondisi', 
-            'lokasi', 'jumlah', 'status'
-        ]));
+        $aset = AssetTetap::create([
+            'tanggal_input'     => $request->tanggal_input,
+            'kode_barang'       => $request->kode_barang,
+            'nup'               => $request->nup,
+            'nama_barang'       => $request->nama_barang,
+            'merek'             => $request->merek,
+            'kategori'          => $request->kategori,
+            'tanggal_perolehan' => $request->tanggal_perolehan,
+            'nilai_perolehan'   => $request->nilai_perolehan ?? 0,
+            'kondisi'           => $request->kondisi,
+            'lokasi'            => $request->lokasi ?? '-',
+            'jumlah'            => $request->jumlah,
+            'status'            => $request->status,
+        ]);
 
-        // 2. LOGIKA PENYIMPANAN DETAIL KENDARAAN (Tambahkan blok ini)
         $kat = strtolower(trim($request->kategori));
         if (str_contains($kat, 'kendaraan') || str_contains($kat, 'angkutan bermotor')) {
             \App\Models\DetailKendaraan::create([
@@ -170,10 +246,9 @@ class AdminAsettetapController extends Controller
                 'nomor_polisi'   => $request->nomor_polisi,
                 'no_bpkb'        => $request->no_bpkb,
                 'nomor_rangka'   => $request->nomor_rangka,
-            'nomor_mesin'    => $request->nomor_mesin,
-        ]);
-    }
-        AssetTetap::create($validated);
+                'nomor_mesin'    => $request->nomor_mesin,
+            ]);
+        }
 
         return redirect()->route('adminasettetap.data-aset-tetap')
             ->with('success', 'Aset tetap berhasil ditambahkan!');
@@ -1010,7 +1085,7 @@ class AdminAsettetapController extends Controller
     // Tampilan Peminjaman Barang Admin
     public function PeminjamanBarang(Request $request)
     {
-        $query = PeminjamanBarang::with(['user'])
+        $query = PeminjamanBarang::with(['user', 'items'])
             ->when($request->search, function ($q, $search) {
                 $q->where('kode_barang', 'like', "%{$search}%")
                     ->orWhere('nama_barang', 'like', "%{$search}%")
@@ -1038,75 +1113,33 @@ class AdminAsettetapController extends Controller
     // Aksi: Teruskan / Tolak Permintaan
     public function reviewPeminjaman(Request $request, $id)
     {
-        $peminjaman = PeminjamanBarang::findOrFail($id);
+        try {
+            $peminjaman = PeminjamanBarang::findOrFail($id);
 
-        if ($request->action == 'teruskan') {
-            // 🔥 KITA UBAH CARANYA JADI MANUAL SEPERTI INI (Pasti Tembus)
-            $peminjaman->status = 'diteruskan_kasubag';
-            $peminjaman->reviewed_by_adminasettetap_id = auth()->id();
-            $peminjaman->diteruskan_ke_kasubag_date = now();
-            $peminjaman->save(); // Simpan paksa ke database
+            if ($request->action == 'teruskan' || $request->action == 'setuju') {
+                // Diteruskan ke Kasubag untuk persetujuan
+                $peminjaman->status = 'diteruskan_kasubag';
+                $peminjaman->reviewed_by_adminasettetap_id = auth()->id();
+                $peminjaman->diteruskan_ke_kasubag_date = now();
+                $peminjaman->save();
 
-            $pesan = 'Peminjaman diteruskan ke Kasubag untuk persetujuan.';
-            // --- 1. NOTIFIKASI KE KASUBAG 
-            $kasubag = User::where('role', 'kasubag')->first();
-            if ($kasubag && $kasubag->nomor_telepon) {
-                $namaPegawai = $peminjaman->user->name ?? 'Pegawai';
+                $pesan = 'Peminjaman barang berhasil diteruskan ke Kasubag untuk persetujuan.';
+            } elseif ($request->action == 'tolak') {
+                $peminjaman->status = 'ditolak';
+                $peminjaman->reviewed_by_adminasettetap_id = auth()->id();
+                $peminjaman->komentar = $request->komentar;
+                $peminjaman->save();
 
-                // Detail Pesan ke Kasubag
-                $pesanWa = "*Persetujuan Peminjaman BARANG*\n\n";
-                $pesanWa .= "Yth. Kasubag,\n";
-                $pesanWa .= "Admin Aset Tetap meneruskan permintaan peminjaman barang untuk disetujui:\n\n";
-                $pesanWa .= "👤 *Pemohon:* {$namaPegawai}\n";
-                $pesanWa .= "📦 *Barang:* {$peminjaman->nama_barang}\n";
-                $pesanWa .= "🔢 *Jumlah:* {$peminjaman->jumlah}\n";
-                $pesanWa .= "📅 *Tgl Pinjam:* {$peminjaman->tanggal_peminjaman}\n";
-                $pesanWa .= "📝 *Keperluan:* {$peminjaman->deskripsi_peruntukan}\n\n";
-                $pesanWa .= "Silakan login ke sistem untuk memberikan persetujuan akhir.";
-
-                $noHpKasubag = preg_replace('/[^0-9]/', '', $kasubag->nomor_telepon);
-                SendFonnteNotification::dispatch($noHpKasubag, $pesanWa);
+                $pesan = 'Peminjaman berhasil ditolak.';
+            } else {
+                return back()->with('error', 'Aksi tidak valid.');
             }
-            // --- 2.  NOTIFIKASI INFO KE PEGAWAI ---
-            $pegawai = $peminjaman->user;
-            if ($pegawai && $pegawai->nomor_telepon) {
-                $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
 
-                $pesanWaPegawai = "*Status Peminjaman Barang*\n\n";
-                $pesanWaPegawai .= "Halo {$pegawai->name},\n";
-                $pesanWaPegawai .= "Pengajuan peminjaman barang Anda telah diverifikasi oleh Admin dan *sedang diteruskan ke Kasubag* untuk proses persetujuan akhir.\n\n";
-                $pesanWaPegawai .= "📦 *Barang:* {$peminjaman->nama_barang}\n";
-                $pesanWaPegawai .= "Kami akan mengabari Anda kembali setelah ada keputusan dari Kasubag. Terima kasih.";
-
-                SendFonnteNotification::dispatch($noHpPegawai, $pesanWaPegawai);
-            }
-        } elseif ($request->action == 'tolak') {
-            // 🔥 CARA MANUAL UNTUK TOLAK
-            $peminjaman->status = 'ditolak';
-            $peminjaman->reviewed_by_adminasettetap_id = auth()->id();
-            $peminjaman->komentar = $request->komentar;
-            $peminjaman->save(); // Simpan paksa ke database
-
-            $pesan = 'Peminjaman berhasil ditolak.';
-
-            $pegawai = $peminjaman->user;
-            if ($pegawai && $pegawai->nomor_telepon) {
-
-                // Detail Pesan Penolakan ke Pegawai
-                $pesanWa = "*Peminjaman DITOLAK Admin*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Maaf, pengajuan peminjaman barang Anda telah *ditolak* oleh Admin.\n\n";
-                $pesanWa .= "📦 *Barang:* {$peminjaman->nama_barang}\n";
-                $pesanWa .= "📅 *Tgl Pinjam:* {$peminjaman->tanggal_peminjaman}\n";
-                $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar ?? '-') . "\n\n";
-                $pesanWa .= "Silakan hubungi Admin Aset Tetap jika ada pertanyaan lebih lanjut.";
-
-                $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
-                SendFonnteNotification::dispatch($noHpPegawai, $pesanWa);
-            }
+            return back()->with('success', $pesan);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Gagal review peminjaman barang: ' . $e->getMessage());
+            return back()->with('error', 'Gagal memproses peminjaman: ' . $e->getMessage());
         }
-
-        return back()->with('success', $pesan);
     }
 
     // Aksi: Upload Surat BAST
@@ -1141,8 +1174,15 @@ class AdminAsettetapController extends Controller
     }
 
     // Method untuk Generate/Print Surat Peminjaman
-    public function generateSuratPeminjaman(PeminjamanBarang $peminjaman)
+    public function generateSuratPeminjaman(Request $request, PeminjamanBarang $peminjaman)
     {
+        if (in_array($peminjaman->status, ['ditolak', 'dibatalkan'])) {
+            return back()->with('error', 'Berita Acara Peminjaman tidak dapat dicetak karena pengajuan berstatus ' . $peminjaman->status . '.');
+        }
+
+        $request->validate(['tanggal_surat' => 'nullable|date']);
+        $tanggalSurat = $request->date('tanggal_surat');
+        $peminjaman->loadMissing(['items', 'user']);
         // 1. Ambil data pihak terkait
         $peminjam = $peminjaman->user; // Pegawai yang meminjam
         $admin = auth()->user(); // Admin yang sedang login dan memproses
@@ -1176,7 +1216,8 @@ class AdminAsettetapController extends Controller
             'ttdPeminjam',
             'ttdAdmin',
             'ttdKasubag',
-            'ttdKepala'
+            'ttdKepala',
+            'tanggalSurat'
         ))->setPaper('a4', 'portrait');
 
         // 5. Download otomatis dengan nama file yang rapi
@@ -1268,8 +1309,10 @@ class AdminAsettetapController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    public function cetakSuratPengembalianBarang($id)
+    public function cetakSuratPengembalianBarang(Request $request, $id)
     {
+        $request->validate(['tanggal_surat' => 'nullable|date']);
+        $tanggalSurat = $request->date('tanggal_surat');
         $pengembalian = PengembalianBarang::with(['peminjamanBarang', 'user', 'adminVerifier'])->findOrFail($id);
 
         // Pastikan status sudah diterima agar bisa dicetak
@@ -1277,7 +1320,7 @@ class AdminAsettetapController extends Controller
             abort(403, 'Hanya pengembalian yang disetujui yang dapat dicetak.');
         }
 
-        $pdf = Pdf::loadView('surat.pengembalian_barang', compact('pengembalian'))->setPaper('a4', 'portrait');
+        $pdf = Pdf::loadView('surat.pengembalian_barang', compact('pengembalian', 'tanggalSurat'))->setPaper('a4', 'portrait');
 
         $fileName = 'Surat_Pengembalian_' . $pengembalian->peminjamanBarang->kode_barang . '.pdf';
         return $pdf->stream($fileName);
@@ -1371,8 +1414,14 @@ class AdminAsettetapController extends Controller
         return back()->with('success', 'Surat persetujuan berhasil diunggah.');
     }
 
-    public function generateSuratPeminjamanKendaraan(PeminjamanKendaraan $peminjaman)
+    public function generateSuratPeminjamanKendaraan(Request $request, PeminjamanKendaraan $peminjaman)
     {
+        if (in_array($peminjaman->status, ['ditolak', 'dibatalkan'])) {
+            return back()->with('error', 'Berita Acara Peminjaman Kendaraan tidak dapat dicetak karena pengajuan berstatus ' . $peminjaman->status . '.');
+        }
+
+        $request->validate(['tanggal_surat' => 'nullable|date']);
+        $tanggalSurat = $request->date('tanggal_surat');
         // 1. Ambil data pihak terkait
         // Data peminjam sudah otomatis terambil dari relasi (jika sudah diset di model)
         $peminjam = $peminjaman->user;
@@ -1407,7 +1456,8 @@ class AdminAsettetapController extends Controller
             'ttdPeminjam',
             'ttdAdmin',
             'ttdKasubag',
-            'ttdKepala'
+            'ttdKepala',
+            'tanggalSurat'
         ))->setPaper('a4', 'portrait');
 
         // 5. Tampilkan PDF (Stream) atau Download Otomatis
@@ -1534,15 +1584,17 @@ class AdminAsettetapController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
-    public function cetakSuratPengembalianKendaraan($id)
+    public function cetakSuratPengembalianKendaraan(Request $request, $id)
     {
+        $request->validate(['tanggal_surat' => 'nullable|date']);
+        $tanggalSurat = $request->date('tanggal_surat');
         $pengembalian = PengembalianKendaraan::with(['peminjamanKendaraan', 'user', 'admin'])->findOrFail($id);
 
         // Ambil data user admin dan kepala dari tabel users
         $admin = auth()->user();
         $kepala = \App\Models\User::where('role', 'kepalabpmp')->first();
 
-        $pdf = Pdf::loadView('surat.pengembalian_kendaraan', compact('pengembalian', 'admin', 'kepala'))
+        $pdf = Pdf::loadView('surat.pengembalian_kendaraan', compact('pengembalian', 'admin', 'kepala', 'tanggalSurat'))
             ->setPaper('a4', 'portrait');
 
         $kodeBarang = $pengembalian->peminjamanKendaraan->nama_barang ?? 'Kendaraan';
@@ -1643,14 +1695,34 @@ class AdminAsettetapController extends Controller
 
     public function laporanTransaksiKeluar(Request $request)
     {
-        $query = TransaksiKeluarAssetTetap::with(['aset', 'penerima'])
-            ->when($request->date_range, function ($q, $range) {
-                [$start, $end] = explode(' - ', $range);
-                $q->whereBetween('tanggal_transaksi', [Carbon::parse($start), Carbon::parse($end)]);
-            });
+        $query = TransaksiKeluarAssetTetap::with(['asetTetap', 'user']);
 
-        $laporanTransaksiKeluar = $query->get();
-        return view('adminasettetap.laporan_transaksikeluar', compact('laporanTransaksiKeluar'));
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_barang', 'like', "%{$search}%")
+                    ->orWhere('nama_barang', 'like', "%{$search}%")
+                    ->orWhere('nup', 'like', "%{$search}%")
+                    ->orWhere('merek', 'like', "%{$search}%")
+                    ->orWhere('nomor_sk', 'like', "%{$search}%")
+                    ->orWhere('lokasi', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('tanggal_input')) {
+            $query->whereDate('tanggal_input', $request->tanggal_input);
+        }
+
+        $totalTransaksi = (clone $query)->count();
+        $totalNilai     = (clone $query)->sum('nilai_perolehan');
+
+        $laporanTransaksiKeluar = $query->orderBy('tanggal_input', 'desc')->paginate(10);
+
+        return view('adminasettetap.laporan_transaksikeluar', compact(
+            'laporanTransaksiKeluar',
+            'totalTransaksi',
+            'totalNilai'
+        ));
     }
 
     public function laporanMutasiAsetTetap(Request $request)

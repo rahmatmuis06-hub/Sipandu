@@ -132,14 +132,14 @@
         <div class="judul-surat">SURAT PERJANJIAN SEWA / PEMINJAMAN FASILITAS</div>
         @php
             $nomor_urut = str_pad($peminjaman->id, 3, '0', STR_PAD_LEFT);
-            $tahun_surat = \Carbon\Carbon::parse($peminjaman->created_at)->format('Y');
+            $tahun_surat = \Carbon\Carbon::parse($tanggalSurat ?? $peminjaman->tanggal_approval ?? $peminjaman->created_at)->format('Y');
         @endphp
         <div>Nomor: {{ $nomor_urut }}/SP.PP/BPMP/{{ $tahun_surat }}</div>
     </div>
 
     @php
         // Menggunakan tanggal disetujuinya dokumen, atau tanggal dibuat jika belum disetujui
-        $tgl = $peminjaman->tanggal_approval ?? $peminjaman->created_at ?? now();
+        $tgl = $tanggalSurat ?? $peminjaman->tanggal_approval ?? $peminjaman->created_at ?? now();
         $hari = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('l');
         $tanggal_teks = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('j');
         $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('F');

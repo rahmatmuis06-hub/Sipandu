@@ -247,11 +247,12 @@
           <a href="#fitur"     class="text-blue-100 hover:text-white text-sm font-medium transition">Fitur</a>
           <a href="#statistik" class="text-blue-100 hover:text-white text-sm font-medium transition">Statistik</a>
           <a href="#fasilitas" class="text-blue-100 hover:text-white text-sm font-medium transition">Fasilitas</a>
+          <a href="#panduan"   class="text-blue-100 hover:text-white text-sm font-medium transition">Panduan</a>
           {{-- <a href="#pengaduan-survey" class="text-blue-100 hover:text-white text-sm font-medium transition">Pengaduan</a> --}}
           <a href="#kontak"    class="text-blue-100 hover:text-white text-sm font-medium transition">Kontak</a>
         </div>
         <div class="flex items-center gap-3">
-          <a href="{{ route('login') }}"    class="text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-white/10 transition">Masuk</a>
+          <a href="{{ route('login', [], false) }}"    class="text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-white/10 transition">Masuk</a>
           <a href="{{ route('register') }}" class="btn-primary text-white text-sm font-semibold px-5 py-2 rounded-lg">Daftar</a>
           <button class="md:hidden text-white" onclick="document.getElementById('mobileMenu').classList.toggle('hidden')">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
@@ -264,10 +265,11 @@
       <a href="#fitur"     class="block py-2 text-blue-100 text-sm" onclick="document.getElementById('mobileMenu').classList.add('hidden')">Fitur</a>
       <a href="#statistik" class="block py-2 text-blue-100 text-sm" onclick="document.getElementById('mobileMenu').classList.add('hidden')">Statistik</a>
       <a href="#fasilitas" class="block py-2 text-blue-100 text-sm" onclick="document.getElementById('mobileMenu').classList.add('hidden')">Fasilitas</a>
+      <a href="#panduan"   class="block py-2 text-blue-100 text-sm" onclick="document.getElementById('mobileMenu').classList.add('hidden')">Panduan</a>
       {{-- <a href="#pengaduan-survey" class="block py-2 text-blue-100 text-sm" onclick="document.getElementById('mobileMenu').classList.add('hidden')">Pengaduan</a> --}}
       <a href="#kontak"    class="block py-2 text-blue-100 text-sm" onclick="document.getElementById('mobileMenu').classList.add('hidden')">Kontak</a>
       <div class="flex gap-2 mt-3 pt-3 border-t border-white/10">
-        <a href="{{ route('login') }}"    class="flex-1 text-center text-white text-sm font-semibold py-2 rounded-lg border border-white/20 hover:bg-white/10 transition">Masuk</a>
+        <a href="{{ route('login', [], false) }}"    class="flex-1 text-center text-white text-sm font-semibold py-2 rounded-lg border border-white/20 hover:bg-white/10 transition">Masuk</a>
         <a href="{{ route('register') }}" class="flex-1 text-center btn-primary text-white text-sm font-semibold py-2 rounded-lg">Daftar</a>
       </div>
     </div>
@@ -293,7 +295,7 @@
           Pendataan dan monitoring BMN (Barang Milik Negara) pada Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo secara digital, transparan, dan akuntabel.
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start anim-fade-up delay-4">
-          <a href="{{ route('login') }}" class="btn-primary text-white font-semibold px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 text-base">
+          <a href="{{ route('login', [], false) }}" class="btn-primary text-white font-semibold px-8 py-3.5 rounded-xl flex items-center justify-center gap-2 text-base">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" x2="3" y1="12" y2="12"/></svg>
             Masuk Sekarang
           </a>
@@ -329,16 +331,16 @@
                   <div class="carousel-modern" id="carousel1">
                       <div class="carousel-modern-inner">
                           <div class="carousel-modern-slide active">
-                            <img src="{{ ('storage/fasilitas/kantor_utama.jpeg') }}" class="w-full h-full object-cover">
+                            <img src="{{ asset('storage/fasilitas/kantor_utama.jpeg') }}" class="w-full h-full object-cover">
                           </div>
                           <div class="carousel-modern-slide">
-                              <img src="{{ ('storage/fasilitas/kantor_ponuwa.jpeg') }}" class="w-full h-full object-cover">
+                              <img src="{{ asset('storage/fasilitas/kantor_ponuwa.jpeg') }}" class="w-full h-full object-cover">
                           </div>
                           <div class="carousel-modern-slide">
-                              <img src="{{ ('storage/fasilitas/gedung_aula.jpeg') }}" class="w-full h-full object-cover">
+                              <img src="{{ asset('storage/fasilitas/gedung_aula.jpeg') }}" class="w-full h-full object-cover">
                           </div>
                           <div class="carousel-modern-slide">
-                              <img src="{{ ('storage/fasilitas/tinelo_1.jpeg') }}" class="w-full h-full object-cover">
+                              <img src="{{ asset('storage/fasilitas/tinelo_1.jpeg') }}" class="w-full h-full object-cover">
                           </div>
                           </div>
                           <button class="carousel-modern-arrow prev" onclick="carouselPrev(this)">‹</button>
@@ -815,6 +817,419 @@
     </div>
   </section> --}}
 
+  <!-- ==================== SECTION PANDUAN PENGGUNAAN ==================== -->
+  <section id="panduan" class="py-20 bg-slate-100/70 border-t border-slate-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Header Section -->
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <div class="inline-flex items-center gap-2 bg-blue-100/80 text-blue-700 rounded-full px-4 py-1.5 mb-4 text-sm font-semibold">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+          <span>Pusat Bantuan &amp; Panduan</span>
+        </div>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-navy-900 tracking-tight mb-4">
+          Panduan Penggunaan &amp; Fungsi Menu
+        </h2>
+        <p class="text-slate-600 text-base md:text-lg leading-relaxed">
+          Pelajari alur operasional, tata cara pengajuan layanan, dan fungsi setiap menu pada SIPANDU BPMP Provinsi Gorontalo.
+        </p>
+      </div>
+
+      <!-- Main Category Tabs -->
+      <div class="flex justify-center mb-8">
+        <div class="inline-flex p-1.5 bg-white rounded-2xl shadow-sm border border-slate-200/80 gap-1 sm:gap-2">
+          <button type="button" onclick="switchGuideMainTab('roles')" id="mainTabBtn-roles" class="px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 bg-navy-900 text-white shadow-md flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Panduan Peran (Role)</span>
+          </button>
+          <button type="button" onclick="switchGuideMainTab('sop')" id="mainTabBtn-sop" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-navy-900 hover:bg-slate-100 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span>Alur Kerja (SOP)</span>
+          </button>
+          <button type="button" onclick="switchGuideMainTab('akses')" id="mainTabBtn-akses" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-navy-900 hover:bg-slate-100 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <span>Akses &amp; Login</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ================= PANDUAN PERAN (ROLES) CONTAINER ================= -->
+      <div id="guideContent-roles" class="bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-lg">
+        
+        <!-- Role Pills Selector -->
+        <div class="mb-8">
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center sm:text-left">Pilih Peran Pengguna:</p>
+          <div class="flex flex-wrap gap-2 justify-center sm:justify-start">
+            <button type="button" onclick="switchRoleGuide('pegawai')" id="roleBtn-pegawai" class="role-pill active px-4 py-2 rounded-xl text-xs md:text-sm font-bold border transition-all duration-200 flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 shadow-sm">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span> Pegawai
+            </button>
+            <button type="button" onclick="switchRoleGuide('tamu')" id="roleBtn-tamu" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Tamu / Eksternal
+            </button>
+            <button type="button" onclick="switchRoleGuide('kasubag')" id="roleBtn-kasubag" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-indigo-600"></span> Kasubag Umum
+            </button>
+            <button type="button" onclick="switchRoleGuide('adminasettetap')" id="roleBtn-adminasettetap" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-orange-500"></span> Admin Aset Tetap
+            </button>
+            <button type="button" onclick="switchRoleGuide('adminpersediaan')" id="roleBtn-adminpersediaan" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-600"></span> Admin Persediaan
+            </button>
+            <button type="button" onclick="switchRoleGuide('adminsarpras')" id="roleBtn-adminsarpras" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-600"></span> Admin Sarpras
+            </button>
+            <button type="button" onclick="switchRoleGuide('kepalabpmp')" id="roleBtn-kepalabpmp" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-purple-600"></span> Kepala BPMP
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. DETAIL PEGAWAI -->
+        <div id="roleDetail-pegawai" class="role-detail-box space-y-6">
+          <div class="bg-blue-50/60 rounded-2xl p-5 border border-blue-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Pegawai BPMP Gorontalo</h3>
+              <p class="text-slate-600 text-sm mt-1">Diberikan kepada seluruh ASN / Pegawai BPMP untuk mengajukan kebutuhan operasional kerja, peminjaman sarana, dan mutasi inventaris.</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
+                <span class="text-blue-600">📦</span> Peminjaman Barang &amp; Kendaraan
+              </h4>
+              <p class="text-slate-500 text-xs">Mengajukan pinjam alat kantor dan mobil/motor dinas untuk perjalanan dinas luar kota/daerah.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
+                <span class="text-emerald-600">📝</span> Permintaan Persediaan (ATK)
+              </h4>
+              <p class="text-slate-500 text-xs">Meminta bahan operasional kantor, kertas, tinta, dan kebutuhan habis pakai unit kerja.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
+                <span class="text-indigo-600">↩️</span> Pengembalian Barang &amp; Armada
+              </h4>
+              <p class="text-slate-500 text-xs">Formulir serah terima pengembalian barang dan input KM akhir serta kondisi kendaraan setelah selesai dinas.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
+                <span class="text-amber-600">📍</span> Ajuan Mutasi Inventaris
+              </h4>
+              <p class="text-slate-500 text-xs">Mengajukan pengalihan tanggung jawab atau perpindahan lokasi fisik aset ruangan.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. DETAIL TAMU -->
+        <div id="roleDetail-tamu" class="role-detail-box hidden space-y-6">
+          <div class="bg-cyan-50/60 rounded-2xl p-5 border border-cyan-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-cyan-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Tamu / Pengguna Eksternal</h3>
+              <p class="text-slate-600 text-sm mt-1">Diberikan kepada masyarakat umum, sekolah, dinas, atau instansi mitra yang ingin menyewa/meminjam fasilitas gedung BPMP.</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-cyan-700">1. Informasi Fasilitas</h4>
+              <p class="text-slate-500 text-xs">Cek kapasitas ruangan, luas, fasilitas pendukung (AC, Proyektor, Sound), dan galeri foto.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-cyan-700">2. Peminjaman Gedung</h4>
+              <p class="text-slate-500 text-xs">Pilih gedung, tanggal kegiatan, kuantitas peserta, dan upload surat permohonan resmi.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-cyan-700">3. Survei Layanan</h4>
+              <p class="text-slate-500 text-xs">Mengisi kuesioner kepuasan pelayanan sarpras pasca penggunaan fasilitas.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. DETAIL KASUBAG -->
+        <div id="roleDetail-kasubag" class="role-detail-box hidden space-y-6">
+          <div class="bg-indigo-50/60 rounded-2xl p-5 border border-indigo-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Kasubag Umum</h3>
+              <p class="text-slate-600 text-sm mt-1">Otorisator penentu persetujuan (*Approval*) berjenjang untuk peminjaman sarana dan pengeluaran barang persediaan kantor.</p>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Barang</h4>
+              <p class="text-slate-500 text-xs">Validasi permohonan pinjam alat kantor dari pegawai (Setujui / Tolak dengan catatan).</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Kendaraan</h4>
+              <p class="text-slate-500 text-xs">Otorisasi peminjaman kendaraan dinas berdasarkan urgensi tugas dan alokasi BBM.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Persediaan</h4>
+              <p class="text-slate-500 text-xs">Otorisasi pengeluaran ATK dan bahan operasional dari gudang logistik.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. DETAIL ADMIN ASET TETAP -->
+        <div id="roleDetail-adminasettetap" class="role-detail-box hidden space-y-6">
+          <div class="bg-orange-50/60 rounded-2xl p-5 border border-orange-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-orange-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Admin Aset Tetap</h3>
+              <p class="text-slate-600 text-sm mt-1">Mengelola siklus hidup lengkap Barang Milik Negara (BMN) dari penerimaan, peminjaman, mutasi, hingga penghapusan.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Master Data Aset</strong>
+              <span class="text-slate-500">Katalog BMN, NUP, Merk, Nilai, Import Excel &amp; Cetak Barcode.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Transaksi Masuk / Keluar</strong>
+              <span class="text-slate-500">Pencatatan pengadaan baru &amp; penghapusan aset rusak/dijual.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Layanan Peminjaman</strong>
+              <span class="text-slate-500">Verifikasi barang/kendaraan, buat BAST &amp; Surat Izin Jalan.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Laporan &amp; Analitik</strong>
+              <span class="text-slate-500">Rekap depresiasi, transaksi keluar, unduh berkas PDF/Excel.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. DETAIL ADMIN PERSEDIAAN -->
+        <div id="roleDetail-adminpersediaan" class="role-detail-box hidden space-y-6">
+          <div class="bg-emerald-50/60 rounded-2xl p-5 border border-emerald-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Admin Persediaan</h3>
+              <p class="text-slate-600 text-sm mt-1">Mengelola logistik habis pakai, ATK, bahan kebersihan,@if(config('features.show_stok_opname')) stok opname berkala,@endif dan penyaluran barang ke unit kerja.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Master Persediaan</strong>
+              <span class="text-slate-500">Katalog barang habis pakai, satuan, harga perolehan, batas minimum.</span>
+            </div>
+            @if(config('features.show_stok_opname'))
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Stok Opname Bulanan</strong>
+              <span class="text-slate-500">Cek fisik gudang bulanan, hitung selisih otomatis, finalisasi opname.</span>
+            </div>
+            @endif
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Masuk &amp; Keluar Gudang</strong>
+              <span class="text-slate-500">Penerimaan dari vendor &amp; pengeluaran logistik operasional kantor.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Laporan Logistik</strong>
+              <span class="text-slate-500">Cetak rekap masuk/keluar &amp; permintaan unit kerja (PDF).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. DETAIL ADMIN SARPRAS -->
+        <div id="roleDetail-adminsarpras" class="role-detail-box hidden space-y-6">
+          <div class="bg-cyan-50/60 rounded-2xl p-5 border border-cyan-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-cyan-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Admin Sarpras</h3>
+              <p class="text-slate-600 text-sm mt-1">Mengelola fasilitas fisik, data gedung, galeri etalase beranda, serta pencatatan dan perbaikan kerusakan sarpras.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-3 gap-3 text-xs">
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Data Gedung &amp; Etalase</strong>
+              <span class="text-slate-500">Kelola master gedung, kapasitas, fasilitas, dan foto galeri landing page.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Pencatatan Kerusakan</strong>
+              <span class="text-slate-500">Input data kerusakan sarana gedung, estimasi biaya, dan vendor teknisi.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Laporan Pemeliharaan</strong>
+              <span class="text-slate-500">Cetak riwayat pemeliharaan dan laporan biaya perbaikan (PDF).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. DETAIL KEPALA BPMP -->
+        <div id="roleDetail-kepalabpmp" class="role-detail-box hidden space-y-6">
+          <div class="bg-purple-50/60 rounded-2xl p-5 border border-purple-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Kepala BPMP</h3>
+              <p class="text-slate-600 text-sm mt-1">Pimpinan eksekutif untuk pengawasan, monitoring neraca BMN, dan pengesahan laporan rekapitulasi instansi.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4 text-xs">
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 text-sm block mb-1">📊 Dashboard Eksekutif</strong>
+              <span class="text-slate-500">Pantauan grafik kondisi aset (Baik/Rusak), kapitalisasi nilai BMN, dan mutasi barang secara real-time.</span>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 text-sm block mb-1">📥 Unduh Laporan Lengkap</strong>
+              <span class="text-slate-500">Download rekapitulasi resmi laporan persediaan, aset tetap, sarpras, hingga laporan gabungan (PDF).</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= ALUR SOP CONTAINER ================= -->
+      <div id="guideContent-sop" class="hidden bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-lg">
+        <div class="grid md:grid-cols-3 gap-6">
+          
+          <!-- SOP 1 -->
+          <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-blue-50/30 flex flex-col">
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center mb-4">1</div>
+            <h4 class="font-bold text-navy-900 text-base mb-2">Pinjam Barang &amp; Kendaraan</h4>
+            <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
+              <li>Pegawai membuat pengajuan di sistem.</li>
+              <li>Admin Aset verifikasi ketersediaan armada/alat.</li>
+              <li>Kasubag Umum menyetujui (*Approve*).</li>
+              <li>Admin Aset cetak BAST / Surat Izin Jalan.</li>
+              <li>Pegawai menggunakan aset dinas.</li>
+              <li>Pegawai serahkan kembali &amp; Admin verifikasi selesai.</li>
+            </ol>
+          </div>
+
+          <!-- SOP 2 -->
+          <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-emerald-50/30 flex flex-col">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center mb-4">2</div>
+            <h4 class="font-bold text-navy-900 text-base mb-2">Permintaan Persediaan (ATK)</h4>
+            <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
+              <li>Pegawai input item &amp; kuantitas ATK.</li>
+              <li>Admin Persediaan cek stok gudang.</li>
+              <li>Kasubag Umum menyetujui penyaluran.</li>
+              <li>Admin Persediaan serah terima barang (stok gudang terpotong otomatis) &amp; cetak BAST.</li>
+            </ol>
+          </div>
+
+          <!-- SOP 3 -->
+          <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-cyan-50/30 flex flex-col">
+            <div class="w-10 h-10 rounded-xl bg-cyan-100 text-cyan-700 font-bold flex items-center justify-center mb-4">3</div>
+            <h4 class="font-bold text-navy-900 text-base mb-2">Peminjaman Gedung (Tamu)</h4>
+            <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
+              <li>Tamu cek fasilitas &amp; daftar akun.</li>
+              <li>Ajukan pinjam gedung (+ upload surat dinas).</li>
+              <li>Admin Sarpras &amp; Kasubag telaah jadwal.</li>
+              <li>Persetujuan terbit &amp; izin pemakaian diberikan.</li>
+            </ol>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ================= AKSES & LOGIN CONTAINER ================= -->
+      <div id="guideContent-akses" class="hidden bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-lg">
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div class="space-y-4">
+            <h3 class="text-2xl font-bold text-navy-900">Cara Masuk &amp; Pendaftaran Akun</h3>
+            <p class="text-slate-600 text-sm leading-relaxed">
+              SIPANDU menggunakan sistem autentikasi pintar yang secara otomatis mengarahkan setiap pengguna ke dashboard perannya masing-masing setelah login berhasil.
+            </p>
+            <div class="space-y-3 text-sm">
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</span>
+                <p class="text-slate-600"><strong class="text-navy-900">Pengguna Terdaftar:</strong> Klik menu <strong>"Masuk"</strong> di navbar, masukkan username dan password Anda.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</span>
+                <p class="text-slate-600"><strong class="text-navy-900">Pengguna Baru / Tamu:</strong> Klik menu <strong>"Daftar"</strong>, isi nama, nomor telepon, username, dan kata sandi baru.</p>
+              </div>
+              <div class="flex items-start gap-3">
+                <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
+                <p class="text-slate-600"><strong class="text-navy-900">Keamanan:</strong> Sistem dilengkapi proteksi rate limiter jika salah kata sandi lebih dari 5 kali berturut-turut.</p>
+              </div>
+            </div>
+            <div class="pt-2 flex gap-3">
+              <a href="{{ route('login', [], false) }}" class="btn-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl inline-flex items-center gap-2">
+                <span>Buka Halaman Masuk</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </a>
+              <a href="{{ route('register') }}" class="border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-semibold px-6 py-2.5 rounded-xl inline-flex items-center gap-2">
+                <span>Daftar Akun Baru</span>
+              </a>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-navy-900 to-blue-900 text-white p-6 rounded-2xl shadow-xl">
+            <h4 class="text-lg font-bold text-blue-200 mb-3 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              <span>Butuh Bantuan Lebih Lanjut?</span>
+            </h4>
+            <p class="text-blue-100 text-xs leading-relaxed mb-4">
+              Jika Anda mengalami kendala aktivasi akun, lupa kata sandi, atau memerlukan bantuan teknis pengajuan, silakan hubungi tim Sarpras / Bagian Umum BPMP Provinsi Gorontalo.
+            </p>
+            <div class="border-t border-white/10 pt-3 text-xs text-blue-200 space-y-1">
+              <div>📞 <strong>Hotline Sarpras:</strong> 081313266661</div>
+              <div>📧 <strong>Email:</strong> bpmpgorontalo@kemdikdasmen.go.id</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    function switchGuideMainTab(tab) {
+      // Toggle Tab Buttons
+      const tabs = ['roles', 'sop', 'akses'];
+      tabs.forEach(t => {
+        const btn = document.getElementById('mainTabBtn-' + t);
+        const content = document.getElementById('guideContent-' + t);
+        if (t === tab) {
+          btn.className = 'px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 bg-navy-900 text-white shadow-md flex items-center gap-2';
+          content.classList.remove('hidden');
+        } else {
+          btn.className = 'px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 text-slate-600 hover:text-navy-900 hover:bg-slate-100 flex items-center gap-2';
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    function switchRoleGuide(role) {
+      const roles = ['pegawai', 'tamu', 'kasubag', 'adminasettetap', 'adminpersediaan', 'adminsarpras', 'kepalabpmp'];
+      roles.forEach(r => {
+        const btn = document.getElementById('roleBtn-' + r);
+        const detail = document.getElementById('roleDetail-' + r);
+        if (r === role) {
+          btn.className = 'role-pill active px-4 py-2 rounded-xl text-xs md:text-sm font-bold border transition-all duration-200 flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 shadow-sm';
+          detail.classList.remove('hidden');
+        } else {
+          btn.className = 'role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2';
+          detail.classList.add('hidden');
+        }
+      });
+    }
+  </script>
+  <!-- ==================== END SECTION PANDUAN PENGGUNAAN ==================== -->
+
   <section id="kontak" class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="grid lg:grid-cols-2 gap-12 items-center">
@@ -933,7 +1348,7 @@
                 </div>
                 <div class="flex gap-2">
                   <button onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Kembali</button>
-                  <a href="{{ route('login') }}" class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5">
+                  <a href="{{ route('login', [], false) }}" class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5">
                     <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="13" x="2" y="5" rx="2"/><path d="m22 8-8 5-8-5"/></svg>
                     Hubungi Kami
                   </a>
@@ -950,452 +1365,7 @@
 
 <script>
 
-const FACILITIES = [
-  { 
-    name: 'Kantor Ponuwa 1', 
-    category: 'kantor', 
-    location: 'Gedung Kantor Utama', 
-    capacity: '100 Staf', luas: '500 m²', 
-    operasional: 'Senin–Jumat 07.30–16.00 WITA', kontak: '(0435) 821-555', 
-    description: 'Pusat administrasi dan layanan penjaminan mutu pendidikan Provinsi Gorontalo yang melayani koordinasi antar instansi pendidikan.',
-    features: ['Ruang Tunggu Nyaman', 'Unit Pelayanan Terpadu (ULT)', 'Ruang Tamu VIP', 'Koneksi Internet ', 'CCTV & Keamanan 24 Jam'], 
-    rules: ['Tamu wajib melapor ke petugas keamanan', 'Berpakaian rapi dan sopan', 'Dilarang merokok di area kerja', 'Menjaga ketertiban selama jam kantor'], 
-    images: [
-      "{{ asset('storage/fasilitas/kantor_utama.jpeg') }}",
-      "{{ asset('storage/fasilitas/ult.jpeg') }}",
-      "{{ asset('storage/fasilitas/ruangtungguult.jpeg') }}",
-      "{{ asset('storage/fasilitas/humas.jpeg') }}",
-      "{{ asset('storage/fasilitas/ruangsubagumum.jpeg') }}",
-      "{{ asset('storage/fasilitas/ruangkeuanganfix.jpg') }}",
-      "{{ asset('storage/fasilitas/ruangsubagumum.jpeg') }}"
-
-      
-    ]
-  },
-  { 
-    name: 'Kantor Ponuwa 2', 
-    category: 'kantor', 
-    location: 'Gedung Kantor Utama', 
-    capacity: '100 Staf', luas: '500 m²', 
-    operasional: 'Senin–Jumat 07.30–16.00 WITA', kontak: '(0435) 821-555', 
-    description: 'Pusat administrasi dan layanan penjaminan mutu pendidikan Provinsi Gorontalo yang melayani koordinasi antar instansi pendidikan.',
-    features: ['Ruang Tunggu Nyaman', 'Unit Pelayanan Terpadu (ULT)', 'Ruang Tamu VIP', 'Koneksi Internet ', 'CCTV & Keamanan 24 Jam'], 
-    rules: ['Tamu wajib melapor ke petugas keamanan', 'Berpakaian rapi dan sopan', 'Dilarang merokok di area kerja', 'Menjaga ketertiban selama jam kantor'], 
-    images: [
-      "{{ asset('storage/fasilitas/Kantorponuwa_2.jpeg') }}",
-      "{{ asset('storage/fasilitas/timkerpaud.jpeg') }}",
-      "{{ asset('storage/fasilitas/timkersd.jpeg') }}",
-      "{{ asset('storage/fasilitas/timkersmp.jpeg') }}",
-      "{{ asset('storage/fasilitas/timkersma2.jpg') }}",
-    ]
-  },
-  { 
-    name: 'Ruang Pertemuan Aula Dulohupa', 
-    category: 'ruang', 
-    location: 'Gedung Aula Utama', 
-    capacity: '200 - 300 Orang', luas: '420 m²', 
-    operasional: 'Senin–Minggu (Sesuai Reservasi)', kontak: '(0435) 821-555 ext. 101', 
-    description: 'Aula serbaguna yang luas, ideal untuk seminar, lokakarya, dan pertemuan skala besar dengan fasilitas audio visual lengkap.',
-    features: ['AC', 'Standar Sound System ', 'vidio trond', 'Meja Kursi', 'Toilet Bersih'], 
-    rules: ['Pemesanan minimal H-7', 'Dilarang membawa makanan berbau tajam ke dalam ruangan', 'Penyewa bertanggung jawab atas kebersihan', 'Jam operasional sesuai izin penggunaan'], 
-    images: [
-      "{{ asset('storage/fasilitas/gedung_aula.jpeg') }}",
-      "{{ asset('storage/fasilitas/aula2.jpg') }}", 
-    ]
-  },
-  { 
-    name: 'Ruang Pertemuan Huyula', 
-    category: 'ruang', 
-    location: 'Gedung Pertemuan Huyula', 
-    capacity: '200 - 300 Orang', luas: '420 m²', 
-    operasional: 'Senin–Minggu (Sesuai Reservasi)', kontak: '(0435) 821-555 ext. 101', 
-    description: 'Aula serbaguna yang luas, ideal untuk seminar, lokakarya, dan pertemuan skala besar dengan fasilitas audio visual lengkap.',
-    features: ['AC', 'Standar Sound System ', 'vidio trond', 'Meja Kursi', 'Toilet Bersih'], 
-    rules: ['Pemesanan minimal H-7', 'Dilarang membawa makanan berbau tajam ke dalam ruangan', 'Penyewa bertanggung jawab atas kebersihan', 'Jam operasional sesuai izin penggunaan'], 
-    images: [
-      "{{ asset('storage/fasilitas/gedung_huyula.jpg') }}",
-      "{{ asset('storage/fasilitas/ruang_sidang.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tilango 1 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '140 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/tilango.jpg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tilango 2 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/TILANGO_2.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tilango 3 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/TILANGO_3.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tinelo 1 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/tinelo_1.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tinelo 2 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/TINELO_2.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tinelo 3 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/tinelo_3.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tinelo 4 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/tinelo_4.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Kelas Tinelo 5 BPMP Gorontalo', 
-    category: 'kelas', 
-    location: 'BPMP Gorontalo', 
-    capacity: '30 Orang/Kelas', luas: '68 m²', 
-    operasional: 'Senin–Sabtu 07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Ruang belajar yang representatif untuk kegiatan pelatihan, bimtek, atau kursus dengan suasana yang tenang dan kondusif.',
-    features: ['AC ', 'Proyektor', 'Papan Tulis Whiteboard', 'meja kursi', 'Sound system'], 
-    rules: ['Dilarang mencoret-coret meja/kursi', 'Matikan alat elektronik setelah selesai digunakan', 'Tidak membawa barang yang terdapat dalm ruangan ke area luar BPMP Gorontalo', 'Tidak merusak barang yang ada dalam ruangan'], 
-    images: [
-      "{{ asset('storage/fasilitas/tinelo_5.jpeg') }}"
-    ]
-  },
-  
-  { 
-    name: 'Mess Bandayo kiki 1 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Area Mess Bandayo', 
-    capacity: '4 Orang 2 Kamar', luas: '136.50 m²', 
-    operasional: '24 Jam (Check-in 14.00, Check-out 12.00)', kontak: '0813-1326-6661', 
-    description: 'Fasilitas penginapan bagi tamu dinas atau peserta diklat dengan suasana asri yang menjamin istirahat berkualitas.',
-    features: [ 'Kamar Mandi Dalam', 'kamar tidur', 'Ruang kumpul Bersama', 'Ac'], 
-    rules: ['Dilarang membawa senjata tajam/narkoba', 'Dilarang merokok di dalam kamar', 'Menyerahkan kartu identitas saat check-in', 'Menjaga ketenangan di jam istirahat'], 
-    images: [
-      "{{ asset('storage/fasilitas/bandayokiki_1.jpeg') }}", 
-      "{{ asset('storage/fasilitas/dalambandayokiki1.jpeg') }}",
-      "{{ asset('storage/fasilitas/dalam_bandayokiki.jpeg') }}",
-    ]
-  },
-  { 
-    name: 'Mess Bandayo kiki 2 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Area Mess Bandayo', 
-    capacity: '4 Orang 2 Kamar', luas: '120,75 m²', 
-    operasional: '24 Jam (Check-in 14.00, Check-out 12.00)', kontak: '0813-1326-6661', 
-    description: 'Fasilitas penginapan bagi tamu dinas atau peserta diklat dengan suasana asri yang menjamin istirahat berkualitas.',
-    features: [ 'Kamar Mandi Dalam', 'kamar tidur', 'Ruang kumpul Bersama', 'Ac'], 
-    rules: ['Dilarang membawa senjata tajam/narkoba', 'Dilarang merokok di dalam kamar', 'Menyerahkan kartu identitas saat check-in', 'Menjaga ketenangan di jam istirahat'], 
-    images: [
-      "{{ asset('storage/fasilitas/bandayokiki.jpeg') }}", 
-      "{{ asset('storage/fasilitas/dalambandayokiki2.jpeg') }}",
-      "{{ asset('storage/fasilitas/kamarbandayokiki2.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Mess Bandayo kiki 3 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Area Mess Bandayo', 
-    capacity: '4 Orang 2 Kamar', luas: '120,75 m²', 
-    operasional: '24 Jam (Check-in 14.00, Check-out 12.00)', kontak: '0813-1326-6661', 
-    description: 'Fasilitas penginapan bagi tamu dinas atau peserta diklat dengan suasana asri yang menjamin istirahat berkualitas.',
-    features: [ 'Kamar Mandi Dalam', 'kamar tidur', 'Ruang kumpul Bersama', 'Ac'], 
-    rules: ['Dilarang membawa senjata tajam/narkoba', 'Dilarang merokok di dalam kamar', 'Menyerahkan kartu identitas saat check-in', 'Menjaga ketenangan di jam istirahat'], 
-    images: [
-      "{{ asset('storage/fasilitas/bandayokiki3.jpeg') }}",
-      "{{ asset('storage/fasilitas/dalambandayokiki3.jpeg') }}",
-      "{{ asset('storage/fasilitas/kamarbandayokiki3.jpeg') }}",
-    ]
-  },
-  { 
-    name: 'Mess Bandayo kiki 4 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Area Mess Bandayo', 
-    capacity: '4 Orang 2 Kamar', luas: '120,75 m²', 
-    operasional: '24 Jam (Check-in 14.00, Check-out 12.00)', kontak: '0813-1326-6661', 
-    description: 'Fasilitas penginapan bagi tamu dinas atau peserta diklat dengan suasana asri yang menjamin istirahat berkualitas.',
-    features: [ 'Kamar Mandi Dalam', 'kamar tidur', 'Ruang kumpul Bersama', 'Ac'], 
-    rules: ['Dilarang membawa senjata tajam/narkoba', 'Dilarang merokok di dalam kamar', 'Menyerahkan kartu identitas saat check-in', 'Menjaga ketenangan di jam istirahat'], 
-    images: [
-      "{{ asset('storage/fasilitas/bandayokiki4.jpeg') }}",
-      "{{ asset('storage/fasilitas/dalambandayokiki4.jpeg') }}",
-      "{{ asset('storage/fasilitas/kamarbandayokiki4.jpeg') }}",
-    ]
-  },
-  { 
-    name: 'Mess Bandayo Daa BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Area Mess Bandayo', 
-    capacity: '12 Orang 6 Kamar', luas: '211,50 m²', 
-    operasional: '24 Jam (Check-in 14.00, Check-out 12.00)', kontak: '0813-1326-6661', 
-    description: 'Fasilitas penginapan bagi tamu dinas atau peserta diklat dengan suasana asri yang menjamin istirahat berkualitas.',
-    features: [ 'Kamar Mandi Dalam', 'kamar tidur', 'Ruang kumpul Bersama', 'Ac'], 
-    rules: ['Dilarang membawa senjata tajam/narkoba', 'Dilarang merokok di dalam kamar', 'Menyerahkan kartu identitas saat check-in', 'Menjaga ketenangan di jam istirahat'], 
-    images: [
-      "{{ asset('storage/fasilitas/bandayodaa.jpeg') }}",
-      "{{ asset('storage/fasilitas/bandayo_daa.jpeg') }}",
-      "{{ asset('storage/fasilitas/dalambandayodaa.jpeg') }}",
-    ]
-  },
-  
-  { 
-    name: 'Ruang Asrama Beledaa 1 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Gedung Asrama Bele Daa, Wongkaditi Timur', 
-    capacity: '32 Orang 16 Kamar', luas: '522,00 m²', 
-    operasional: '24 Jam', kontak: '0813-1326-6661', 
-    description: 'Akomodasi tipe asrama yang luas untuk menampung peserta kegiatan dalam jumlah banyak dengan fasilitas pendukung yang lengkap.',
-    features: ['Tempat Tidur',  'Kamar Mandi Dalam', 'Ruang Berkumpul Bersama'], 
-    rules: ['Wajib menjaga kebersihan area bersama', 'Tidak merusak barang yang ada dalam ruangan', 'Mengembalikan kunci kepada petugas pada saat Chek Out', 'Tidak membawa pasangan bukan muhrim ke dalam kamar','Mengunci pintu saat bepergian'], 
-    images: [
-      "{{ asset('storage/fasilitas/beledaa1.jpeg') }}",
-    ]
-  },
-  { 
-    name: 'Ruang Asrama Beledaa 2 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Gedung Asrama Bele Daa, Wongkaditi Timur', 
-    capacity: '32 Orang 16 Kamar', luas: '522,00 m²', 
-    operasional: '24 Jam', kontak: '0813-1326-6661', 
-    description: 'Akomodasi tipe asrama yang luas untuk menampung peserta kegiatan dalam jumlah banyak dengan fasilitas pendukung yang lengkap.',
-    features: ['Tempat Tidur',  'Kamar Mandi Dalam', 'Ruang Berkumpul Bersama'], 
-    rules: ['Wajib menjaga kebersihan area bersama', 'Tidak merusak barang yang ada dalam ruangan', 'Mengembalikan kunci kepada petugas pada saat Chek Out', 'Tidak membawa pasangan bukan muhrim ke dalam kamar','Mengunci pintu saat bepergian'], 
-    images: [
-       "{{ asset('storage/fasilitas/asrama_baledaa.jpeg') }}",
-    ]
-  },
-  { 
-    name: 'Ruang Asrama Beledaa 3 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Gedung Asrama Bele Daa, Wongkaditi Timur', 
-    capacity: '32 Orang 16 Kamar', luas: '522,00 m²', 
-    operasional: '24 Jam', kontak: '0813-1326-6661', 
-    description: 'Akomodasi tipe asrama yang luas untuk menampung peserta kegiatan dalam jumlah banyak dengan fasilitas pendukung yang lengkap.',
-    features: ['Tempat Tidur',  'Kamar Mandi Dalam', 'Ruang Berkumpul Bersama'], 
-    rules: ['Wajib menjaga kebersihan area bersama', 'Tidak merusak barang yang ada dalam ruangan', 'Mengembalikan kunci kepada petugas pada saat Chek Out', 'Tidak membawa pasangan bukan muhrim ke dalam kamar','Mengunci pintu saat bepergian'], 
-    images: [
-      "{{ asset('storage/fasilitas/beledaa3.jpg') }}",
-    ]
-  },
-  { 
-    name: 'Ruang Asrama Beledaa 4 BPMP Gorontalo', 
-    category: 'penginapan', 
-    location: 'Gedung Asrama Bele Daa, Wongkaditi Timur', 
-    capacity: '32 Orang 16 Kamar', luas: '522,00 m²', 
-    operasional: '24 Jam', kontak: '0813-1326-6661', 
-    description: 'Akomodasi tipe asrama yang luas untuk menampung peserta kegiatan dalam jumlah banyak dengan fasilitas pendukung yang lengkap.',
-    features: ['Tempat Tidur',  'Kamar Mandi Dalam', 'Ruang Berkumpul Bersama'], 
-    rules: ['Wajib menjaga kebersihan area bersama', 'Tidak merusak barang yang ada dalam ruangan', 'Mengembalikan kunci kepada petugas pada saat Chek Out', 'Tidak membawa pasangan bukan muhrim ke dalam kamar','Mengunci pintu saat bepergian'], 
-    images: [
-      "{{ asset('storage/fasilitas/beledaa4.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Makan Olamita 1 BPMP Gorontalo', 
-    category: 'ruang_makan',  
-    location: 'Gedung Olamita, Wongkaditi Timur', 
-    capacity: '160 Orang', luas: '198 m²', 
-    operasional: '07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Area makan bersih dan higienis yang melayani konsumsi peserta diklat maupun tamu umum dengan sistem prasmanan.',
-    features: ['Meja & Kursi Makan ', 'Area Cuci Tangan (Wastafel)', 'Gazebo Outdoor Olamita', 'Toilet', 'Ac'], 
-    rules: ['Budayakan antre', 'Dilarang menyisakan makanan (Zero Waste)', 'Kembalikan peralatan makan ke tempat yang disediakan', 'Dilarang merokok'], 
-    images: [
-      "{{ asset('storage/fasilitas/olamita1_depan.jpeg') }}",
-      "{{ asset('storage/fasilitas/olamita_1.jpeg') }}",
-      "{{ asset('storage/fasilitas/dalamolamita_1.jpeg') }}"
-    ]
-  },
-  
-  { 
-    name: 'Ruang Makan Olamita 2 BPMP Gorontalo', 
-    category: 'ruang_makan',  
-    location: 'Gedung Olamita, Wongkaditi Timur', 
-    capacity: '40 Orang', luas: '198 m²', 
-    operasional: '07.30–16.00 WITA', kontak: ' 0813-1326-6661', 
-    description: 'Area makan bersih dan higienis yang melayani konsumsi peserta diklat maupun tamu umum dengan sistem prasmanan.',
-    features: ['Meja & Kursi Makan ', 'Area Cuci Tangan (Wastafel)', 'Gazebo Outdoor Olamita', 'Toilet', 'Ac'], 
-    rules: ['Budayakan antre', 'Dilarang menyisakan makanan (Zero Waste)', 'Kembalikan peralatan makan ke tempat yang disediakan', 'Dilarang merokok'], 
-    images: [
-      "{{ asset('storage/fasilitas/olamita_2.jpeg') }}",
-      "{{ asset('storage/fasilitas/dalamolamita_2.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Lapangan Tenis BPMP Gorontalo', 
-    category: 'outdoor', 
-    location: 'Area Sport Center BPMP', 
-    capacity: 'Area Terbuka', luas: '800 m²', 
-    operasional: '06.00–18.00 WITA', kontak: 'Keamanan', 
-    description: 'Fasilitas olahraga luar ruangan untuk menjaga kebugaran, terdiri dari lapangan tenis dan area jogging yang sejuk.',
-    features: ['Lapangan Tenis Hardcourt'], 
-    rules: ['Gunakan pakaian dan sepatu olahraga yang sesuai', 'Dilarang merusak fasilitas lapangan', 'Menjaga kebersihan area lapangan', 'Penggunaan malam hari harus seizin pengelola'], 
-    images: [
-      "{{ asset('storage/fasilitas/lapangan_tenis.jpeg') }}",
-    ]
-  },
-  { 
-    name: 'Lapangan Voli/Takraw BPMP Gorontalo', 
-    category: 'outdoor', 
-    location: 'Area Sport Center BPMP', 
-    capacity: 'Area Terbuka', luas: '800 m²', 
-    operasional: '06.00–18.00 WITA', kontak: 'Keamanan', 
-    description: 'Fasilitas olahraga luar ruangan untuk menjaga kebugaran, terdiri dari lapangan tenis dan area jogging yang sejuk.',
-    features: ['Lapangan Voli/Takraw'], 
-    rules: ['Gunakan pakaian dan sepatu olahraga yang sesuai', 'Dilarang merusak fasilitas lapangan', 'Menjaga kebersihan area lapangan', 'Penggunaan malam hari harus seizin pengelola'], 
-    images: [
-      "{{ asset('storage/fasilitas/lapangan_olahraga.jpeg') }}", 
-    ]
-  },{ 
-    name: 'Jogging Track BPMP Gorontalo', 
-    category: 'outdoor', 
-    location: 'Area Sport Center BPMP', 
-    capacity: 'Area Terbuka', luas: '800 m²', 
-    operasional: '06.00–18.00 WITA', kontak: 'Keamanan', 
-    description: 'Fasilitas olahraga luar ruangan untuk menjaga kebugaran, terdiri dari lapangan tenis dan area jogging yang sejuk.',
-    features: [ 'Jogging Track'], 
-    rules: ['Gunakan pakaian dan sepatu olahraga yang sesuai', 'Dilarang merusak fasilitas lapangan', 'Menjaga kebersihan area lapangan', 'Penggunaan malam hari harus seizin pengelola'], 
-    images: [
-      "{{ asset('storage/fasilitas/jogging_treck.jpeg') }}"
-    ]
-  },{ 
-    name: 'Lapangan Fustal BPMP Gorontalo', 
-    category: 'outdoor', 
-    location: 'Area Sport Center BPMP', 
-    capacity: 'Area Terbuka', luas: '800 m²', 
-    operasional: '06.00–18.00 WITA', kontak: 'Keamanan', 
-    description: 'Fasilitas olahraga luar ruangan untuk menjaga kebugaran, terdiri dari lapangan tenis dan area jogging yang sejuk.',
-    features: [ 'Lapangan Futsal'], 
-    rules: ['Gunakan pakaian dan sepatu olahraga yang sesuai', 'Dilarang merusak fasilitas lapangan', 'Menjaga kebersihan area lapangan', 'Penggunaan malam hari harus seizin pengelola'], 
-    images: [
-      "{{ asset('storage/fasilitas/lapanganfutsal.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Mushollah BPMP Gorontalo', 
-    category: 'sarana_ibadah',
-    location: 'Samping Gedung Utama', 
-    capacity: '50 Orang', luas: '100 m²', 
-    operasional: '24 Jam (Waktu Shalat)', kontak: '-', 
-    description: 'Sarana ibadah yang bersih dan tenang bagi pegawai maupun tamu untuk melaksanakan shalat lima waktu.',
-    features: ['Mukena Bersih', 'Tempat Wudhu Terpisah (Pria/Wanita)', 'Sound System Adzan', 'Toilet'], 
-    rules: ['Menjaga ketenangan dan kesucian tempat', 'Meletakkan alas kaki di rak yang tersedia', 'Matikan lampu dan AC setelah digunakan (jika tidak ada orang)', 'Dilarang tidur di dalam mushollah'], 
-    images: [
-      "{{ asset('storage/fasilitas/musolla_depan.jpg') }}"
-    ]
-  },
-  { 
-    name: 'Klinik BPMP Gorontalo', 
-    category: 'kesehatan', 
-    location: 'Gedung Layanan Kesehatan, Lantai 1', 
-    capacity: '5 Pasien', luas: '40 m²', 
-    operasional: 'Senin–Jumat 08.00–15.00 WITA', kontak: 'Unit Kesehatan', 
-    description: 'Fasilitas kesehatan dasar untuk penanganan pertama bagi pegawai atau peserta diklat yang mengalami gangguan kesehatan ringan.',
-    features: [ 'Kotak P3K Lengkap', 'Obat-obatan Standar', 'kursi roda', 'tempat tidur pasien' ], 
-    rules: ['Hanya untuk penanganan medis darurat/ringan', 'Wajib mengisi buku kunjungan pasien', 'Pasien dengan kondisi berat akan dirujuk ke RS terdekat'], 
-    images: [
-      "{{ asset('storage/fasilitas/klinik.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Lapangan Upacara BPMP Gorontalo', 
-    category: 'lapangan_Upacara', 
-    location: 'Halaman Depan Gedung Utama', 
-    capacity: '500 Orang', luas: '1200 m²', 
-    operasional: 'Senin–Jumat 07.00–17.00 WITA', kontak: 'Satpam', 
-    description: 'Lapangan terbuka yang luas untuk pelaksanaan upacara bendera, apel pagi, serta kegiatan senam bersama setiap hari Jumat.',
-    features: ['Tiang Bendera', 'Lantai Paving Blok Rata', 'Sound System Luar Ruang', 'podium upacara'], 
-    rules: ['Dilarang memarkir kendaraan di tengah lapangan saat jam upacara', 'Menjaga kebersihan area lapangan', 'Izin khusus untuk kegiatan tenda/panggung besar'], 
-    images: [
-      "{{ asset('storage/fasilitas/upacara.jpg') }}"
-    ]
-  },
-  { 
-    name: 'Gedung Arsip BPMP Gorontalo', 
-    category: 'gedung', 
-    location: 'Area Belakang, ', 
-    capacity: 'Penyimpanan Dokumen', luas: '150 m²', 
-    operasional: 'Senin–Jumat 08.00–16.00 WITA', kontak: 'Unit Kearsipan', 
-    description: 'Fasilitas penyimpanan dokumen negara dan data penting lembaga yang dikelola secara sistematis dan aman.',
-    features: ['Lemari arsip'], 
-    rules: ['Hanya petugas berwenang yang boleh masuk', 'Dilarang membawa cairan atau benda mudah terbakar', 'Wajib mencatat pengambilan dokumen di buku log'], 
-    images: [
-      "{{ asset('storage/fasilitas/gedung_arsip.jpeg') }}"
-    ]
-  },
-  { 
-    name: 'Ruang Laboratorium BPMP Gorontalo', 
-    category: 'Ruang', 
-    location: 'Gedung Laboratorium Lt. 2', 
-    capacity: '30 Orang', luas: '61 m²', 
-    operasional: 'Sesuai Jadwal Pelatihan', kontak: 'Unit TIK', 
-    description: 'Laboratorium komputer dan multimedia untuk uji kompetensi, pelatihan IT, serta pengembangan media pembelajaran digital.',
-    features: [''], 
-    rules: ['Dilarang mengubah konfigurasi software/hardware', 'Dilarang membawa makanan/minuman ke meja komputer', 'Gunakan alas kaki khusus atau melepas alas kaki'], 
-    images: [
-      "{{ asset('storage/fasilitas/gedung_laboratorium.jpeg') }}"
-    ]
-  }
-];
+const FACILITIES = {{ Illuminate\Support\Js::from(\App\Models\FasilitasBeranda::where('tampil', true)->orderBy('urutan')->orderBy('id')->get()->pluck('konten')->all()) }};
 
 const FACILITY_CHIPS = [
   { id:'semua', label:'Semua' },
@@ -1412,16 +1382,20 @@ const FACILITY_CHIPS = [
   { id:'kesehatan',   label:'Kesehatan' },
 ];
 
+@if(config('demo.enabled'))
 const DEMO_ACCOUNTS = [
-  { username:'superadmin',     password:'super123',      label:'Super Admin',         color:'from-red-500 to-rose-600',     icon:'shield',    desc:'Akses penuh ke seluruh sistem' },
+  { username:'Operator',       password:'super123',      label:'Super Admin',         color:'from-red-500 to-rose-600',     icon:'shield',    desc:'Akses penuh ke seluruh sistem' },
   { username:'kepalabpmp',     password:'kepala123',     label:'Kepala BPMP',            color:'from-purple-500 to-indigo-600',icon:'crown',     desc:'Dashboard eksekutif & persetujuan' },
   { username:'kasubag',        password:'kasubag123',    label:'Kasubag TU',             color:'from-indigo-500 to-blue-600',  icon:'briefcase', desc:'Verifikasi & koordinasi BMN' },
   { username:'adminpersediaan',password:'persediaan123', label:'Admin Persediaan',      color:'from-emerald-500 to-green-600',icon:'package',   desc:'Kelola stok & barang habis pakai' },
   { username:'adminsarpras',   password:'sarpras123',    label:'Admin Sarana Prasarana',color:'from-cyan-500 to-teal-600',   icon:'building',  desc:'Monitor gedung & fasilitas' },
-  { username:'adminaset',      password:'aset123',       label:'Admin Aset Tetap',      color:'from-amber-500 to-yellow-600', icon:'landmark',  desc:'Inventarisasi aset tetap' },
+  { username:'adminasettetap', password:'aset123',       label:'Admin Aset Tetap',      color:'from-amber-500 to-yellow-600', icon:'landmark',  desc:'Inventarisasi aset tetap' },
   { username:'pegawai',        password:'pegawai123',    label:'Pegawai',               color:'from-slate-500 to-gray-600',   icon:'user',      desc:'Peminjaman & riwayat BMN' },
-  { username:'tamu',           password:'tamu123',       label:'Tamu',                  color:'from-cyan-400 to-blue-500',    icon:'eye',       desc:'Melihat info & statistik BMN' },
 ];
+
+@else
+const DEMO_ACCOUNTS = [];
+@endif
 
 let facilityFilter = 'semua';
 let activeModalFacility = null;
@@ -1444,6 +1418,12 @@ function starRow(rating, size='13px') {
   return [0,1,2,3,4].map(i => `<span style="font-size:${size};line-height:1;color:${i < n ? '#f59e0b' : '#e2e8f0'}">★</span>`).join('');
 }
 
+function escapeFacility(value) {
+  const el = document.createElement('span');
+  el.textContent = String(value ?? '');
+  return el.innerHTML.replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+}
+
 function buildCarousel() {
   const chipsEl  = document.getElementById('facilityChips');
   const scrollEl = document.getElementById('facilitiesCarouselScroll');
@@ -1460,32 +1440,32 @@ function buildCarousel() {
     // const op = f.priceOld ? `<div class="text-slate-400 text-xs line-through mb-0.5">${f.priceOld}<span class="text-slate-300">/hari</span></div>` : '';
     return `<article class="facility-card flex-shrink-0 w-[260px] sm:w-[280px] snap-start rounded-2xl bg-white shadow-md border border-slate-100/80 overflow-hidden card-hover flex flex-col" onclick="openModal(${globalIdx})" title="Klik untuk lihat detail">
       <div class="relative overflow-hidden" style="aspect-ratio:4/3;">
-        <img src="${f.images[0]}" alt="${f.name}" class="card-img w-full h-full object-cover" loading="lazy">
+        <img src="${f.images[0]}" alt="${escapeFacility(f.name)}" class="card-img w-full h-full object-cover" loading="lazy">
         <div class="card-overlay absolute inset-0 flex flex-col justify-end p-3"><div class="view-detail-btn inline-flex items-center gap-1.5 bg-white/90 backdrop-blur text-navy-800 text-xs font-bold px-3 py-1.5 rounded-full self-start shadow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>Lihat Detail</div></div>
         ${f.images.length > 1 ? `<div class="absolute top-2 right-2 flex gap-0.5">${f.images.map((_,i)=>`<div class="w-1.5 h-1.5 rounded-full ${i===0?'bg-white':'bg-white/50'}"></div>`).join('')}</div>` : ''}
       </div>
       <div class="p-3.5 flex flex-col flex-1 space-y-1.5">
-      <h3 class="font-bold text-navy-900 text-sm leading-snug line-clamp-2">${f.name}</h3>
+      <h3 class="font-bold text-navy-900 text-sm leading-snug line-clamp-2">${escapeFacility(f.name)}</h3>
       
       <p class="text-slate-500 text-xs flex items-center gap-1">
-        📍 <span class="truncate">${f.location}</span>
+        📍 <span class="truncate">${escapeFacility(f.location)}</span>
       </p>
 
       <div class="space-y-1 mb-3">
         <p class="text-xs font-medium text-slate-700 mb-1">Fasilitas:</p>
         <div class="flex flex-wrap gap-1">
-          ${f.features.slice(0,4).map(feat => `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">${feat}</span>`).join('')}
+          ${f.features.slice(0,4).map(feat => `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">${escapeFacility(feat)}</span>`).join('')}
         
         </div>
       </div>
       
       <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
-        <span>📏 ${f.luas}</span>
-        <span>👥 ${f.capacity}</span>
-        <span>🕒 ${f.operasional.split(' ')[0]}</span>
+        <span>📏 ${escapeFacility(f.luas)}</span>
+        <span>👥 ${escapeFacility(f.capacity)}</span>
+        <span>🕒 ${escapeFacility(f.operasional.split(' ')[0])}</span>
       </div>
       <p class="text-emerald-600 text-xs font-medium flex items-center gap-1 pt-1 border-t border-slate-200/50 mt-auto">
-        📞 ${f.kontak}
+        📞 ${escapeFacility(f.kontak)}
       </p>
     </div>
     </article>`;
@@ -1516,10 +1496,10 @@ function openModal(idx) {
     { icon:'clock', label:'Operasional', value:f.operasional },
     { icon:'phone', label:'Kontak TU', value:f.kontak },
   ];
-  document.getElementById('modalSpecs').innerHTML = specs.map(s => `<div class="flex items-start gap-2.5 bg-slate-50 rounded-xl p-3"><div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="${s.icon}" class="w-3.5 h-3.5 text-navy-600"></i></div><div><div class="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">${s.label}</div><div class="text-navy-900 text-xs font-semibold mt-0.5 leading-snug">${s.value}</div></div></div>`).join('');
+  document.getElementById('modalSpecs').innerHTML = specs.map(s => `<div class="flex items-start gap-2.5 bg-slate-50 rounded-xl p-3"><div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="${s.icon}" class="w-3.5 h-3.5 text-navy-600"></i></div><div><div class="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">${s.label}</div><div class="text-navy-900 text-xs font-semibold mt-0.5 leading-snug">${escapeFacility(s.value)}</div></div></div>`).join('');
   document.getElementById('modalDesc').textContent = f.description;
-  document.getElementById('modalFeatures').innerHTML = f.features.map(feat => `<span class="inline-flex items-center gap-1 bg-blue-50 text-navy-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-100"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" stroke="#1a2f9b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>${feat}</span>`).join('');
-  document.getElementById('modalRules').innerHTML = f.rules.map(rule => `<li class="flex items-start gap-2 text-slate-600 text-xs leading-relaxed"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="#3355ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><polyline points="9 18 15 12 9 6"/></svg>${rule}</li>`).join('');
+  document.getElementById('modalFeatures').innerHTML = f.features.map(feat => `<span class="inline-flex items-center gap-1 bg-blue-50 text-navy-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-100"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" stroke="#1a2f9b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>${escapeFacility(feat)}</span>`).join('');
+  document.getElementById('modalRules').innerHTML = f.rules.map(rule => `<li class="flex items-start gap-2 text-slate-600 text-xs leading-relaxed"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="#3355ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><polyline points="9 18 15 12 9 6"/></svg>${escapeFacility(rule)}</li>`).join('');
   document.getElementById('modalPriceOld').textContent = f.priceOld ? f.priceOld + '/hari' : '';
   document.getElementById('modalPrice').textContent = f.price;
   document.getElementById('facilityModal').classList.remove('hidden');
@@ -1556,7 +1536,7 @@ function buildDemoAccounts() {
         <div class="flex justify-between text-xs"><span class="text-slate-400">Username:</span><span class="font-mono font-semibold text-navy-700">${a.username}</span></div>
         <div class="flex justify-between text-xs"><span class="text-slate-400">Password:</span><span class="font-mono font-semibold text-navy-700">${a.password}</span></div>
       </div>
-      <a href="{{ route('login') }}"
+      <a href="{{ route('login', [], false) }}"
         onclick="sessionStorage.setItem('prefill_u', '${a.username}'); sessionStorage.setItem('prefill_p', '${a.password}');"
         class="block w-full text-center py-2 text-sm font-semibold text-navy-600 bg-navy-50 hover:bg-navy-100 rounded-lg transition">
         Login Cepat →

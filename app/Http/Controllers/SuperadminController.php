@@ -52,7 +52,7 @@ class SuperadminController extends Controller
             'username' => 'required|string|max:255|unique:users,username',
             'email'    => 'nullable|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'role'     => 'required|in:superadmin,kepalabpmp,kasubag,adminpersediaan,adminsarpras,adminasettetap,pegawai,tamu',
+            'role'     => 'required|in:superadmin,kepalabpmp,kasubag,adminpersediaan,adminsarpras,adminasettetap,pegawai',
             'nip'      => 'nullable|string|max:30',
             'jabatan'  => 'nullable|string|max:255',
         ]);
@@ -77,7 +77,7 @@ class SuperadminController extends Controller
             'name'     => 'required|string|max:255',
             'username' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
             'email'    => ['nullable', 'email', Rule::unique('users')->ignore($user->id)],
-            'role'     => 'required|in:superadmin,kepalabpmp,kasubag,adminpersediaan,adminsarpras,adminasettetap,pegawai,tamu',
+            'role'     => 'required|in:superadmin,kepalabpmp,kasubag,adminpersediaan,adminsarpras,adminasettetap,pegawai',
             'nip'      => 'nullable|string|max:30',
             'jabatan'  => 'nullable|string|max:255',
         ]);

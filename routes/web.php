@@ -8,7 +8,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\KepalaBPMPController;
 use App\Http\Controllers\KasubagController;
 use App\Http\Controllers\RegisterController;
-use App\Http\Controllers\TamuController;
 use App\Http\Controllers\UnitKerjaController;
 use App\Http\Controllers\AdminPersediaanController;
 use App\Http\Controllers\LaporanController;
@@ -45,68 +44,19 @@ Route::middleware('guest')->group(function () {
     Route::post('/daftar', [RegisterController::class, 'register'])->name('register.post');
 });
 
-// Logout (wajib login)
-Route::post('/logout', [AuthController::class, 'logout'])
-    ->middleware('auth')
-    ->name('logout');
-
-// ──────────────────────────────────────────────────────────────────────
-// Area yang memerlukan login (semua peran)
-// ──────────────────────────────────────────────────────────────────────
-// routes/web.php
-Route::middleware('guest')->group(function () {
-    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-});
-
-// Protected Routes - PAKAI MIDDLEWARE ANDA!
-Route::middleware('checkrole')->group(function () {
-    Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile');
-    Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/profile/signature', [AuthController::class, 'updateSignature'])->name('profile.signature');
-    Route::post('/password/change', [AuthController::class, 'changePassword'])->name('password.change');
-    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-});
-
 // Superadmin Register - PAKAI MIDDLEWARE ANDA!
 Route::middleware('checkrole:superadmin')->group(function () {
     Route::get('/register', function () {
         return view('auth.register');
     })->name('register.show');
-    Route::post('/register', [AuthController::class, 'register'])->name('register');
-});
-
-// Role-specific dashboards
-Route::middleware('checkrole:superadmin')->group(function () {
-    Route::get('/superadmin/dashbord', fn() => view('superadmin.dashbord'))->name('superadmin.dashbord');
-});
-Route::middleware('checkrole:kepalabpmp')->group(function () {
-    Route::get('/kepalabpmp/dashboard', fn() => view('kepalabpmp.dashboard'))->name('kepalabpmp.dashboard');
-});
-Route::middleware('checkrole:kasubag')->group(function () {
-    Route::get('/kasubag/dashboard', fn() => view('kasubag.dashboard'))->name('kasubag.dashboard');
-});
-Route::middleware('checkrole:adminpersediaan')->group(function () {
-    Route::get('/adminpersediaan/dashboard', fn() => view('adminpersediaan.dashboard'))->name('kasubag.dashboard');
-});
-Route::middleware('checkrole:adminsarpras')->group(function () {
-    Route::get('/adminsarpras/dashboard', fn() => view('adminsarpras.dashboard'))->name('adminsarpras.dashboard');
-});
-Route::middleware('checkrole:adminasettetap')->group(function () {
-    Route::get('/adminasettetap/dashboard', fn() => view('adminasettetap.dashboard'))->name('adminasettetap.dashboard');
-});
-Route::middleware('checkrole:pegawai')->group(function () {
-    Route::get('/pegawai/dashboard', fn() => view('pegawai.dashboard'))->name('pegawai.dashboard');
-});
-Route::middleware('checkrole:tamu')->group(function () {
-    Route::get('/tamu/dashboard', fn() => view('tamu.dashboard'))->name('tamu.dashboard');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.admin.store');
 });
 
 Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [AuthController::class, 'showProfile'])->name('profile');
     Route::put('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/profile/signature', [AuthController::class, 'updateProfile'])->name('profile.signature'); // Same method
+    Route::post('/profile/signature', [AuthController::class, 'updateSignature'])->name('profile.signature');
     Route::post('/password/change', [AuthController::class, 'changePassword'])->name('password.change');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     // ──────────────────────────────────────────────────────────────────
@@ -183,6 +133,17 @@ Route::middleware('auth')->group(function () {
             Route::get('/peminjaman/{peminjaman}/surat/download', [KasubagController::class, 'downloadSurat'])->name('download-surat');
             Route::get('/kasubag/peminjaman-gedung/{peminjaman}', [KasubagController::class, 'show'])->name('kasubag.peminjaman-gedung.show');
 
+            // MONITORING KASUBAG (Persediaan, Barang / Aset Tetap, Kendaraan)
+            Route::get('/monitoring-persediaan', [KasubagController::class, 'monitoringPersediaan'])->name('monitoring-persediaan');
+            Route::get('/monitoring-persediaan/{id}/json', [KasubagController::class, 'detailMonitoringPersediaanJson'])->name('monitoring-persediaan.json');
+            Route::get('/monitoring-aset-tetap', [KasubagController::class, 'monitoringAsetTetap'])->name('monitoring-aset-tetap');
+            Route::get('/monitoring-kendaraan', [KasubagController::class, 'monitoringKendaraan'])->name('monitoring-kendaraan');
+
+            // MONITORING & LAPORAN TRANSAKSI KELUAR
+            Route::get('/transaksi-keluar', [KasubagController::class, 'transaksiKeluar'])->name('transaksi-keluar');
+            Route::get('/laporan-transaksi-keluar', [KasubagController::class, 'laporanTransaksiKeluar'])->name('laporan-transaksi-keluar');
+            Route::get('/laporan-transaksi-keluar/pdf', [KasubagController::class, 'exportLaporanTransaksiKeluarPdf'])->name('laporan-transaksi-keluar.pdf');
+
             //PENGATURAN AKUN
             Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
         });
@@ -216,6 +177,12 @@ Route::middleware('auth')->group(function () {
 
 
             // 📤 TRANSAKSI KELUAR
+            Route::get('/stok-opname', [\App\Http\Controllers\StokOpnameController::class, 'index'])->name('opname.index');
+            Route::post('/stok-opname', [\App\Http\Controllers\StokOpnameController::class, 'store'])->name('opname.store');
+            Route::get('/stok-opname/{opname}', [\App\Http\Controllers\StokOpnameController::class, 'show'])->name('opname.show');
+            Route::put('/stok-opname/{opname}', [\App\Http\Controllers\StokOpnameController::class, 'update'])->name('opname.update');
+            Route::post('/stok-opname/{opname}/finalisasi', [\App\Http\Controllers\StokOpnameController::class, 'finalize'])->name('opname.finalize');
+            Route::get('/stok-opname/{opname}/laporan', [\App\Http\Controllers\StokOpnameController::class, 'report'])->name('opname.report');
             Route::get('/transaksi-keluar', [AdminPersediaanController::class, 'transaksiKeluar'])->name('transaksi-keluar');
             Route::get('/transaksi-keluar/create', [AdminPersediaanController::class, 'createTransaksiKeluar'])->name('transaksi-keluar.create');
             Route::post('/transaksi-keluar', [AdminPersediaanController::class, 'storeTransaksiKeluar'])->name('transaksi-keluar.store');
@@ -244,12 +211,10 @@ Route::middleware('auth')->group(function () {
             //LAPORAN
             Route::get('/laporan-permintaan-persediaan', [AdminPersediaanController::class, 'laporanPermintaanPersediaan'])->name('laporan-permintaan-persediaan');
             Route::get('/laporan-transaksi-masuk', [AdminPersediaanController::class, 'laporanTransaksiMasuk'])->name('laporan-transaksi-masuk');
-            Route::get('/adminpersediaan/laporan-transaksi-masuk/pdf', [AdminPersediaanController::class, 'downloadLaporanTransaksiMasuk'])->name('laporan-transaksi-masuk.pdf');
+            Route::get('/laporan-transaksi-masuk/pdf', [AdminPersediaanController::class, 'downloadLaporanTransaksiMasuk'])->name('laporan-transaksi-masuk.pdf');
             Route::get('/laporan-transaksi-keluar/pdf', [AdminPersediaanController::class, 'downloadLaporanTransaksiKeluarPdf'])->name('laporan-transaksi-keluar.pdf');
-            Route::prefix('adminpersediaan')->middleware(['auth', 'role:adminpersediaan'])->group(function () {
-                Route::get('/laporan-permintaan/download', [AdminPersediaanController::class, 'downloadLaporanPermintaan'])->name('laporan.download');
-                Route::get('/laporan-transaksi-keluar', [AdminPersediaanController::class, 'laporanTransaksiKeluar'])->name('laporan-transaksi-keluar');
-            });
+            Route::get('/laporan-permintaan/download', [AdminPersediaanController::class, 'downloadLaporanPermintaan'])->name('laporan.download');
+            Route::get('/laporan-transaksi-keluar', [AdminPersediaanController::class, 'laporanTransaksiKeluar'])->name('laporan-transaksi-keluar');
         });
 
     // ──────────────────────────────────────────────────────────────────
@@ -274,7 +239,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/laporan-kerusakan/download', [AdminSarprasController::class, 'downloadLaporanKerusakan'])->name('laporan.kerusakan.download');
 
             //DATA GEDUNG
+            Route::get('/fasilitas-beranda', [\App\Http\Controllers\FasilitasBerandaController::class, 'index'])->name('fasilitas-beranda.index');
+            Route::get('/fasilitas-beranda/{fasilitas}/edit', [\App\Http\Controllers\FasilitasBerandaController::class, 'edit'])->name('fasilitas-beranda.edit');
+            Route::put('/fasilitas-beranda/{fasilitas}', [\App\Http\Controllers\FasilitasBerandaController::class, 'update'])->name('fasilitas-beranda.update');
             Route::post('/data-gedung', [AdminSarprasController::class, 'storeGedung'])->name('data-gedung.store');
+            Route::post('/data-gedung/sync-fasilitas', [AdminSarprasController::class, 'syncGedungFromFasilitas'])->name('data-gedung.sync-fasilitas');
             Route::get('/gedung/{gedung}', [AdminSarprasController::class, 'showGedungJson'])->name('gedung.show');
             Route::put('/gedung/{gedung}', [AdminSarprasController::class, 'updateGedung'])->name('gedung.update');
             Route::delete('/gedung/{gedung}', [AdminSarprasController::class, 'destroyGedung'])->name('gedung.destroy');
@@ -282,16 +251,18 @@ Route::middleware('auth')->group(function () {
 
 
             // Modal AJAX Routes (BARU)
+            Route::get('/data-kerusakan-pilih-barang', [AdminSarprasController::class, 'getBarangPilihan'])->name('kerusakan.pilih-barang');
             Route::get('/data-kerusakan/{kerusakan}/edit', [AdminSarprasController::class, 'editKerusakanJson'])->name('kerusakan.edit.json');
             Route::get('/data-kerusakan/{kerusakan}', [AdminSarprasController::class, 'showKerusakanJson'])->name('kerusakan.show.json');
             Route::post('/data-kerusakan', [AdminSarprasController::class, 'storeKerusakan'])->name('kerusakan.store');
             Route::post('/data-kerusakan/{kerusakan}/update', [AdminSarprasController::class, 'updateKerusakanAjax'])->name('kerusakan.update.ajax');
+            Route::post('/data-kerusakan/{kerusakan}/perbaikan', [AdminSarprasController::class, 'storePerbaikanKerusakan'])->name('kerusakan.perbaikan.store');
+            Route::get('/data-kerusakan/{kerusakan}/riwayat', [AdminSarprasController::class, 'riwayatKerusakan'])->name('kerusakan.riwayat');
             Route::delete('/data-kerusakan/{kerusakan}', [AdminSarprasController::class, 'destroyKerusakan'])->name('kerusakan.destroy');
 
             //ROUTE PERSETUJUAN PEMINJAMAN
             Route::post('/peminjaman/{peminjaman}/forward', [AdminSarprasController::class, 'forwardToKasubag'])->name('peminjaman.forward');
             Route::post('/peminjaman/{peminjaman}/reject', [AdminSarprasController::class, 'rejectByAdmin'])->name('peminjaman.reject');
-            Route::get('/peminjaman/{peminjaman}/download-surat', [AdminSarprasController::class, 'downloadSurat'])->name('download-surat');
             Route::get('/peminjaman-gedung/download', [AdminSarprasController::class, 'downloadLaporanPeminjaman'])->name('peminjaman.download');
             Route::get('/peminjaman-gedung/{peminjaman}/generate-surat', [AdminSarprasController::class, 'generateSuratPerjanjianSewa'])
                 ->name('peminjaman.generate-surat');
@@ -412,6 +383,7 @@ Route::middleware('auth')->group(function () {
             // 📊 LAPORAN & ANALITIK (BARU ⭐)
             Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan');
             Route::get('/laporan/filter', [LaporanController::class, 'filter'])->name('laporan.filter');
+            Route::get('/laporan-transaksi-keluar', [AdminAsettetapController::class, 'laporanTransaksiKeluar'])->name('laporan-transaksi-keluar');
 
             // 📥 DOWNLOAD ROUTES (LENGKAP)
             Route::get('/transaksi-masuk/download', [LaporanController::class, 'downloadTransaksiMasuk'])->name('transaksi-masuk.download');
@@ -422,20 +394,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/dashboard-summary/download', [LaporanController::class, 'downloadDashboardSummary'])->name('dashboard.download');
             Route::get('/all/download', [LaporanController::class, 'downloadAll'])->name('all.download');
 
-            // Laporan
-            Route::prefix('adminasettetap/laporan')->group(function () {
-                Route::get('/', [LaporanController::class, 'index'])->name('laporan');
-
-                // Rute Download dengan parameter
-                Route::get('/download-transaksi-masuk', [LaporanController::class, 'downloadTransaksiMasuk'])->name('transaksi-masuk.download');
-                Route::get('/download-transaksi-keluar', [LaporanController::class, 'downloadTransaksiKeluar'])->name('transaksi-keluar.download');
-                Route::get('/download-pengaduan', [LaporanController::class, 'downloadPengaduan'])->name('pengaduan.download');
-                Route::get('/download-survey', [LaporanController::class, 'downloadSurvey'])->name('survey.download');
-                Route::get('/download-peminjaman', [LaporanController::class, 'downloadPeminjaman'])->name('peminjaman.download');
-                Route::get('/download-pengembalian', [LaporanController::class, 'downloadPengembalian'])->name('pengembalian.download');
-                Route::get('/download-all', [LaporanController::class, 'downloadAll'])->name('adminasettetap.all.download');
-                Route::get('/download-mutasi', [LaporanController::class, 'downloadMutasi'])->name('mutasi.download');
-            });
+            Route::get('/pengembalian/download', [LaporanController::class, 'downloadPengembalian'])->name('pengembalian.download');
+            Route::get('/mutasi/download', [LaporanController::class, 'downloadMutasi'])->name('mutasi.download');
         });
 
 
@@ -499,25 +459,4 @@ Route::middleware('auth')->group(function () {
             Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
         });
 
-        //Ajuan Mutasi
-            Route::resource('ajuan-mutasi', AjuanMutasiController::class)->except(['create', 'show']);
-            Route::get('ajuan-mutasi/{id}', [AjuanMutasiController::class, 'show']);
-            Route::get('ajuan-mutasi/aset/{id}', [AjuanMutasiController::class, 'getAsetTetapData']);
-
-    // ──────────────────────────────────────────────────────────────────
-    // TAMU – akses baca saja
-    // ──────────────────────────────────────────────────────────────────
-    Route::prefix('tamu')
-        ->name('tamu.')
-        ->middleware('role:tamu,superadmin')
-        ->group(function () {
-            Route::get('/dashboard', [TamuController::class, 'dashboard'])->name('dashboard');
-            Route::get('/peminjaman-gedung', [TamuController::class, 'peminjamangedung'])->name('peminjaman-gedung');
-            Route::post('/peminjaman-gedung', [TamuController::class, 'storePeminjamanGedung'])->name('peminjaman-gedung.store');
-            Route::get('/peminjaman-gedung/{peminjaman}', [TamuController::class, 'showPeminjamanGedung'])->name('peminjaman-gedung.show');
-            Route::post('/peminjaman-gedung/{id}/cancel', [TamuController::class, 'cancelPeminjaman'])->name('peminjaman-gedung.cancel');
-            Route::get('/survei-layanan', [TamuController::class, 'surveilayanan'])->name('survei-layanan');
-            Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
-            Route::get('/info-fasilitas', [TamuController::class, 'infoFasilitas'])->name('info-fasilitas');
-        });
 });

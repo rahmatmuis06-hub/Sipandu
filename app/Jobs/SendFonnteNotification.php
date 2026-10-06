@@ -37,22 +37,7 @@ class SendFonnteNotification implements ShouldQueue
 
     public function handle(): void
     {
-        try {
-            FonnteService::sendMessage($this->target, $this->message);
-        } catch (\Exception $e) {
-            Log::error('Gagal mengirim via Queue: ' . $e->getMessage());
-
-            // 🔥 Paksa job ini gagal agar sistem tahu harus melakukan RETRY berikutnya
-            throw $e;
-        }
-    }
-
-    /**
-     * 🔥 3. JEDA WAKTU SEBELUM RETRY (DALAM DETIK)
-     * Berapa lama dia bakalan retry? Di bawah ini diatur jeda 10 detik sebelum mencoba lagi.
-     */
-    public function backoff(): int
-    {
-        return 10; // Jeda 10 detik untuk retry berikutnya (memberi waktu server Fonnte sehat dulu)
+        // Notifikasi WhatsApp dinonaktifkan sepenuhnya
+        return;
     }
 }

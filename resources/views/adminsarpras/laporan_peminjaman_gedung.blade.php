@@ -381,25 +381,8 @@ function getStatusBadge($status) {
     </div>
   </div>
 
-    <!-- TREND CHART - DYNAMIC -->
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Tren Peminjaman</div>
-        <div class="chart-sub">6 bulan terakhir</div>
-        <div class="bar-chart">
-          @foreach($trendData as $data)
-          <div class="bar-col">
-            <div class="bar-val">{{ $data['val'] }}</div>
-            <div class="bar-wrap">
-              <div class="bar" style="height:{{ $data['height'] }}%"></div>
-            </div>
-            <div class="bar-lbl">{{ $data['label'] }}</div>
-          </div>
-          @endforeach
-        </div>
-      </div>
-
-      <!-- DONUT CHART - FULL DYNAMIC -->
+    <!-- DONUT CHART - FULL DYNAMIC -->
+    <div style="margin-bottom: 20px; max-width: 420px;">
       <div class="chart-card">
         <div class="chart-title">Distribusi Status</div>
         <div class="chart-sub">Komposisi keseluruhan ({{ $donutData['total'] ?? 0 }} total)</div>

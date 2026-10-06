@@ -4,13 +4,13 @@
 <meta charset="UTF-8">
 <title>Surat Permintaan Persediaan</title>
 <style>
-    /* 1. PENGATURAN MARGIN KERTAS PDF (Atas 4cm, Bawah 4cm, Kiri 3cm, Kanan 3cm) */
+    /* 1. PENGATURAN MARGIN KERTAS PDF */
     @page {
         size: A4 portrait;
-        margin-top: 4cm;
-        margin-bottom: 4cm;
-        margin-left: 3cm;
-        margin-right: 3cm;
+        margin-top: 2cm;
+        margin-bottom: 2cm;
+        margin-left: 2cm;
+        margin-right: 2cm;
     }
 
     /* 2. RESET BODY & PEMADATAN TYPOGRAPHY */
@@ -18,15 +18,15 @@
         margin: 0;
         padding: 0;
         font-family: Arial, Helvetica, sans-serif;
-        font-size: 9.5pt; /* Diperkecil agar dijamin muat 1 halaman dengan margin besar */
-        line-height: 1.2; /* Spasi antar baris dirapatkan */
+        font-size: 9.5pt;
+        line-height: 1.2;
         color: #000;
         background-color: transparent;
     }
 
     /* 3. KOP SURAT */
     .kop-surat {
-        margin-bottom: 8px; /* Jarak kop ke judul diperkecil */
+        margin-bottom: 8px;
         width: 100%;
     }
     .kop-surat img {
@@ -54,20 +54,38 @@
     table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 8px; /* Jarak bawah tabel diperkecil */
+        margin-bottom: 6px;
     }
     td {
         vertical-align: top;
-        padding: 1px 0; /* Jarak antar baris tabel dirapatkan */
+        padding: 1px 0;
     }
     .td-label { width: 110px; }
     .td-titikdua { width: 15px; text-align: center; }
+
+    .table-list-barang {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 4px;
+        margin-bottom: 6px;
+        font-size: 8.5pt;
+    }
+    .table-list-barang th, .table-list-barang td {
+        border: 1px solid #333;
+        padding: 3px 5px;
+        vertical-align: middle;
+    }
+    .table-list-barang th {
+        background-color: #f1f5f9;
+        font-weight: bold;
+        text-align: center;
+    }
 
     /* 6. TABEL TANDA TANGAN */
     .ttd-table {
         width: 100%;
         text-align: center;
-        margin-top: 10px; /* Spasi sebelum tabel TTD diperkecil */
+        margin-top: 10px;
         page-break-inside: avoid; 
     }
     .ttd-table td {
@@ -76,7 +94,7 @@
         vertical-align: bottom;
     }
     .ttd-img-container {
-        height: 45px; /* Area gambar TTD dipadatkan */
+        height: 45px;
         margin: 2px 0;
     }
     .ttd-img-container img {
@@ -92,7 +110,7 @@
     /* 7. FOOTER */
     .footer {
         position: fixed;
-        bottom: -3cm; 
+        bottom: -1.2cm; 
         left: 0;
         right: 0;
         font-size: 8pt; 
@@ -118,7 +136,7 @@
             $nomor_urut = str_pad($permintaan->id, 3, '0', STR_PAD_LEFT);
             
             // Ambil tahun dari tanggal permintaan dibuat
-            $tahun_surat = \Carbon\Carbon::parse($permintaan->created_at)->format('Y');
+            $tahun_surat = \Carbon\Carbon::parse($tanggalSurat ?? $permintaan->tanggal_penerimaan ?? $permintaan->created_at)->format('Y');
         @endphp
         <div>No: {{ $nomor_urut }}/BA.PP/693228/2026{{ date('Y') }}</div>
     </div>
@@ -157,26 +175,47 @@
         Dengan ini mengajukan permintaan persediaan dengan rincian sebagai berikut:
     </div>
 
-    <!-- DATA BARANG (Ditarik dari tabel permintaan_persediaan & relasinya) -->
-    <table>
+    <!-- DATA BARANG (TABEL DAFTAR BARANG) -->
+    <table class="table-list-barang">
+        <thead>
+            <tr>
+                <th style="width: 25px;">No</th>
+                <th>Nama Barang</th>
+                <th style="width: 110px;">Kode Barang</th>
+                <th style="width: 70px;">Satuan</th>
+                <th style="width: 70px;">Jumlah Diminta</th>
+                <th style="width: 70px;">Jumlah Disetujui</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(isset($permintaan->items) && $permintaan->items->count() > 0)
+                @foreach($permintaan->items as $idx => $it)
+                    <tr>
+                        <td class="text-center">{{ $idx + 1 }}</td>
+                        <td>{{ $it->nama_barang }}</td>
+                        <td class="text-center">{{ $it->kode_barang }}</td>
+                        <td class="text-center">{{ $it->satuan ?? ($it->persediaan->satuan ?? 'Unit') }}</td>
+                        <td class="text-center">{{ $it->jumlah_diminta }}</td>
+                        <td class="text-center">{{ $permintaan->status === 'pending' ? '-' : ($permintaan->jumlah_disetujui !== null ? $it->jumlah_diminta : '-') }}</td>
+                    </tr>
+                @endforeach
+            @else
+                <tr>
+                    <td class="text-center">1</td>
+                    <td>{{ $permintaan->persediaan->nama_barang ?? $permintaan->nama_barang ?? '-' }}</td>
+                    <td class="text-center">{{ $permintaan->kode_barang ?? '-' }}</td>
+                    <td class="text-center">{{ $permintaan->persediaan->satuan ?? $permintaan->satuan ?? 'Unit' }}</td>
+                    <td class="text-center">{{ $permintaan->jumlah_diminta ?? '0' }}</td>
+                    <td class="text-center">{{ $permintaan->status === 'pending' ? '-' : ($permintaan->jumlah_disetujui ?? $permintaan->jumlah_diminta ?? '-') }}</td>
+                </tr>
+            @endif
+        </tbody>
+    </table>
+
+    <table style="width: 100%; margin-bottom: 5px; font-size: 9pt;">
         <tr>
-            <td class="td-label">Nama Barang</td>
-            <td class="td-titikdua">:</td>
-            <td class="font-bold">{{ $permintaan->persediaan->nama_barang ?? $permintaan->nama_barang ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td>Merek</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $permintaan->persediaan->merek ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td>Jumlah</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $permintaan->jumlah_diminta ?? '0' }} {{ $permintaan->persediaan->satuan ?? 'unit' }}</td>
-        </tr>
-        <tr>
-            <td>Peruntukan</td>
-            <td class="td-titikdua">:</td>
+            <td style="width: 75px; font-weight: bold;">Peruntukan</td>
+            <td style="width: 15px; text-align: center;">:</td>
             <td>{{ $permintaan->tujuan_penggunaan ?? '-' }}</td>
         </tr>
     </table>
@@ -191,7 +230,9 @@
 
     <!-- TANGGAL SURAT -->
     @php
-        $tgl = $permintaan->created_at ?? now();
+        // Tanggal berita acara mengikuti tanggal penerimaan yang dipilih saat persetujuan.
+        // Data lama tetap memakai tanggal persetujuan/perubahan terakhir.
+        $tgl = $tanggalSurat ?? $permintaan->tanggal_penerimaan ?? $permintaan->updated_at ?? $permintaan->created_at ?? now();
         $tanggal = \Carbon\Carbon::parse($tgl)->format('j');
         $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('F');
         $tahun = \Carbon\Carbon::parse($tgl)->format('Y');

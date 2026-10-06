@@ -344,8 +344,17 @@
                                         class="status-badge {{ $statusClass }}">{{ str_replace('_', ' ', ucfirst($statusText)) }}</span>
                                 </td>
                                 <td>
-                                    @if($item->status == 'dibatalkan')
-                                        <span style="font-size: 13px; color: var(--muted); font-style: italic;">Tidak ada aksi</span>
+                                    @if(in_array($item->status, ['dibatalkan', 'ditolak']))
+                                        <button class="action-btn" data-item="{{ json_encode($item) }}"
+                                            data-peminjam="{{ $item->user->name ?? '-' }}"
+                                            data-tglpinjam="{{ \Carbon\Carbon::parse($item->tanggal_peminjaman)->format('d/m/Y') }}"
+                                            data-tglkembali="{{ \Carbon\Carbon::parse($item->tanggal_pengembalian)->format('d/m/Y') }}"
+                                            onclick="openDetailModal(this)">
+                                            <i class="fas fa-eye"></i> Detail
+                                        </button>
+                                        <span style="font-size: 12px; color: var(--muted); font-style: italic; margin-left: 6px;">
+                                            {{ $item->status == 'ditolak' ? 'Ditolak' : 'Dibatalkan' }}
+                                        </span>
                                     @else
                                         <button class="action-btn" data-item="{{ json_encode($item) }}"
                                             data-peminjam="{{ $item->user->name ?? '-' }}"
@@ -355,21 +364,25 @@
                                             <i class="fas fa-eye"></i> Detail
                                         </button>
 
-                                        <a href="{{ route('adminasettetap.peminjaman-barang.print', $item->id) }}"
-                                            target="_blank" class="action-btn" style="color: var(--purple);">
+                                        @if(in_array($item->status, ['disetujui', 'diteruskan_kasubag', 'dikembalikan']))
+                                        <form action="{{ route('adminasettetap.peminjaman-barang.print', $item->id) }}" method="GET" target="_blank" style="display:inline-flex; gap:4px; align-items:center;">
+                                            <input type="date" name="tanggal_surat" value="{{ now()->format('Y-m-d') }}" required title="Tanggal surat" style="padding:5px; max-width:135px;">
+                                            <button type="submit" class="action-btn" style="color: var(--purple);">
                                             <i class="fas fa-file-pdf"></i> Cetak
-                                        </a>
+                                            </button>
+                                        </form>
+                                        @endif
 
-                                        @if ($item->status == 'pending')
-                                            <button class="action-btn teruskan"
-                                                onclick="openReviewModal({{ $item->id }}, 'teruskan')">
-                                                <i class="fas fa-paper-plane"></i> Teruskan
-                                            </button>
-                                            <button class="action-btn tolak"
-                                                onclick="openReviewModal({{ $item->id }}, 'tolak')">
-                                                <i class="fas fa-times"></i> Tolak
-                                            </button>
-                                        @elseif(in_array($item->status, ['diteruskan_kasubag', 'disetujui']))
+                                         @if ($item->status == 'pending')
+                                              <button class="action-btn teruskan" style="background:#2563eb; color:#fff;"
+                                                  onclick="openReviewModal({{ $item->id }}, 'teruskan')">
+                                                  <i class="fas fa-arrow-right"></i> Teruskan
+                                              </button>
+                                              <button class="action-btn tolak"
+                                                  onclick="openReviewModal({{ $item->id }}, 'tolak')">
+                                                  <i class="fas fa-times"></i> Tolak
+                                              </button>
+                                         @elseif(in_array($item->status, ['diteruskan_kasubag', 'disetujui']))
                                             <button class="action-btn upload"
                                                 onclick="openUploadModal({{ $item->id }})">
                                                 <i class="fas fa-upload"></i> Upload BAST
@@ -446,6 +459,25 @@
                         <td class="label-col">Keterangan/Catatan</td>
                         <td class="colon-col">:</td>
                         <td><span id="detKeterangan" style="color: var(--danger); font-style: italic;"></span></td>
+                    </tr>
+                    <tr id="rowMultiItems" style="display: none;">
+                        <td colspan="3" style="padding-top: 12px;">
+                            <div style="font-weight: 700; margin-bottom: 6px; color: var(--text);">Daftar Rincian Barang (Multi-Item):</div>
+                            <div style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
+                                <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                                    <thead style="background: #f1f5f9; text-align: left;">
+                                        <tr>
+                                            <th style="padding: 6px 8px;">No</th>
+                                            <th style="padding: 6px 8px;">Nama Barang</th>
+                                            <th style="padding: 6px 8px;">Kode</th>
+                                            <th style="padding: 6px 8px;">NUP</th>
+                                            <th style="padding: 6px 8px;">Jumlah</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detMultiItemsBody"></tbody>
+                                </table>
+                            </div>
+                        </td>
                     </tr>
                 </table>
             </div>
@@ -547,6 +579,30 @@
                 rowKeterangan.style.display = 'none';
             }
 
+            // Penanganan Multi-Item
+            const rowMultiItems = document.getElementById('rowMultiItems');
+            const tbodyMulti = document.getElementById('detMultiItemsBody');
+            if (rowMultiItems && tbodyMulti) {
+                if (itemData.items && itemData.items.length > 0) {
+                    let rows = '';
+                    itemData.items.forEach((it, idx) => {
+                        rows += `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 6px 8px;">${idx + 1}</td>
+                                <td style="padding: 6px 8px; font-weight: 600;">${it.nama_barang}</td>
+                                <td style="padding: 6px 8px; font-family: monospace;">${it.kode_barang}</td>
+                                <td style="padding: 6px 8px;">${it.nup || '-'}</td>
+                                <td style="padding: 6px 8px; font-weight: 700; color: #10B981;">${it.jumlah} Unit</td>
+                            </tr>
+                        `;
+                    });
+                    tbodyMulti.innerHTML = rows;
+                    rowMultiItems.style.display = 'table-row';
+                } else {
+                    rowMultiItems.style.display = 'none';
+                }
+            }
+
             // Tampilkan modal
             document.getElementById('detailModal').style.display = 'flex';
         }
@@ -563,10 +619,14 @@
                 document.getElementById('reviewTitle').innerText = 'Tolak Permintaan';
                 reasonDiv.style.display = 'block';
                 confirmBtn.className = 'action-btn tolak';
+                confirmBtn.innerText = 'Tolak';
             } else {
                 document.getElementById('reviewTitle').innerText = 'Teruskan ke Kasubag';
                 reasonDiv.style.display = 'none';
                 confirmBtn.className = 'action-btn teruskan';
+                confirmBtn.style.background = '#2563eb';
+                confirmBtn.style.color = '#fff';
+                confirmBtn.innerText = 'Teruskan';
             }
             document.getElementById('reviewModal').style.display = 'flex';
         }

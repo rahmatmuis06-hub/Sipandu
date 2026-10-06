@@ -99,7 +99,7 @@
     <span class="topbar-title">Laporan Permintaan Persediaan</span>
     <div class="topbar-right">
       <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-      <form method="POST" action="{{ route('logout') }}">
+      <form method="POST" action="{{ route('logout', [], false) }}">
           @csrf
           <button type="submit" class="btn-keluar">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zm-5 11H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2z"/></svg>
@@ -216,29 +216,7 @@
     </div>
 
     <!-- CHARTS -->
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Tren Permintaan Persediaan</div>
-        <div class="chart-sub">Perbandingan bulanan tahun {{ date('Y') }}</div>
-        
-        <div class="bar-chart">
-          @php $months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']; @endphp
-          @for($i = 1; $i <= 12; $i++)
-            @php $height = $maxMonth > 0 ? ($monthlyData[$i] / $maxMonth * 100) : 0; @endphp
-            <div class="bar-col">
-              <div class="bar-val">{{ $monthlyData[$i] > 0 ? $monthlyData[$i] : '' }}</div>
-              <div class="bar-wrap">
-                  <div class="bar" style="height: {{ $height }}%"></div>
-              </div>
-              <div class="bar-lbl">{{ $months[$i-1] }}</div>
-            </div>
-          @endfor
-        </div>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Jumlah Transaksi Permintaan</div>
-        </div>
-      </div>
-
+    <div style="margin-bottom: 20px; max-width: 420px;">
       <div class="chart-card">
         <div class="chart-title">Distribusi Status</div>
         <div class="chart-sub">Komposisi bulan ini</div>

@@ -157,6 +157,20 @@
             <button type="submit" class="btn btn-reject"><i class="fas fa-times"></i> Tolak</button>
           </form>
         </div>
+      @elseif($item->status == 'disetujui')
+        <div style="display:flex; flex-direction:column; gap:4px; width:100%;">
+          <form action="{{ route('adminasettetap.peminjaman-barang.print', $item->id) }}" method="GET" target="_blank" style="display:flex; gap:4px; align-items:center; width:100%;">
+            <input type="date" name="tanggal_surat" value="{{ now()->format('Y-m-d') }}" required title="Tanggal surat" style="padding:6px; font-size:11px; border:1px solid var(--gray-200); border-radius:6px; flex:1;">
+            <button type="submit" class="btn btn-detail" style="color:var(--blue); width:auto; padding:6px 12px;" title="Cetak Berita Acara">
+              <i class="fas fa-file-pdf"></i> Cetak BAST
+            </button>
+          </form>
+          @if(!empty($item->surat_bast_path))
+            <a href="{{ asset('storage/' . $item->surat_bast_path) }}" target="_blank" class="btn btn-detail" style="color:var(--green); text-decoration:none;" title="Lihat BAST Terunggah">
+              <i class="fas fa-file-circle-check"></i> BAST Fisik
+            </a>
+          @endif
+        </div>
       @endif
     </div>
   </div>

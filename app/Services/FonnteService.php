@@ -15,24 +15,7 @@ class FonnteService
      */
     public static function sendMessage($target, $message)
     {
-        try {
-            $response = Http::withHeaders([
-                'Authorization' => env('FONNTE_TOKEN'),
-            ])->post('https://api.fonnte.com/send', [
-                'target'  => $target,
-                'message' => $message,
-                'countryCode' => '62',
-            ]);
-
-            if ($response->successful()) {
-                return true;
-            }
-
-            Log::error('Fonnte Error: ' . $response->body());
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Fonnte Exception: ' . $e->getMessage());
-            return false;
-        }
+        // Notifikasi WhatsApp dinonaktifkan sepenuhnya
+        return true;
     }
 }

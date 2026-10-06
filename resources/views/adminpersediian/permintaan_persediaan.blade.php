@@ -222,7 +222,7 @@ tr:hover { background: #f8faff; }
         <span class="notif-dot"></span>
       </div> --}}
       <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-      <form method="POST" action="{{ route('logout') }}" style="display:inline">
+      <form method="POST" action="{{ route('logout', [], false) }}" style="display:inline">
         @csrf
         <button type="submit" class="btn-keluar">
           <i class="fas fa-sign-out-alt"></i> Keluar
@@ -236,6 +236,22 @@ tr:hover { background: #f8faff; }
       <h1>Permintaan Persediaan</h1>
       <p>{{ $permintaan->total() }} data permintaan ditemukan {{ $permintaan->hasPages() ? '(Halaman ' . $permintaan->currentPage() . ')' : '' }}</p>
     </div>
+
+    @if(session('success'))
+      <div style="background: #ecfdf5; border-left: 4px solid #10b981; color: #065f46; padding: 14px 20px; margin: 20px 32px 0 32px; border-radius: 8px; font-weight: 600;">
+        <i class="fas fa-check-circle" style="margin-right: 8px;"></i> {{ session('success') }}
+      </div>
+    @endif
+    @if(session('error'))
+      <div style="background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; padding: 14px 20px; margin: 20px 32px 0 32px; border-radius: 8px; font-weight: 600;">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> {{ session('error') }}
+      </div>
+    @endif
+    @if($errors->any())
+      <div style="background: #fef2f2; border-left: 4px solid #ef4444; color: #991b1b; padding: 14px 20px; margin: 20px 32px 0 32px; border-radius: 8px; font-weight: 600;">
+        <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> {{ $errors->first() }}
+      </div>
+    @endif
 
     <div class="table-card">
       <div class="table-toolbar">
@@ -362,8 +378,8 @@ tr:hover { background: #f8faff; }
                         </div>
 
                         <div style="margin-top: 15px; display: flex; gap: 10px;">
-                            <button type="submit" name="action" value="teruskan" class="btn btn-primary style-btn">
-                                <i class="fas fa-paper-plane"></i> Teruskan ke Kasubag
+                            <button type="submit" name="action" value="setuju" class="btn btn-primary style-btn" style="background: #10b981; border-color: #10b981; color: white;">
+                                <i class="fas fa-check"></i> Setujui
                             </button>
                             <button type="submit" name="action" value="tolak" class="btn btn-danger style-btn">
                                 <i class="fas fa-times"></i> Tolak
@@ -373,13 +389,16 @@ tr:hover { background: #f8faff; }
 
                     @elseif(in_array($item->status, ['diteruskan_kasubag', 'disetujui_kasubag', 'disetujui']))
                       {{-- Tombol Cetak (Generate) --}}
-                      <a href="{{ route('adminpersediaan.surat-permintaan', $item->id) }}" class="btn-outline btn-cetak" target="_blank">
+                      <form action="{{ route('adminpersediaan.surat-permintaan', $item->id) }}" method="GET" target="_blank" style="display:flex; gap:6px; align-items:center;">
+                        <input type="date" name="tanggal_surat" value="{{ optional($item->tanggal_penerimaan)->format('Y-m-d') ?? now()->format('Y-m-d') }}" required title="Tanggal surat" style="padding:7px; border:1px solid #d1d5db; border-radius:6px;">
+                        <button type="submit" class="btn-outline btn-cetak">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"></path>
                           <polyline points="14,2 14,8 20,8"></polyline>
                         </svg>
                         <span>Cetak</span>
-                      </a>
+                        </button>
+                      </form>
 
                       {{-- Tombol Upload --}}
                       <button type="button" onclick="openUploadModal({{ $item->id }})" class="btn-outline btn-upload">

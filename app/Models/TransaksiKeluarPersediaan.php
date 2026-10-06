@@ -13,6 +13,7 @@ class TransaksiKeluarPersediaan extends Model
     protected $table = 'transaksi_keluar_persediaan';
     
     protected $fillable = [
+        'persediaan_id',
         'tanggal_input',     // ✅ Sesuai "Tanggal Input"
         'kode_kategori',     // ✅ Sesuai "Kota Kategori"
         'kategori',          // ✅ Sesuai "Kategori"
@@ -60,6 +61,11 @@ class TransaksiKeluarPersediaan extends Model
         return 'Rp ' . number_format($this->total ?? 0, 0, ',', '.');
     }
 
+    public function getKodeUnikBarangAttribute(): string
+    {
+        return trim((string) $this->kode_kategori).'-'.trim((string) $this->kode_barang);
+    }
+
     public function getNoAttribute(): string
     {
         return $this->getKey();
@@ -86,13 +92,6 @@ class TransaksiKeluarPersediaan extends Model
      */
     public function persediaan()
     {
-        // Ganti 'kode_barang' dengan nama kolom yang benar-benar Anda 
-        // gunakan di database untuk menghubungkan transaksi dengan master barang.
-        
-        // Opsi 1: Jika relasinya menggunakan kode_barang
-        // return $this->belongsTo(Persediaan::class, 'kode_barang', 'kode_barang');
-        
-        // Opsi 2: Jika relasinya menggunakan ID (uncomment baris di bawah dan hapus Opsi 1 jika ini yang benar)
-        return $this->belongsTo(Persediaan::class, 'id_barang', 'id');
+        return $this->belongsTo(Persediaan::class);
     }
 }

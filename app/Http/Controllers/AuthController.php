@@ -20,8 +20,12 @@ class AuthController extends Controller
     // ────────────────────────────────────────────────────────────────────
     // Halaman Login
     // ────────────────────────────────────────────────────────────────────
-    public function showLogin(): View
+    public function showLogin(): View|RedirectResponse
     {
+        if (Auth::check()) {
+            return $this->redirectByRole(Auth::user());
+        }
+
         // 1. Hitung total BMN (Gabungan Aset Tetap & Persediaan, bisa Anda sesuaikan)
         $totalAset = AssetTetap::count() + Persediaan::count();
 
@@ -38,7 +42,7 @@ class AuthController extends Controller
         $peranTersedia = User::distinct('role')->count('role');
 
         return view('auth.login', [
-            'alreadyLoggedIn' => Auth::check(),
+            'alreadyLoggedIn' => false,
             'totalAset' => $totalAset,
             'persentaseBaik' => $persentaseBaik,
             'penggunaAktif' => $penggunaAktif,
@@ -99,7 +103,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('login')
+        return redirect()->away(route('login', [], false))
             ->with('success', 'Anda telah logout.');
     }
 
@@ -116,7 +120,6 @@ class AuthController extends Controller
             'adminsarpras'    => redirect()->route('adminsarpras.dashboard'),
             'adminasettetap'  => redirect()->route('adminasettetap.dashboard'),
             'pegawai'         => redirect()->route('pegawai.dashboard'),
-            'tamu'            => redirect()->route('tamu.dashboard'),
             default           => redirect('/'),
         };
     }
@@ -221,7 +224,7 @@ class AuthController extends Controller
             'username' => ['required', 'string', 'max:100', 'unique:users,username'],
             'email' => ['nullable', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', Rule::in(['superadmin','kepalabpmp','kasubag','adminpersediaan','adminsarpras','adminasettetap','pegawai','tamu'])],
+            'role' => ['required', Rule::in(['superadmin','kepalabpmp','kasubag','adminpersediaan','adminsarpras','adminasettetap','pegawai'])],
             'nip' => ['nullable', 'string', 'max:30'],
             'jabatan' => ['nullable', 'string', 'max:255'],
             'unit_kerja_id' => ['nullable', 'exists:unit_kerjas,id'],
@@ -252,48 +255,42 @@ class AuthController extends Controller
         $user = Auth::user();
 
         $request->validate([
-            'signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
-            'signature_base64' => ['nullable', 'string'],
+            'signature' => ['nullable', 'required_without:signature_base64', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'signature_base64' => ['nullable', 'required_without:signature', 'string', 'regex:/^data:image\/(png|jpeg);base64,/'],
         ]);
 
-        $hasUpdate = false;
+        $newPath = null;
 
-        // 1. Jika User Mengunggah File Gambar
         if ($request->hasFile('signature')) {
-            // Hapus yang lama jika ada
-            if ($user->signature && Storage::disk('public')->exists($user->signature)) {
-                Storage::disk('public')->delete($user->signature);
+            $newPath = $request->file('signature')->store('signatures', 'public');
+        } else {
+            [$metadata, $payload] = explode(';base64,', $request->string('signature_base64')->toString(), 2);
+            $binary = base64_decode($payload, true);
+
+            if ($binary === false || strlen($binary) > 2 * 1024 * 1024 || getimagesizefromstring($binary) === false) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'signature_base64' => 'Data tanda tangan tidak valid atau melebihi 2 MB.',
+                ]);
             }
-            $user->signature = $request->file('signature')->store('signatures', 'public');
-            $hasUpdate = true;
-        } 
-        // 2. Jika User Menggambar Manual di Canvas (Base64)
-        elseif ($request->filled('signature_base64')) {
-            // Hapus yang lama jika ada
-            if ($user->signature && Storage::disk('public')->exists($user->signature)) {
-                Storage::disk('public')->delete($user->signature);
-            }
-            
-            // Decode Base64 ke File
-            $image_parts = explode(";base64,", $request->signature_base64);
-            if (count($image_parts) >= 2) {
-                $image_type_aux = explode("image/", $image_parts[0]);
-                $image_type = $image_type_aux[1];
-                $image_base64 = base64_decode($image_parts[1]);
-                
-                $filename = 'signatures/ttd_' . $user->id . '_' . time() . '.' . $image_type;
-                Storage::disk('public')->put($filename, $image_base64);
-                
-                $user->signature = $filename;
-                $hasUpdate = true;
+
+            $extension = str_ends_with($metadata, 'jpeg') ? 'jpg' : 'png';
+            $newPath = 'signatures/ttd_'.$user->id.'_'.now()->format('YmdHisv').'.'.$extension;
+
+            if (! Storage::disk('public')->put($newPath, $binary)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'signature_base64' => 'Tanda tangan gagal disimpan.',
+                ]);
             }
         }
 
-        if ($hasUpdate) {
-            $user->save();
-            return back()->with('success', 'Tanda tangan berhasil diperbarui!');
+        $oldPath = $user->signature;
+        $user->signature = $newPath;
+        $user->save();
+
+        if ($oldPath && $oldPath !== $newPath && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
         }
 
-        return back()->with('error', 'Tidak ada tanda tangan yang dikirim.');
+        return back()->with('success', 'Tanda tangan berhasil diperbarui!');
     }
 }

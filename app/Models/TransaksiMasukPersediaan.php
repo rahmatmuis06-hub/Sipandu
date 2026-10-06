@@ -69,6 +69,11 @@ class TransaksiMasukPersediaan extends Model
         return 'Rp ' . number_format($this->total ?? 0, 0, ',', '.');
     }
 
+    public function getKodeUnikBarangAttribute(): string
+    {
+        return trim((string) $this->kode_kategori).'-'.trim((string) $this->kode_barang);
+    }
+
     public function getTanggalInputFormatAttribute(): string
     {
         return $this->tanggal_input ? $this->tanggal_input->format('d/m/Y') : '-';

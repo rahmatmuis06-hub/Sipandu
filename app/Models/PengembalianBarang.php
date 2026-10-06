@@ -56,7 +56,8 @@ class PengembalianBarang extends Model
     {
         return $query->where('kondisi_barang', 'like', "%{$search}%")
                     ->orWhereHas('peminjamanBarang', function($q) use ($search) {
-                        $q->whereHas('barang', fn($qb) => $qb->where('nama_barang', 'like', "%{$search}%"));
+                        $q->where('nama_barang', 'like', "%{$search}%")
+                          ->orWhere('kode_barang', 'like', "%{$search}%");
                     })
                     ->orWhereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
     }

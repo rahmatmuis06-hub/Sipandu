@@ -19,7 +19,6 @@ class UserSeeder extends Seeder
      *   adminsarpras    / sarpras123
      *   adminasettetap  / aset123
      *   pegawai         / pegawai123
-     *   tamu            / tamu123
      */
     public function run(): void
     {
@@ -105,18 +104,6 @@ class UserSeeder extends Seeder
                 'role'     => 'pegawai',
                 'nip'      => '199510302019031004',
                 'jabatan'  => 'Staf Tata Usaha',
-                'is_active' => true,
-            ],
-
-            // ── Tamu ────────────────────────────────────────────────────
-            [
-                'name'     => 'Pengguna Tamu',
-                'username' => 'tamu',
-                'email'    => 'tamu@bpmpgorontalo.id',
-                'password' => Hash::make('tamu123'),
-                'role'     => 'tamu',
-                'nip'      => null,
-                'jabatan'  => 'Tamu / Pengunjung',
                 'is_active' => true,
             ],
         ];

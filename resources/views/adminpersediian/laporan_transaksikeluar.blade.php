@@ -198,7 +198,7 @@
   <span class="topbar-title">Laporan Transaksi Keluar</span>
   <div class="topbar-right">
     <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-    <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+    <form method="POST" action="{{ route('logout', [], false) }}" style="margin: 0;">
       @csrf
       <button type="submit" class="btn-keluar">Keluar</button>
     </form>
@@ -232,8 +232,8 @@
         <div class="filter-group">
           <select name="kode_kategori" class="filter-select" onchange="this.form.submit()">
             <option value="">Semua Kategori</option>
-            @foreach(\App\Models\TransaksiKeluarPersediaan::distinct()->orderBy('kode_kategori')->pluck('kode_kategori')->toArray() as $kategori)
-              <option value="{{ $kategori }}" {{ request('kode_kategori') == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+            @foreach(\App\Models\TransaksiKeluarPersediaan::select('kode_kategori', 'kategori')->distinct()->orderBy('kategori')->get() as $kategori)
+              <option value="{{ $kategori->kode_kategori }}" {{ request('kode_kategori') == $kategori->kode_kategori ? 'selected' : '' }}>{{ $kategori->kategori }}</option>
             @endforeach
           </select>
         </div>
@@ -277,7 +277,6 @@
       </div>
       <!-- Diubah dari $stats['total_item'] menjadi $totalItem -->
       <div class="stat-value" style="color:var(--blue);">{{ number_format($totalItem ?? 0, 0, ',', '.') }}</div>
-      <div class="stat-sub">Semua Satuan</div>
     </div>
   </div>
 
@@ -299,9 +298,8 @@
             <tr>
               <th width="5%">No</th>
               <th width="10%">Tanggal</th>
-              <th width="10%">Kode Kategori</th>
+              <th width="18%">Kode Unik Barang</th>
               <th width="15%">Kategori</th>
-              <th width="12%">Kode Barang</th>
               <th width="20%">Nama Barang</th>
               <th width="8%">Jml Keluar</th>
               <th width="10%">Harga</th>
@@ -313,9 +311,8 @@
             <tr>
               <td>{{ ($transaksi instanceof \Illuminate\Pagination\LengthAwarePaginator) ? ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration : $loop->iteration }}</td>
               <td><strong>{{ \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') }}</strong></td>
-              <td>{{ $item->kode_kategori ?? '-' }}</td>
+              <td class="font-mono"><strong>{{ $item->kode_unik_barang }}</strong></td>
               <td>{{ $item->kategori ?? '-' }}</td>
-              <td class="font-mono"><strong>{{ $item->kode_barang ?? '-' }}</strong></td>
               <td>{{ Str::limit($item->nama_barang ?? '-', 35) }}</td>
               <!-- Diubah: Menambahkan pemanggilan relasi satuan ke persediaan ($item->persediaan->satuan) -->
               <td class="text-danger">
@@ -326,7 +323,7 @@
             </tr>
             @empty
             <tr>
-              <td colspan="10" style="text-align:center; padding:60px; color:var(--muted);">
+              <td colspan="8" style="text-align:center; padding:60px; color:var(--muted);">
                 Belum ada data transaksi keluar pada filter ini.
               </td>
             </tr>

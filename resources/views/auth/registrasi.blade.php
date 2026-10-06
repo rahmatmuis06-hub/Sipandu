@@ -90,7 +90,7 @@
           </div>
           <div class="flex items-start gap-4">
             <div class="w-9 h-9 rounded-xl bg-blue-500/30 border border-blue-400/40 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">2</div>
-            <div><p class="text-white font-semibold text-sm">Pilih Peran & Unit</p><p class="text-blue-300 text-xs mt-0.5">Tentukan role & unit kerja Anda</p></div>
+            <div><p class="text-white font-semibold text-sm">Pilih Unit Kerja</p><p class="text-blue-300 text-xs mt-0.5">Tentukan unit kerja penugasan Anda</p></div>
           </div>
           <div class="flex items-start gap-4">
             <div class="w-9 h-9 rounded-xl bg-blue-500/30 border border-blue-400/40 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">3</div>
@@ -105,8 +105,8 @@
             <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
             </div>
-            <h2 class="text-2xl font-extrabold text-navy-900 mb-1">Buat Akun Baru</h2>
-            <p class="text-slate-400 text-sm">Registrasi akun SIPANDU</p>
+            <h2 class="text-2xl font-extrabold text-navy-900 mb-1">Daftar Akun Pegawai</h2>
+            <p class="text-slate-400 text-sm">Registrasi akun Pegawai SIPANDU</p>
           </div>
 
           {{-- Flash Messages --}}
@@ -134,18 +134,18 @@
               <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
                 <input id="regName" name="name" type="text" autocomplete="name"
-                  value="{{ old('name') }}"
+                  value="{{ old('name') }}" required
                   class="auth-input w-full pl-9 pr-4 py-3 border {{ $errors->has('name') ? 'border-red-400' : 'border-slate-200' }} rounded-xl text-sm text-navy-900 bg-slate-50 placeholder:text-slate-400"
                   placeholder="Nama lengkap Anda">
               </div>
             </div>
 
             <div class="mb-4">
-              <label for="regNIP" class="block text-sm font-semibold text-navy-800 mb-2">NIP/NIK</label>
+              <label for="regNIP" class="block text-sm font-semibold text-navy-800 mb-2">NIP/NIK <span class="text-red-400">*</span></label>
               <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="20" x="4" y="2" rx="2" ry="2"/><line x1="8" x2="16" y1="6" y2="6"/><line x1="8" x2="16" y1="10" y2="10"/><line x1="8" x2="12" y1="14" y2="14"/></svg></span>
                 <input id="regNIP" name="nip" type="text"
-                  value="{{ old('nip') }}"
+                  value="{{ old('nip') }}" required
                   class="auth-input w-full pl-9 pr-4 py-3 border {{ $errors->has('nip') ? 'border-red-400' : 'border-slate-200' }} rounded-xl text-sm text-navy-900 bg-slate-50 placeholder:text-slate-400"
                   placeholder="Nomor Induk Pegawai">
               </div>
@@ -198,9 +198,9 @@
               <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
                 
-                <select id="regUnitKerja" name="unit_kerja_id" class="auth-input w-full pl-9 pr-4 py-3 border {{ $errors->has('unit_kerja_id') ? 'border-red-400' : 'border-slate-200' }} rounded-xl text-sm text-navy-900 bg-slate-50 appearance-none cursor-pointer">
+                <select id="regUnitKerja" name="unit_kerja_id" required class="auth-input w-full pl-9 pr-4 py-3 border {{ $errors->has('unit_kerja_id') ? 'border-red-400' : 'border-slate-200' }} rounded-xl text-sm text-navy-900 bg-slate-50 appearance-none cursor-pointer">
                   <option value="">-- Pilih Unit Kerja --</option>
-                  @foreach(\App\Models\UnitKerja::all() as $unit)
+                  @foreach($unitKerjas ?? \App\Models\UnitKerja::orderBy('nama_unit')->get() as $unit)
                     <option value="{{ $unit->id }}" {{ old('unit_kerja_id') == $unit->id ? 'selected' : '' }}>
                       {{ $unit->nama_unit }}
                     </option>
@@ -211,22 +211,9 @@
               </div>
             </div>
 
-            <div class="mb-6">
-              <label for="regRole" class="block text-sm font-semibold text-navy-800 mb-2">Peran / Role <span class="text-red-400">*</span></label>
-              <div class="relative">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
-                <select id="regRole" name="role" class="auth-input w-full pl-9 pr-4 py-3 border {{ $errors->has('role') ? 'border-red-400' : 'border-slate-200' }} rounded-xl text-sm text-navy-900 bg-slate-50 appearance-none cursor-pointer">
-                  <option value="">-- Pilih Peran --</option>
-                  <option value="pegawai"          {{ old('role') == 'pegawai'          ? 'selected' : '' }}>Pegawai</option>
-                  <option value="adminpersediaan"  {{ old('role') == 'adminpersediaan'  ? 'selected' : '' }}>Admin Persediaan</option>
-                  <option value="adminsarpras"     {{ old('role') == 'adminsarpras'     ? 'selected' : '' }}>Admin Sarana Prasarana</option>
-                  <option value="adminasettetap"   {{ old('role') == 'adminasettetap'   ? 'selected' : '' }}>Admin Aset Tetap</option>
-                  <option value="kasubag"          {{ old('role') == 'kasubag'          ? 'selected' : '' }}>Kasubag TU</option>
-                  <option value="kepalabpmp"       {{ old('role') == 'kepalabpmp'       ? 'selected' : '' }}>Kepala BPMP</option>
-                  <option value="tamu"             {{ old('role') == 'tamu'             ? 'selected' : '' }}>Tamu</option>
-                </select>
-                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
-              </div>
+            <div class="mb-6 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-start gap-2.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-600 flex-shrink-0 mt-0.5"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+              <span>Pendaftaran ini khusus untuk <strong>Pegawai BPMP Gorontalo</strong>. Akun yang didaftarkan akan otomatis mendapatkan peran sebagai <strong>Pegawai</strong> dan terhubung ke Unit Kerja yang dipilih.</span>
             </div>
 
             <button type="submit" id="regBtn"
@@ -238,7 +225,7 @@
 
           <p class="text-center text-sm text-slate-500 mt-5">
             Sudah punya akun?
-            <a href="{{ route('login') }}" class="text-navy-600 font-semibold hover:underline ml-1">Masuk di sini</a>
+            <a href="{{ route('login', [], false) }}" class="text-navy-600 font-semibold hover:underline ml-1">Masuk di sini</a>
           </p>
         </div>
       </div>

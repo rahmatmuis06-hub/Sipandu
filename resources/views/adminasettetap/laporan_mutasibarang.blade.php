@@ -501,30 +501,7 @@ body {
     </div>
 
     <!-- CHARTS ROW -->
-    <div class="charts-row">
-      <div class="chart-card">
-        <div class="chart-title">Tren Mutasi barang</div>
-        <div class="chart-sub">Perbandingan bulanan tahun 2025</div>
-        <div class="bar-chart">
-          <div class="bar-col"><div class="bar-val">5</div><div class="bar-wrap"><div class="bar" style="height:50%"></div></div><div class="bar-lbl">Jan</div></div>
-          <div class="bar-col"><div class="bar-val">8</div><div class="bar-wrap"><div class="bar" style="height:80%"></div></div><div class="bar-lbl">Feb</div></div>
-          <div class="bar-col"><div class="bar-val">6</div><div class="bar-wrap"><div class="bar" style="height:60%"></div></div><div class="bar-lbl">Mar</div></div>
-          <div class="bar-col"><div class="bar-val">10</div><div class="bar-wrap"><div class="bar" style="height:100%"></div></div><div class="bar-lbl">Apr</div></div>
-          <div class="bar-col"><div class="bar-val">7</div><div class="bar-wrap"><div class="bar" style="height:70%"></div></div><div class="bar-lbl">Mei</div></div>
-          <div class="bar-col"><div class="bar-val">9</div><div class="bar-wrap"><div class="bar" style="height:90%"></div></div><div class="bar-lbl">Jun</div></div>
-          <div class="bar-col"><div class="bar-val">4</div><div class="bar-wrap"><div class="bar" style="height:40%"></div></div><div class="bar-lbl">Jul</div></div>
-          <div class="bar-col"><div class="bar-val">3</div><div class="bar-wrap"><div class="bar green" style="height:30%"></div></div><div class="bar-lbl">Agu</div></div>
-          <div class="bar-col"><div class="bar-val">6</div><div class="bar-wrap"><div class="bar green" style="height:60%"></div></div><div class="bar-lbl">Sep</div></div>
-          <div class="bar-col"><div class="bar-val">5</div><div class="bar-wrap"><div class="bar green" style="height:50%"></div></div><div class="bar-lbl">Okt</div></div>
-          <div class="bar-col"><div class="bar-val">3</div><div class="bar-wrap"><div class="bar" style="height:30%"></div></div><div class="bar-lbl">Nov</div></div>
-          <div class="bar-col"><div class="bar-val">3</div><div class="bar-wrap"><div class="bar" style="height:30%"></div></div><div class="bar-lbl">Des</div></div>
-        </div>
-        <div class="chart-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Mutasi Barang</div>
-     
-        </div>
-      </div>
-
+    <div style="margin-bottom: 20px; max-width: 420px;">
       <div class="chart-card">
         <div class="chart-title">Distribusi Status</div>
         <div class="chart-sub">Komposisi per status</div>

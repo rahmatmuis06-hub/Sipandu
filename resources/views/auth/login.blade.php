@@ -146,7 +146,7 @@
             </div>
           @endif
 
-          <form method="POST" action="{{ route('login.post') }}" id="loginForm">
+          <form method="POST" action="{{ route('login.post', [], false) }}" id="loginForm">
             @csrf
 
             <!-- Username -->
@@ -203,6 +203,7 @@
             </button>
           </form>
 
+          @if(config('demo.enabled'))
           <!-- Divider -->
           <div class="flex items-center gap-3 my-6">
             <div class="flex-1 h-px bg-slate-200"></div>
@@ -211,7 +212,8 @@
           </div>
 
           <!-- Quick fill buttons -->
-          {{-- <div class="grid grid-cols-2 gap-2 mb-6">
+          <p class="text-xs text-slate-500 mb-3">Klik peran untuk langsung masuk menggunakan akun uji coba.</p>
+          <div id="demoAccounts" class="grid grid-cols-2 gap-2 mb-6">
             <button type="button" onclick="quickFill('Operator','super123')"          class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-red-500"></span>Operator</button>
             <button type="button" onclick="quickFill('kepalabpmp','kepala123')"         class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-purple-500"></span>Kepala BPMP</button>
             <button type="button" onclick="quickFill('kasubag','kasubag123')"           class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-indigo-500"></span>Kasubag Umum</button>
@@ -219,8 +221,8 @@
             <button type="button" onclick="quickFill('adminsarpras','sarpras123')"      class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-cyan-500"></span>Admin Sarpras</button>
             <button type="button" onclick="quickFill('adminasettetap','aset123')"       class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-orange-500"></span>Admin Aset</button>
             <button type="button" onclick="quickFill('pegawai','pegawai123')"           class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-slate-500"></span>Pegawai</button>
-            <button type="button" onclick="quickFill('tamu','tamu123')"                 class="text-xs font-semibold text-navy-700 bg-navy-50 hover:bg-navy-100 border border-navy-200/60 rounded-lg py-2 px-3 transition flex items-center gap-1.5 "><span class="w-2 h-2 rounded-full bg-gray-500"></span>Tamu</button>
-          </div> --}}
+          </div>
+          @endif
 
           <p class="text-center text-sm text-slate-500">
             Belum punya akun?
@@ -258,6 +260,8 @@
   function quickFill(u, p) {
     document.getElementById('loginUsername').value = u;
     document.getElementById('loginPassword').value = p;
+    document.getElementById('rememberMe').checked = false;
+    document.getElementById('loginForm').requestSubmit();
   }
 
   // Toggle show/hide password
@@ -276,6 +280,7 @@
     const btn = document.getElementById('loginBtn');
     btn.innerHTML = '<svg class="animate-spin w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Memuat...';
     btn.disabled = true;
+    document.querySelectorAll('#demoAccounts button').forEach(button => button.disabled = true);
   });
 
   lucide.createIcons();

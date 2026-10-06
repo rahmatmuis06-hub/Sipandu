@@ -14,9 +14,8 @@ class PersediaanTemplateExport implements FromArray, WithHeadings, WithStyles, S
     public function headings(): array
     {
         return [
-            'kode_kategori',
+            'kode_unik_barang',
             'kategori',
-            'kode_barang',
             'nama_barang',
             'tanggal_masuk',
             'harga_satuan',
@@ -29,9 +28,8 @@ class PersediaanTemplateExport implements FromArray, WithHeadings, WithStyles, S
     {
         return [
             [
-                'ATK',
-                'Alat Tulis Kantor',
                 'ATK-001',
+                'Alat Tulis Kantor',
                 'Kertas HVS A4 Sidu',
                 date('Y-m-d'),
                 50000,

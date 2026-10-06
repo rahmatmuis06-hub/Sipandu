@@ -106,7 +106,7 @@
 
     @php
         // LOGIKA PENANGGALAN OTOMATIS
-        $tgl = $pengembalian->tanggal_pengembalian_aktual ?? now();
+        $tgl = $tanggalSurat ?? $pengembalian->tanggal_pengembalian_aktual ?? now();
         $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
         $tanggal_teks = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('D');
         $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');

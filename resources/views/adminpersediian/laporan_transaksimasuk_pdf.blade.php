@@ -115,9 +115,8 @@
             <tr>
                 <th style="width: 4%;">No</th>
                 <th style="width: 10%;">Tanggal Input</th>
-                <th style="width: 12%;">Kode Kategori</th>
+                <th style="width: 18%;">Kode Unik Barang</th>
                 <th style="width: 14%;">Kategori</th>
-                <th style="width: 12%;">Kode Barang</th>
                 <th style="width: 20%;">Nama Barang</th>
                 <th style="width: 8%;">Jml Masuk</th>
                 <th style="width: 10%;">Harga Satuan</th>
@@ -129,9 +128,8 @@
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td class="text-center">{{ $item->tanggal_input ? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') : '-' }}</td>
-                <td class="text-center">{{ $item->kode_kategori ?? '-' }}</td>
+                <td class="text-center">{{ $item->kode_unik_barang }}</td>
                 <td class="text-left">{{ $item->kategori ?? '-' }}</td>
-                <td class="text-center">{{ $item->kode_barang ?? '-' }}</td>
                 <td class="text-left">{{ $item->nama_barang ?? '-' }}</td>
                 <td class="text-center"><b>{{ number_format($item->jumlah_masuk ?? 0, 0, ',', '.') }}</b> Unit</td>
                 <td class="text-right">Rp {{ number_format($item->harga_satuan ?? 0, 0, ',', '.') }}</td>
@@ -139,14 +137,14 @@
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center" style="padding: 20px;">Tidak ada data transaksi masuk persediaan pada filter/periode ini.</td>
+                <td colspan="8" class="text-center" style="padding: 20px;">Tidak ada data transaksi masuk persediaan pada filter/periode ini.</td>
             </tr>
             @endforelse
         </tbody>
         @if($transaksi->count() > 0)
         <tfoot>
             <tr>
-                <td colspan="8" class="text-right"><strong>Total Keseluruhan:</strong></td>
+                <td colspan="7" class="text-right"><strong>Total Keseluruhan:</strong></td>
                 <td class="text-right"><strong>Rp {{ number_format($transaksi->sum('total'), 0, ',', '.') }}</strong></td>
             </tr>
             <tr>

@@ -1043,68 +1043,106 @@
             </div>
             @endif
 
-            <div style="font-size: 12px; color: var(--danger); background: rgba(239, 68, 68, 0.1); padding: 8px 12px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 500;">
-              <i class="fas fa-info-circle"></i> <b>Perhatian:</b> Pengajuan peminjaman barang wajib dilakukan maksimal H-1. Anda tidak bisa memilih tanggal hari ini.
+            <div style="font-size: 12px; color: #1d4ed8; background: #eff6ff; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; border: 1px solid #bfdbfe; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+              <i class="fas fa-info-circle" style="color: #2563eb; font-size: 14px;"></i> <span><b>Informasi:</b> Peminjaman barang dapat diajukan mulai hari ini, sesuai ketersediaan barang dan persetujuan petugas.</span>
             </div>
 
-            <div class="form-group">
-              <div class="form-label"><i class="fas fa-search"></i> Pilih Aset <span class="req">*</span></div>
-              <select class="form-select" name="kode_barang" id="asetSelect" required>
-                <option value="">-- Ketik untuk mencari barang... --</option>
-                @foreach($asetTetap as $aset)
-                <option value="{{ $aset->kode_barang }}"
-                  data-nama="{{ $aset->nama_barang }}"
-                  data-merek="{{ $aset->merek }}"
-                  data-stok="{{ $aset->jumlah }}"
-                  data-kategori="{{ $aset->kategori }}"
-                  data-nup="{{ $aset->nup }}">
-                  {{ $aset->kode_barang }} - (NUP: {{ $aset->nup }}) {{ $aset->nama_barang }} 
-                </option>
-                @endforeach
-              </select>
-            </div>
+            <!-- PEMILIHAN ASET (BISA MULTI-ITEM) -->
+            <div style="background: #F8FAFC; border: 1.5px dashed #CBD5E1; border-radius: 12px; padding: 16px; margin-bottom: 18px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                <i class="fas fa-plus-circle" style="color: var(--primary);"></i> Pilih Barang yang Ingin Dipinjam
+              </div>
 
-            <div class="facility-preview" id="previewBarang">
-              <div class="fp-icon"><i class="fas fa-box-open"></i></div>
-              <div>
-                <div class="fp-name" id="previewNama">-</div>
-                <div class="fp-details">
-                  <span class="fp-tag" id="previewMerek">-</span>
-                  <span class="fp-tag" style="background:rgba(16,185,129,0.1);color:var(--success)" id="previewStok">-</span>
+              <div class="form-group" style="margin-bottom: 12px;">
+                <div class="form-label"><i class="fas fa-search"></i> Cari Aset</div>
+                <select class="form-select" id="asetSelect">
+                  <option value="">-- Ketik untuk mencari barang... --</option>
+                  @foreach($asetTetap as $aset)
+                  <option value="{{ $aset->kode_barang }}|{{ $aset->nup }}"
+                    data-kode="{{ $aset->kode_barang }}"
+                    data-nama="{{ $aset->nama_barang }}"
+                    data-merek="{{ $aset->merek }}"
+                    data-stok="{{ $aset->jumlah }}"
+                    data-kategori="{{ $aset->kategori }}"
+                    data-nup="{{ $aset->nup }}">
+                    {{ $aset->kode_barang }} - (NUP: {{ $aset->nup }}) {{ $aset->nama_barang }} 
+                  </option>
+                  @endforeach
+                </select>
+              </div>
+
+              <div class="facility-preview" id="previewBarang" style="margin-bottom: 12px;">
+                <div class="fp-icon"><i class="fas fa-box-open"></i></div>
+                <div>
+                  <div class="fp-name" id="previewNama">-</div>
+                  <div class="fp-details">
+                    <span class="fp-tag" id="previewMerek">-</span>
+                    <span class="fp-tag" style="background:rgba(16,185,129,0.1);color:var(--success)" id="previewStok">-</span>
+                  </div>
                 </div>
               </div>
+
+              <div class="input-row" style="margin-bottom: 12px;">
+                <div class="form-group">
+                  <div class="form-label"><i class="fas fa-barcode"></i> NUP</div>
+                  <input type="text" class="form-input" id="nupInput" placeholder="Otomatis..." readonly style="background: #f1f5f9; cursor: not-allowed;">
+                </div>
+                <div class="form-group">
+                  <div class="form-label"><i class="fas fa-cubes"></i> Jumlah Unit</div>
+                  <input type="number" class="form-input" id="inputJumlah" value="1" min="1" placeholder="1">
+                </div>
+              </div>
+
+              <input type="hidden" id="kategoriInput">
+
+              <button type="button" onclick="tambahItemKeDaftarPinjam()" class="btn" style="background: #EEF2FF; color: var(--primary); border: 1.5px solid #C7D2FE; font-weight: 700; width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; transition: all .15s;">
+                <i class="fas fa-cart-plus"></i> + Tambahkan ke Daftar Pinjaman
+              </button>
             </div>
 
-            <div class="input-row" style="margin-top: 14px;">
-              <div class="form-group">
-                <div class="form-label"><i class="fas fa-tags"></i> Kategori Barang</div>
-                <input type="text" class="form-input" id="kategoriInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+            <!-- TABEL DAFTAR BARANG YANG AKAN DIPINJAM -->
+            <div style="margin-bottom: 20px;">
+              <div style="font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fas fa-list-check"></i> Daftar Barang Pinjaman (<span id="totalItemCount">0</span> barang)</span>
+                <span style="font-size: 11px; color: var(--muted); font-weight: 400;">Bisa meminjam banyak barang sekaligus</span>
               </div>
-              <div class="form-group">
-                <div class="form-label"><i class="fas fa-barcode"></i> Nomor Urut Pendaftaran (NUP)</div>
-                <input type="text" class="form-input" id="nupInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
-              </div>
-            </div>
 
-            <div class="form-group">
-              <div class="form-label"><i class="fas fa-cubes"></i> Jumlah Diminta <span class="req">*</span></div>
-              <input type="number" class="form-input" name="jumlah" id="inputJumlah" min="1" placeholder="Masukkan jumlah barang" required>
+              <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #FFF;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;" id="tabelBarangPinjam">
+                  <thead>
+                    <tr style="background: #F8FAFC; border-bottom: 1px solid var(--border); text-align: left;">
+                      <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 35px;">No</th>
+                      <th style="padding: 9px 12px; font-weight: 700; color: #475569;">Nama & Merek</th>
+                      <th style="padding: 9px 12px; font-weight: 700; color: #475569;">Kode / NUP</th>
+                      <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 60px;">Jumlah</th>
+                      <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 45px; text-align: center;">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyBarangPinjam">
+                    <tr id="emptyRowPinjam">
+                      <td colspan="5" style="text-align: center; padding: 22px; color: var(--muted); font-style: italic;">
+                        Belum ada barang di daftar. Pilih barang di atas lalu klik "+ Tambahkan ke Daftar Pinjaman".
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             <div class="input-row">
               <div class="form-group">
                 <div class="form-label"><i class="fas fa-calendar"></i> Tgl Pinjam <span class="req">*</span></div>
-                <input type="date" class="form-input" name="tanggal_peminjaman" min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" required>
+                <input type="date" class="form-input" id="tglPinjamInput" name="tanggal_peminjaman" value="{{ old('tanggal_peminjaman', today()->format('Y-m-d')) }}" min="{{ today()->format('Y-m-d') }}" required>
               </div>
               <div class="form-group">
                 <div class="form-label"><i class="fas fa-calendar-check"></i> Tgl Kembali <span class="req">*</span></div>
-                <input type="date" class="form-input" name="tanggal_pengembalian" min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" required>
+                <input type="date" class="form-input" id="tglKembaliInput" name="tanggal_pengembalian" value="{{ old('tanggal_pengembalian', today()->format('Y-m-d')) }}" min="{{ today()->format('Y-m-d') }}" required>
               </div>
             </div>
 
             <div class="form-group">
               <div class="form-label"><i class="fas fa-bullseye"></i> Tujuan Penggunaan <span class="req">*</span></div>
-              <textarea class="form-textarea" name="deskripsi_peruntukan" placeholder="Jelaskan tujuan peminjaman secara singkat dan jelas..." required></textarea>
+              <textarea class="form-textarea" name="deskripsi_peruntukan" placeholder="Jelaskan tujuan peminjaman secara singkat dan jelas..." required>{{ old('deskripsi_peruntukan') }}</textarea>
             </div>
 
             <button type="submit" class="submit-btn" id="btnSubmit">
@@ -1208,7 +1246,7 @@
             <div id="detailContent" style="display: none;">
               <table style="width: 100%; font-size: 13px; line-height: 2;">
                 <tr>
-                  <td style="color: var(--text-secondary); width: 40%;">Barang</td>
+                  <td style="color: var(--text-secondary); width: 40%;">Ringkasan Barang</td>
                   <td style="font-weight: bold;" id="detBarang">-</td>
                 </tr>
                 <tr>
@@ -1216,11 +1254,7 @@
                   <td id="detKode">-</td>
                 </tr>
                 <tr>
-                  <td style="color: var(--text-secondary);">Merek</td>
-                  <td id="detMerek">-</td>
-                </tr>
-                <tr>
-                  <td style="color: var(--text-secondary);">Jumlah</td>
+                  <td style="color: var(--text-secondary);">Total Jumlah</td>
                   <td id="detJumlah">-</td>
                 </tr>
                 <tr>
@@ -1236,6 +1270,24 @@
                   <td style="font-weight: bold;" id="detStatus">-</td>
                 </tr>
               </table>
+
+              <!-- Tabel Rincian Multi-Item -->
+              <div id="detTableWrapper" style="margin-top: 14px; display: none;">
+                <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; color: var(--text);">Rincian Barang yang Dipinjam:</div>
+                <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 11.5px;">
+                    <thead style="background: #f1f5f9; text-align: left;">
+                      <tr>
+                        <th style="padding: 6px 8px;">No</th>
+                        <th style="padding: 6px 8px;">Nama Barang</th>
+                        <th style="padding: 6px 8px;">Kode/NUP</th>
+                        <th style="padding: 6px 8px;">Jumlah</th>
+                      </tr>
+                    </thead>
+                    <tbody id="detTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
           <div style="padding: 16px 24px; background: #f8fafc; text-align: right; border-top: 1px solid var(--border);">
@@ -1250,6 +1302,8 @@
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   
   <script>
+    let daftarPinjaman = [];
+
     $(document).ready(function() {
       // Inisialisasi Select2
       $('#asetSelect').select2({
@@ -1258,10 +1312,25 @@
         width: '100%'
       });
 
-      // Menghubungkan Select2 dengan fungsi update detail bawaan Anda
       $('#asetSelect').on('select2:select select2:clear', function (e) {
         updateDetailAset();
       });
+
+      // Validasi dinamis tanggal peminjaman & pengembalian
+      const tglPinjam = document.getElementById('tglPinjamInput');
+      const tglKembali = document.getElementById('tglKembaliInput');
+
+      if (tglPinjam && tglKembali) {
+        if (tglPinjam.value) {
+          tglKembali.min = tglPinjam.value;
+        }
+        tglPinjam.addEventListener('change', function() {
+          tglKembali.min = this.value;
+          if (tglKembali.value && tglKembali.value < this.value) {
+            tglKembali.value = this.value;
+          }
+        });
+      }
     });
 
     function updateDetailAset() {
@@ -1269,7 +1338,6 @@
       const selected = select.options[select.selectedIndex];
       const previewBox = document.getElementById('previewBarang');
       const inputJumlah = document.getElementById('inputJumlah');
-
       const kategoriInput = document.getElementById('kategoriInput');
       const nupInput = document.getElementById('nupInput');
 
@@ -1279,10 +1347,8 @@
         document.getElementById('previewStok').innerText = "Stok Tersedia: " + selected.getAttribute('data-stok');
 
         inputJumlah.max = selected.getAttribute('data-stok');
-
         kategoriInput.value = selected.getAttribute('data-kategori') || 'Umum';
-        nupInput.value = selected.getAttribute('data-nup') || '-';
-
+        nupInput.value = selected.getAttribute('data-nup') || '';
         previewBox.style.display = 'flex';
       } else {
         previewBox.style.display = 'none';
@@ -1292,7 +1358,109 @@
       }
     }
 
-    document.getElementById('peminjamanForm').addEventListener('submit', function() {
+    function tambahItemKeDaftarPinjam() {
+      const select = document.getElementById('asetSelect');
+      if (!select.value) {
+        alert('Silakan pilih barang terlebih dahulu!');
+        return;
+      }
+      const selected = select.options[select.selectedIndex];
+      const kode = selected.getAttribute('data-kode');
+      const nama = selected.getAttribute('data-nama');
+      const merek = selected.getAttribute('data-merek') || '-';
+      const nup = selected.getAttribute('data-nup') || '';
+      const jumlahInput = document.getElementById('inputJumlah');
+      const jumlah = parseInt(jumlahInput.value) || 1;
+
+      if (jumlah <= 0) {
+        alert('Jumlah pinjam minimal 1 unit!');
+        return;
+      }
+
+      const existing = daftarPinjaman.find(item => item.kode_barang === kode && item.nup === nup);
+      if (existing) {
+        alert('Barang ini (NUP: ' + (nup || '-') + ') sudah ada di dalam daftar pinjaman.');
+        return;
+      }
+
+      daftarPinjaman.push({
+        kode_barang: kode,
+        nup: nup,
+        nama_barang: nama,
+        merek: merek,
+        jumlah: jumlah
+      });
+
+      renderTabelPinjaman();
+
+      // Reset form pilihan aset
+      $('#asetSelect').val('').trigger('change');
+      updateDetailAset();
+      jumlahInput.value = 1;
+    }
+
+    function hapusItemPinjam(idx) {
+      daftarPinjaman.splice(idx, 1);
+      renderTabelPinjaman();
+    }
+
+    function renderTabelPinjaman() {
+      const tbody = document.getElementById('tbodyBarangPinjam');
+      const totalCount = document.getElementById('totalItemCount');
+      totalCount.innerText = daftarPinjaman.length;
+
+      if (daftarPinjaman.length === 0) {
+        tbody.innerHTML = `
+          <tr id="emptyRowPinjam">
+            <td colspan="5" style="text-align: center; padding: 22px; color: var(--muted); font-style: italic;">
+              Belum ada barang di daftar. Pilih barang di atas lalu klik "+ Tambahkan ke Daftar Pinjaman".
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      let html = '';
+      daftarPinjaman.forEach((item, i) => {
+        html += `
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 10px 12px; font-weight: 700; color: var(--muted);">${i + 1}</td>
+            <td style="padding: 10px 12px;">
+              <div style="font-weight: 700; color: var(--text);">${item.nama_barang}</div>
+              <small style="color: var(--muted);">Merek: ${item.merek}</small>
+              <input type="hidden" name="items[${i}][kode_barang]" value="${item.kode_barang}">
+              <input type="hidden" name="items[${i}][nup]" value="${item.nup}">
+              <input type="hidden" name="items[${i}][jumlah]" value="${item.jumlah}">
+            </td>
+            <td style="padding: 10px 12px;">
+              <div style="font-family: monospace; font-size: 11.5px; color: #1E293B;">${item.kode_barang}</div>
+              <small style="color: var(--primary); font-weight: 600;">NUP: ${item.nup || '-'}</small>
+            </td>
+            <td style="padding: 10px 12px; font-weight: 700; color: #10B981;">
+              ${item.jumlah} Unit
+            </td>
+            <td style="padding: 10px 12px; text-align: center;">
+              <button type="button" onclick="hapusItemPinjam(${i})" style="background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Hapus dari daftar">
+                <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    document.getElementById('peminjamanForm').addEventListener('submit', function(e) {
+      const select = document.getElementById('asetSelect');
+      if (daftarPinjaman.length === 0) {
+        if (select.value) {
+          tambahItemKeDaftarPinjam();
+        } else {
+          e.preventDefault();
+          alert('Silakan pilih minimal 1 barang dan klik "+ Tambahkan ke Daftar Pinjaman".');
+          return;
+        }
+      }
       const btn = document.getElementById('btnSubmit');
       btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
       btn.style.opacity = '0.7';
@@ -1315,7 +1483,6 @@
             let data = res.data;
             document.getElementById('detBarang').innerText = data.nama_barang;
             document.getElementById('detKode').innerText = data.kode_barang + ' / ' + (data.nup || '-');
-            document.getElementById('detMerek').innerText = data.merek || '-';
             document.getElementById('detJumlah').innerText = data.jumlah + ' Unit';
 
             let tglPinjam = new Date(data.tanggal_peminjaman).toLocaleDateString('id-ID');
@@ -1324,6 +1491,27 @@
 
             document.getElementById('detTujuan').innerText = data.deskripsi_peruntukan;
             document.getElementById('detStatus').innerText = data.status.toUpperCase().replace('_', ' ');
+
+            // Tampilkan list multi-item jika ada
+            const tableWrapper = document.getElementById('detTableWrapper');
+            const tbody = document.getElementById('detTableBody');
+            if (data.items && data.items.length > 0) {
+              let rows = '';
+              data.items.forEach((it, idx) => {
+                rows += `
+                  <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 6px 8px;">${idx + 1}</td>
+                    <td style="padding: 6px 8px; font-weight: 600;">${it.nama_barang}</td>
+                    <td style="padding: 6px 8px;">${it.kode_barang} (NUP: ${it.nup || '-'})</td>
+                    <td style="padding: 6px 8px; font-weight: 700; color: #10B981;">${it.jumlah} Unit</td>
+                  </tr>
+                `;
+              });
+              tbody.innerHTML = rows;
+              tableWrapper.style.display = 'block';
+            } else {
+              tableWrapper.style.display = 'none';
+            }
 
             loading.style.display = 'none';
             content.style.display = 'block';

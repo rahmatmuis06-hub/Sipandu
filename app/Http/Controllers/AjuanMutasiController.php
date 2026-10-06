@@ -14,6 +14,7 @@ class AjuanMutasiController extends Controller
     public function index(Request $request)
     {
         $query = AjuanMutasi::with(['asetTetap', 'user'])
+            ->where('user_id', Auth::id())
             ->when($request->filled('search'), function ($q) use ($request) {
                 $q->where(function ($subQ) use ($request) {
                     $subQ->where('nup', 'like', "%{$request->search}%")
@@ -71,10 +72,6 @@ class AjuanMutasiController extends Controller
                 'user_id'       => Auth::id(),
             ]);
 
-            // CATATAN: Untuk Ajuan, biasanya lokasi di aset_tetap TIDAK langsung diupdate. 
-            // Nanti admin yang update saat ACC. Tapi karena instruksinya "sama persis", saya biarkan update lokasinya.
-            $aset->update(['lokasi' => $validated['lokasi_akhir']]);
-
             DB::commit();
 
             return response()->json([
@@ -93,7 +90,9 @@ class AjuanMutasiController extends Controller
 
     public function show($id)
     {
-        $ajuan = AjuanMutasi::with(['asetTetap', 'user'])->findOrFail($id);
+        $ajuan = AjuanMutasi::with(['asetTetap', 'user'])
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
 
         $ajuan->tanggal_mutasi_formatted = $ajuan->tanggal_mutasi?->format('d/m/Y');
         $ajuan->tanggal_input = $ajuan->created_at?->format('d/m/Y H:i');
@@ -103,7 +102,9 @@ class AjuanMutasiController extends Controller
 
     public function edit($id)
     {
-        $ajuan = AjuanMutasi::with('asetTetap')->findOrFail($id);
+        $ajuan = AjuanMutasi::with('asetTetap')
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
 
         return response()->json([
             'id'            => $ajuan->id,
@@ -131,7 +132,7 @@ class AjuanMutasiController extends Controller
 
         DB::beginTransaction();
         try {
-            $ajuan = AjuanMutasi::findOrFail($id);
+            $ajuan = AjuanMutasi::where('user_id', Auth::id())->findOrFail($id);
             $aset = AssetTetap::findOrFail($validated['aset_tetap_id']);
 
             $ajuan->update([
@@ -145,8 +146,6 @@ class AjuanMutasiController extends Controller
                 'tanggal_mutasi'=> $validated['tanggal_mutasi'],
                 'keterangan'    => $validated['keterangan'],
             ]);
-
-            $aset->update(['lokasi' => $validated['lokasi_akhir']]);
 
             DB::commit();
 
@@ -167,11 +166,7 @@ class AjuanMutasiController extends Controller
     {
         DB::beginTransaction();
         try {
-            $ajuan = AjuanMutasi::with('asetTetap')->findOrFail($id);
-
-            if ($ajuan->asetTetap) {
-                $ajuan->asetTetap->update(['lokasi' => $ajuan->lokasi_awal]);
-            }
+            $ajuan = AjuanMutasi::where('user_id', Auth::id())->findOrFail($id);
 
             $ajuan->delete();
 

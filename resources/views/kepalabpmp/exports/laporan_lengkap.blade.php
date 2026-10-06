@@ -57,10 +57,10 @@
         </table>
         <div class="sub-title">Daftar Persediaan</div>
         <table>
-            <thead><tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Jumlah</th></tr></thead>
+            <thead><tr><th>No</th><th>Kode Unik Barang</th><th>Nama Barang</th><th>Kategori</th><th>Jumlah</th></tr></thead>
             <tbody>
             @foreach($persediaan_list as $i => $item)
-                <tr><td>{{ $i+1 }}</td><td>{{ $item->kode_barang }}</td><td>{{ $item->nama_barang }}</td><td>{{ $item->kategori }}</td><td>{{ $item->getRawOriginal('jumlah') }}</td></tr>
+                <tr><td>{{ $i+1 }}</td><td>{{ $item->kode_unik_barang }}</td><td>{{ $item->nama_barang }}</td><td>{{ $item->kategori }}</td><td>{{ $item->getRawOriginal('jumlah') }}</td></tr>
             @endforeach
             </tbody>
         </table>

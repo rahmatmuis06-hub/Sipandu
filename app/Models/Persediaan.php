@@ -16,6 +16,7 @@ class Persediaan extends Model
         'kode_kategori',
         'kategori',
         'kode_barang',
+        'kode_unik_barang',
         'nama_barang',
         'satuan',
         'tanggal_masuk',
@@ -30,6 +31,32 @@ class Persediaan extends Model
         'harga_total' => 'decimal:2',
         'jumlah' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Persediaan $persediaan) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('persediaan', 'kode_unik_barang')) {
+                    if (empty($persediaan->attributes['kode_unik_barang'])) {
+                        $persediaan->attributes['kode_unik_barang'] = trim((string) $persediaan->kode_kategori)
+                            .'-'.trim((string) $persediaan->kode_barang);
+                    }
+                } else {
+                    unset($persediaan->kode_unik_barang);
+                }
+            } catch (\Throwable $e) {
+                unset($persediaan->kode_unik_barang);
+            }
+        });
+    }
+
+    public function getKodeUnikBarangAttribute(): string
+    {
+        if (!empty($this->attributes['kode_unik_barang'])) {
+            return (string) $this->attributes['kode_unik_barang'];
+        }
+        return trim((string) $this->kode_kategori) . '-' . trim((string) $this->kode_barang);
+    }
 
     /**
      * Accessor Virtual baru agar tidak merusak nilai asli database.

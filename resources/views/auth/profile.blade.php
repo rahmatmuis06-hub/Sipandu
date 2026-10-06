@@ -582,7 +582,7 @@
             <input type="file" id="signature_upload" name="signature" accept=".jpg,.jpeg,.png" style="display:none" onchange="previewSig(this)">
           </div>
 
-          {{-- <div style="margin-bottom:20px">
+          <div style="margin-bottom:20px">
             <div class="form-label"><i class="fas fa-pen-to-square"></i> Atau Gambar Manual</div>
             <canvas id="sigCanvas" width="600" height="160" style="
               border: 1.5px solid var(--border); border-radius: 11px; background: #fff;
@@ -593,7 +593,7 @@
                 <i class="fas fa-eraser"></i> Hapus Coretan
               </button>
             </div>
-          </div> --}}
+          </div>
 
           <div class="btn-row">
             <button type="submit" class="save-btn">
@@ -655,7 +655,7 @@
       <a href="#" class="quick-item">
         <i class="fas fa-cog"></i> Pengaturan Akun
       </a>
-      <form method="POST" action="{{ route('logout') }}" style="display:contents">
+      <form method="POST" action="{{ route('logout', [], false) }}" style="display:contents">
         @csrf
         <button type="submit" class="quick-item" style="border:none;background:none;width:100%;text-align:left;color:#ef4444">
           <i class="fas fa-sign-out-alt"></i> Logout

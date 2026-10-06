@@ -222,7 +222,7 @@
       <span class="notif-dot"></span>
     </div> --}}
     <span class="date-text">{{ \Carbon\Carbon::now()->locale('id')->isoFormat('dddd, DD MMMM YYYY') }}</span>
-    <form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+    <form method="POST" action="{{ route('logout', [], false) }}" style="margin: 0;">
       @csrf
       <button type="submit" class="btn-keluar">Keluar</button>
     </form>
@@ -259,8 +259,8 @@
         <div class="filter-group">
           <select name="kode_kategori" class="filter-select" onchange="this.form.submit()">
             <option value="">Semua Kategori</option>
-            @foreach(\App\Models\TransaksiMasukPersediaan::distinct()->orderBy('kode_kategori')->pluck('kode_kategori')->toArray() as $kategori)
-              <option value="{{ $kategori }}" {{ request('kode_kategori') == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+            @foreach(\App\Models\TransaksiMasukPersediaan::select('kode_kategori', 'kategori')->distinct()->orderBy('kategori')->get() as $kategori)
+              <option value="{{ $kategori->kode_kategori }}" {{ request('kode_kategori') == $kategori->kode_kategori ? 'selected' : '' }}>{{ $kategori->kategori }}</option>
             @endforeach
           </select>
         </div>
@@ -306,33 +306,6 @@
     </div>
   </div>
 
-  {{-- CHART (Data 6 bulan terakhir) --}}
-  <div class="chart-card">
-    <div class="chart-title">Tren Transaksi Masuk (6 Bulan Terakhir)</div>
-    <div class="chart-area">
-      @php
-        $bulanData = [];
-        for($i = 5; $i >= 0; $i--) {
-            $bulan = now()->subMonths($i);
-            $count = TransaksiMasukPersediaan::whereYear('tanggal_input', $bulan->year)
-                                            ->whereMonth('tanggal_input', $bulan->month)
-                                            ->count();
-            $bulanData[] = ['label' => $bulan->translatedFormat('M'), 'value' => $count];
-        }
-        $maxValue = max(array_column($bulanData, 'value')) ?: 1;
-      @endphp
-      @foreach($bulanData as $data)
-      <div class="chart-col">
-        <div class="bar-val">{{ $data['value'] }}</div>
-        <div class="bar-wrap">
-          <div class="bar" style="height: {{ ($data['value'] / $maxValue) * 100 }}%"></div>
-        </div>
-        <div class="bar-label">{{ $data['label'] }}</div>
-      </div>
-      @endforeach
-    </div>
-  </div>
-
   {{-- TABLE --}}
     <div class="table-card">
       <div class="table-toolbar">
@@ -351,9 +324,8 @@
             <tr>
               <th width="5%">No</th>
               <th width="12%">Tanggal Input</th>
-              <th width="12%">Kode Kategori</th>
+              <th width="18%">Kode Unik Barang</th>
               <th width="15%">Kategori</th>
-              <th width="12%">Kode Barang</th>
               <th width="20%">Nama Barang</th>
               <th width="8%">Jumlah Masuk</th>
               <th width="10%">Harga Satuan</th>
@@ -367,9 +339,8 @@
                 {{ ($transaksi instanceof \Illuminate\Pagination\LengthAwarePaginator) ? ($transaksi->currentPage() - 1) * $transaksi->perPage() + $loop->iteration : $loop->iteration }}
               </td>
               <td><strong>{{ $item->tanggal_input_format ?? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') }}</strong></td>
-              <td>{{ $item->kode_kategori ?? '-' }}</td>
+              <td class="font-mono"><strong>{{ $item->kode_unik_barang }}</strong></td>
               <td>{{ $item->kategori ?? '-' }}</td>
-              <td class="font-mono"><strong>{{ $item->kode_barang ?? '-' }}</strong></td>
               <td>{{ Str::limit($item->nama_barang ?? '-', 35) }}</td>
               <td class="text-green"><strong>{{ number_format($item->jumlah_masuk ?? 0, 0, ',', '.') }}</strong></td>
               <td class="font-mono">{{ isset($item->harga_satuan_format) ? $item->harga_satuan_format : 'Rp ' . number_format($item->harga_satuan ?? 0, 0, ',', '.') }}</td>
@@ -377,7 +348,7 @@
             </tr>
             @empty
             <tr>
-              <td colspan="9" style="text-align:center; padding:60px; color:var(--muted);">
+              <td colspan="8" style="text-align:center; padding:60px; color:var(--muted);">
                 Belum ada data transaksi masuk pada periode/filter ini.
               </td>
             </tr>

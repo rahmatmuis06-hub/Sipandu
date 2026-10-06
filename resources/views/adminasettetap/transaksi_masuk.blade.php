@@ -289,10 +289,13 @@
         <span class="notif-dot"></span>
       </div> --}}
       <span class="date-text">{{ now()->translatedFormat('l, d F Y') }}</span>
-      <button class="btn-keluar" onclick="document.location='{{ route('logout') }}'">
+<form method="POST" action="{{ route('logout', [], false) }}" style="display:inline; margin:0;">
+@csrf
+<button type="submit" class="btn-keluar">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zm-5 11H5V5h7V3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h7v-2z"/></svg>
         Keluar
       </button>
+</form>
     </div>
   </div>
 

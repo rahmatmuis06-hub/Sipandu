@@ -309,8 +309,8 @@
           <input type="date" name="tanggal_input" class="filter-select" value="{{ request('tanggal_input') }}">
           <select name="kode_kategori" class="filter-select" onchange="this.form.submit()">
             <option value="">Semua Kategori</option>
-            @foreach(\App\Models\TransaksiMasukPersediaan::distinct()->orderBy('kode_kategori')->pluck('kode_kategori')->toArray() as $kategori)
-              <option value="{{ $kategori }}" {{ request('kode_kategori') == $kategori ? 'selected' : '' }}>{{ $kategori }}</option>
+            @foreach(\App\Models\TransaksiMasukPersediaan::select('kode_kategori', 'kategori')->distinct()->orderBy('kategori')->get() as $kategori)
+              <option value="{{ $kategori->kode_kategori }}" {{ request('kode_kategori') == $kategori->kode_kategori ? 'selected' : '' }}>{{ $kategori->kategori }}</option>
             @endforeach
           </select>
         </form>
@@ -415,27 +415,43 @@
       @csrf
       <div style="padding:28px; overflow-y:auto; flex:1;">
 
-        <div class="section-label"><span class="section-label-inner">Data Kategori</span></div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Kode Kategori *</label>
-            <input type="text" name="kode_kategori" id="create_kode_kategori" class="form-input" placeholder="Cth: ATK, ELK" maxlength="10" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nama Kategori *</label>
-            <input type="text" name="kategori" id="create_kategori" class="form-input" placeholder="Alat Tulis Kantor, dll" required>
-          </div>
+        <div class="section-label"><span class="section-label-inner green">Pilih Barang Persediaan</span></div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label class="form-label">Kode Unik Barang *</label>
+          <select id="create_barang_persediaan" class="form-select" required onchange="pilihBarangPersediaan(this.value)">
+            <option value="">Pilih kategori dan kode barang</option>
+            @foreach($daftarPersediaan as $barang)
+              <option value="{{ $barang->id }}">
+                {{ $barang->kode_unik_barang }} — {{ $barang->nama_barang }} ({{ $barang->kategori }}, stok: {{ number_format($barang->jumlah) }} {{ $barang->satuan }})
+              </option>
+            @endforeach
+            <option value="baru">+ Barang baru belum ada di Data Persediaan</option>
+          </select>
+          <small style="color:var(--muted); font-size:11px; display:block; margin-top:6px;">
+            Kode kategori dan kode barang telah digabung menjadi satu kode unik.
+          </small>
         </div>
 
-        <div class="section-label"><span class="section-label-inner green">Data Barang</span></div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Kode Barang *</label>
-            <input type="text" name="kode_barang" id="create_kode_barang" class="form-input" placeholder="Cth: ATK001" maxlength="20" required>
+        <div id="create_manual_barang_fields" style="display:none;">
+          <div class="section-label"><span class="section-label-inner">Data Barang Baru</span></div>
+          <div class="form-group" style="margin-bottom:20px;">
+            <label class="form-label">Kode Unik Barang *</label>
+            <input type="text" name="kode_unik_barang" id="create_kode_unik_barang" class="form-input" placeholder="Contoh: 1010301003-000001" oninput="sinkronkanKodeUnikBarang()">
+            <small style="color:var(--muted); font-size:11px; display:block; margin-top:6px;">
+              Gunakan tanda hubung untuk memisahkan kode kategori dan kode barang.
+            </small>
           </div>
-          <div class="form-group">
-            <label class="form-label">Nama Barang *</label>
-            <input type="text" name="nama_barang" id="create_nama_barang" class="form-input" placeholder="Nama lengkap barang" required>
+          <div class="form-row">
+            <div class="form-group">
+              <input type="hidden" name="kode_kategori" id="create_kode_kategori">
+              <label class="form-label">Nama Kategori *</label>
+              <input type="text" name="kategori" id="create_kategori" class="form-input" placeholder="Alat Tulis Kantor, dll">
+            </div>
+            <div class="form-group">
+              <input type="hidden" name="kode_barang" id="create_kode_barang">
+              <label class="form-label">Nama Barang *</label>
+              <input type="text" name="nama_barang" id="create_nama_barang" class="form-input" placeholder="Nama lengkap barang">
+            </div>
           </div>
         </div>
 
@@ -677,6 +693,70 @@
 </div>
 
 <script>
+  const daftarPersediaan = @json($daftarPersediaan->keyBy('id'));
+
+  function aturInputBarangBisaDiubah(bisaDiubah) {
+    ['create_kategori', 'create_nama_barang']
+      .forEach(id => {
+        const input = document.getElementById(id);
+        input.readOnly = !bisaDiubah;
+        input.required = bisaDiubah;
+        input.style.background = bisaDiubah ? '' : '#F1F5F9';
+      });
+
+    const kodeUnik = document.getElementById('create_kode_unik_barang');
+    kodeUnik.required = bisaDiubah;
+
+    const satuan = document.getElementById('create_satuan');
+    satuan.style.pointerEvents = bisaDiubah ? '' : 'none';
+    satuan.style.background = bisaDiubah ? '' : '#F1F5F9';
+  }
+
+  function sinkronkanKodeUnikBarang() {
+    const input = document.getElementById('create_kode_unik_barang');
+    const kodeUnik = input.value.trim();
+    const pemisah = kodeUnik.indexOf('-');
+
+    if (pemisah <= 0 || pemisah === kodeUnik.length - 1) {
+      document.getElementById('create_kode_kategori').value = '';
+      document.getElementById('create_kode_barang').value = '';
+      input.setCustomValidity('Gunakan format KODEKATEGORI-KODEBARANG, contoh 1010301003-000001.');
+      return;
+    }
+
+    document.getElementById('create_kode_kategori').value = kodeUnik.slice(0, pemisah);
+    document.getElementById('create_kode_barang').value = kodeUnik.slice(pemisah + 1);
+    input.setCustomValidity('');
+  }
+
+  function pilihBarangPersediaan(id) {
+    const barang = daftarPersediaan[id];
+    const kolomManual = document.getElementById('create_manual_barang_fields');
+
+    if (!barang) {
+      ['create_kode_kategori', 'create_kategori', 'create_kode_barang', 'create_nama_barang',
+       'create_harga_satuan', 'create_jumlah_masuk']
+        .forEach(inputId => { document.getElementById(inputId).value = ''; });
+      document.getElementById('create_satuan').value = '';
+      document.getElementById('create_kode_unik_barang').value = '';
+      document.getElementById('create_total_display').value = '0';
+      kolomManual.style.display = id === 'baru' ? 'block' : 'none';
+      aturInputBarangBisaDiubah(id === 'baru');
+      return;
+    }
+
+    kolomManual.style.display = 'none';
+    document.getElementById('create_kode_kategori').value = barang.kode_kategori || '';
+    document.getElementById('create_kategori').value = barang.kategori || '';
+    document.getElementById('create_kode_barang').value = barang.kode_barang || '';
+    document.getElementById('create_nama_barang').value = barang.nama_barang || '';
+    document.getElementById('create_satuan').value = barang.satuan || '';
+    document.getElementById('create_harga_satuan').value = formatRupiah(parseFloat(barang.harga_satuan) || 0);
+    document.getElementById('create_jumlah_masuk').value = '';
+    aturInputBarangBisaDiubah(false);
+    calculateTotal('create');
+  }
+
   function refreshCsrfToken() {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     document.querySelectorAll('input[name="_token"]').forEach(el => { el.value = token; });
@@ -724,6 +804,8 @@
     document.getElementById('createForm').reset();
     document.getElementById('create_tanggal_input').value = new Date().toISOString().split('T')[0];
     document.getElementById('create_total_display').value = '0';
+    document.getElementById('create_manual_barang_fields').style.display = 'none';
+    aturInputBarangBisaDiubah(false);
   });
 
   // ——— DETAIL ———

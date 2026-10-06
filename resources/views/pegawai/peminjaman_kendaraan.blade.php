@@ -147,6 +147,11 @@
               <i class="fas fa-check-circle"></i> {{ session('success') }}
             </div>
             @endif
+            @if(session('error'))
+            <div style="background: rgba(239,68,68,0.1); color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; border: 1px solid rgba(239,68,68,0.2);">
+              <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
+            </div>
+            @endif
             @if($errors->any())
             <div style="background: rgba(239,68,68,0.1); color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; border: 1px solid rgba(239,68,68,0.2);">
               <i class="fas fa-exclamation-triangle"></i> {{ $errors->first() }}
@@ -194,7 +199,7 @@
               </div>
               <div class="form-group">
                 <div class="form-label"><i class="fas fa-barcode"></i> NUP</div>
-                <input type="text" class="form-input" id="nupInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
+                <input type="text" class="form-input" name="nup" id="nupInput" placeholder="Otomatis terisi..." readonly style="background: #f8fafc; cursor: not-allowed; color: var(--text-secondary);">
               </div>
             </div>
 

@@ -8,11 +8,15 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf; // Tambahkan ini di atas
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use App\Models\{
     AdminSarpras,
+    AssetTetap,
     Gedung,
+    FasilitasBeranda,
     PeminjamanGedung,
     Kerusakan,
+    PerbaikanKerusakan,
     User
 };
 use App\Services\FonnteService;
@@ -144,6 +148,11 @@ class AdminSarprasController extends Controller
     // DATA GEDUNG
     public function dataGedung(Request $request)
     {
+        // Auto-sinkronisasi awal jika tabel gedung masih kosong tetapi fasilitas beranda ada
+        if (Gedung::count() === 0 && class_exists(FasilitasBeranda::class) && FasilitasBeranda::count() > 0) {
+            $this->performSyncFromFasilitas();
+        }
+
         $query = Gedung::query();
 
         if ($request->filled('search')) {
@@ -154,38 +163,13 @@ class AdminSarprasController extends Controller
         }
 
         if ($request->filled('kategori')) {
-            $query->kategori($request->kategori);
+            $query->where('kategori', $request->kategori);
         }
-
-        // Eager load peminjaman dengan filter bulan ini dan status aktif
-        $gedungs = $query->with(['peminjaman' => function ($q) {
-            $q->whereIn('status', ['disetujui', 'di setujui', 'berlangsung'])
-                ->whereMonth('tanggal_pinjam', now()->month)
-                ->whereYear('tanggal_pinjam', now()->year)
-                ->select(
-                    'id',
-                    'gedung_id',
-                    'nama_lengkap',
-                    'instansi_lembaga',
-                    'tanggal_pinjam',
-                    'tanggal_kembali',
-                    'jam_mulai',
-                    'jam_selesai',
-                    'status'
-                );
-        }])->latest()->get();
-
-        // Hitung statistik
-        $totalGedung = $gedungs->count();
-        $tersedia = $gedungs->where('ketersediaan', 'Tersedia')->count();
-
-
 
         if ($request->filled('ketersediaan')) {
             $query->where('ketersediaan', $request->ketersediaan);
         }
 
-        // ✅ KONSISTEN - $gedung untuk view
         $gedung = $query->latest()->paginate(10);
 
         $stats = [
@@ -198,6 +182,98 @@ class AdminSarprasController extends Controller
         return view('adminsarpras.data_gedung', compact('gedung', 'stats'));
     }
 
+    // Sinkronisasi data gedung dari fasilitas beranda
+    public function syncGedungFromFasilitas()
+    {
+        $count = $this->performSyncFromFasilitas();
+        return redirect()->route('adminsarpras.data-gedung')
+            ->with('success', "Berhasil menyinkronkan {$count} data gedung dari Fasilitas Beranda!");
+    }
+
+    private function performSyncFromFasilitas(): int
+    {
+        $fasilitasItems = FasilitasBeranda::orderBy('urutan')->orderBy('id')->get();
+        if ($fasilitasItems->isEmpty()) {
+            return 0;
+        }
+
+        $count = 0;
+        foreach ($fasilitasItems as $item) {
+            $k = $item->konten;
+            if (empty($k['name'])) continue;
+
+            $kapasitas = 50;
+            if (!empty($k['capacity'])) {
+                if (preg_match('/(\d+)\s*-\s*(\d+)/', $k['capacity'], $m)) {
+                    $kapasitas = (int)$m[2];
+                } elseif (preg_match('/(\d+)/', $k['capacity'], $m)) {
+                    $kapasitas = (int)$m[1];
+                }
+            }
+
+            $luas = '100';
+            if (!empty($k['luas'])) {
+                $cleaned = trim(str_replace(['m²', 'm2', 'M²', 'M2'], '', $k['luas']));
+                if (!empty($cleaned)) {
+                    $luas = $cleaned;
+                }
+            }
+
+            $fotoUrl = null;
+            if (!empty($k['images']) && is_array($k['images']) && !empty($k['images'][0])) {
+                $fotoUrl = ltrim(preg_replace('#^/?storage/#', '', $k['images'][0]), '/');
+            }
+
+            $fasilitasText = null;
+            if (!empty($k['features']) && is_array($k['features'])) {
+                $fasilitasText = implode(', ', array_filter($k['features']));
+            }
+
+            $kategori = $k['category'] ?? 'ruang';
+
+            $tarifMap = [
+                'ruang' => 1500000,
+                'kelas' => 500000,
+                'penginapan' => 500000,
+                'ruang_makan' => 300000,
+                'outdoor' => 100000,
+                'lapangan_Upacara' => 200000,
+                'kantor' => 0,
+                'sarana_ibadah' => 0,
+                'kesehatan' => 0,
+                'gedung' => 0,
+            ];
+            $tarif = $tarifMap[$kategori] ?? 0;
+
+            $gedung = Gedung::where('nama_gedung', $k['name'])->first();
+            if ($gedung) {
+                $gedung->update([
+                    'lokasi' => $k['location'] ?? $gedung->lokasi,
+                    'luas_bangunan' => $luas,
+                    'kapasitas' => $kapasitas,
+                    'kategori' => $kategori,
+                    'fasilitas' => $fasilitasText,
+                    'foto_url' => $fotoUrl ?? $gedung->foto_url,
+                ]);
+            } else {
+                Gedung::create([
+                    'nama_gedung' => $k['name'],
+                    'foto_url' => $fotoUrl,
+                    'lokasi' => $k['location'] ?? 'BPMP Gorontalo',
+                    'luas_bangunan' => $luas,
+                    'tarif_sewa' => $tarif,
+                    'kapasitas' => $kapasitas,
+                    'ketersediaan' => 'Tersedia',
+                    'fasilitas' => $fasilitasText,
+                    'kategori' => $kategori,
+                ]);
+            }
+            $count++;
+        }
+
+        return $count;
+    }
+
     // Tambah gedung
     public function storeGedung(Request $request)
     {
@@ -208,7 +284,7 @@ class AdminSarprasController extends Controller
             'tarif_sewa' => 'required|integer|min:0',
             'kapasitas' => 'required|integer|min:1',
             'ketersediaan' => 'required|in:Tersedia,Sedang Dipakai,Renovasi,Perlu Perbaikan',
-            'kategori' => 'required|in:ruang_sidang,mess,asrama,ruang_makan,aula,ruang_kelas',
+            'kategori' => ['required', Rule::in(array_keys(Gedung::kategoriOptions()))],
             'fasilitas' => 'nullable|string|max:1000',
             'foto_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
@@ -239,13 +315,14 @@ class AdminSarprasController extends Controller
     // Edit gedung
     public function updateGedung(Request $request, Gedung $gedung)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama_gedung' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
             'luas_bangunan' => 'required|string|max:100',
             'tarif_sewa' => 'required|integer|min:0',
             'kapasitas' => 'required|integer|min:1',
             'ketersediaan' => 'required|in:Tersedia,Sedang Dipakai,Renovasi,Perlu Perbaikan',
+            'kategori' => ['nullable', Rule::in(array_keys(Gedung::kategoriOptions()))],
             'fasilitas' => 'nullable|string',
             'foto_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
@@ -286,16 +363,22 @@ class AdminSarprasController extends Controller
         return response()->json([
             'id' => $gedung->id,
             'nama_gedung' => $gedung->nama_gedung,
-            'foto_url' => $gedung->foto_url ? asset('storage/' . $gedung->foto_url) : null,
+            'foto_url' => $gedung->foto_path,
             'lokasi' => $gedung->lokasi,
             'luas_bangunan' => $gedung->luas_bangunan,
             'tarif_sewa' => $gedung->tarif_sewa,
             'kapasitas' => $gedung->kapasitas,
             'ketersediaan' => $gedung->ketersediaan,
+            'kategori' => $gedung->kategori,
             'fasilitas' => $gedung->fasilitas,
         ]);
     }
 
+
+    public function daftarPengembalian(Request $request)
+    {
+        return redirect()->route('adminsarpras.daftar-peminjaman');
+    }
 
     //====DAFTAR PEMINJAMAN=========
     public function daftarPeminjaman(Request $request)
@@ -613,8 +696,10 @@ class AdminSarprasController extends Controller
     /**
      * Generate Surat Perjanjian Sewa Peminjaman Gedung (PDF)
      */
-    public function generateSuratPerjanjianSewa(PeminjamanGedung $peminjaman)
+    public function generateSuratPerjanjianSewa(Request $request, PeminjamanGedung $peminjaman)
     {
+        $request->validate(['tanggal_surat' => 'nullable|date']);
+        $tanggalSurat = $request->date('tanggal_surat');
         // 1. Ambil data entitas yang terlibat
         $admin = Auth::user();
         $kepala = User::where('role', 'kepalabpmp')->first();
@@ -648,7 +733,8 @@ class AdminSarprasController extends Controller
             'kepala',
             'ttdAdmin',
             'ttdKepala',
-            'ttdPeminjam'
+            'ttdPeminjam',
+            'tanggalSurat'
         ));
 
         // 5. Unduh file PDF
@@ -771,7 +857,7 @@ class AdminSarprasController extends Controller
         $validated = $request->validate([
             'tanggal_input' => 'required|date',
             'nama_barang' => 'required|string|max:255',
-            'kode_barang' => 'required|string|max:50|unique:kerusakan,kode_barang',
+            'kode_barang' => 'required|string|max:50',
             'nup' => 'nullable|string|max:100',
             'kondisi' => 'required|in:Baik,Rusak Ringan,Rusak Berat',
             'lokasi' => 'required|string|max:255',
@@ -800,7 +886,7 @@ class AdminSarprasController extends Controller
         $validated = $request->validate([
             'tanggal_input' => 'required|date',
             'nama_barang' => 'required|string|max:255',
-            'kode_barang' => 'required|string|max:50|unique:kerusakan,kode_barang,' . $id,
+            'kode_barang' => 'required|string|max:50',
             'nup' => 'nullable|string|max:100',
             'kondisi' => 'required|in:Baik,Rusak Ringan,Rusak Berat',
             'lokasi' => 'required|string|max:255',
@@ -830,6 +916,9 @@ class AdminSarprasController extends Controller
     public function destroyKerusakan($id)
     {
         $kerusakan = Kerusakan::findOrFail($id);
+        if ($kerusakan->riwayat()->exists() || $kerusakan->riwayatPerbaikan()->exists()) {
+            return back()->with('error', 'Data ini memiliki riwayat. Gunakan edit kondisi agar riwayat tetap tersimpan.');
+        }
 
         // Hapus foto
         if ($kerusakan->foto && Storage::disk('public')->exists($kerusakan->foto)) {
@@ -840,6 +929,50 @@ class AdminSarprasController extends Controller
 
         return redirect()->route('adminsarpras.data-kerusakan')
             ->with('success', 'Data kerusakan berhasil dihapus!');
+    }
+
+    /**
+     * API pencarian barang / aset tetap untuk popup pemilihan pada form data kerusakan
+     */
+    public function getBarangPilihan(Request $request)
+    {
+        $search = trim($request->get('q', ''));
+        $page = max(1, (int) $request->get('page', 1));
+        $perPage = 10;
+
+        $query = AssetTetap::query()
+            ->select('id', 'kode_barang', 'nup', 'nama_barang', 'merek', 'kategori', 'lokasi', 'kondisi');
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_barang', 'like', "%{$search}%")
+                    ->orWhere('kode_barang', 'like', "%{$search}%")
+                    ->orWhere('nup', 'like', "%{$search}%")
+                    ->orWhere('merek', 'like', "%{$search}%")
+                    ->orWhere('lokasi', 'like', "%{$search}%");
+            });
+        }
+
+        $total = $query->count();
+        $items = $query->orderBy('nama_barang', 'asc')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get();
+
+        // Cek apakah barang sudah pernah dicatat di data kerusakan
+        $existingKodes = Kerusakan::pluck('kode_barang')->toArray();
+        $items->transform(function ($item) use ($existingKodes) {
+            $item->sudah_ada = in_array($item->kode_barang, $existingKodes);
+            return $item;
+        });
+
+        return response()->json([
+            'items' => $items,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $perPage,
+            'last_page' => (int) ceil($total / $perPage),
+        ]);
     }
 
     /**
@@ -857,10 +990,43 @@ class AdminSarprasController extends Controller
      */
     public function showKerusakanJson($id)
     {
-        $kerusakan = Kerusakan::findOrFail($id);
+        $kerusakan = Kerusakan::with(['riwayatPerbaikan.dicatatOleh'])->findOrFail($id);
         $kerusakan->foto_url = $kerusakan->foto ? asset('storage/' . $kerusakan->foto) : null;
         $kerusakan->tanggal_input_formatted = $kerusakan->tanggal_input->locale('id')->isoFormat('D MMMM Y');
         return response()->json($kerusakan);
+    }
+
+    public function storePerbaikanKerusakan(Request $request, Kerusakan $kerusakan)
+    {
+        $validated = $request->validate([
+            'tanggal_perbaikan' => 'required|date',
+            'tindakan' => 'required|string|max:2000',
+            'biaya' => 'nullable|numeric|min:0|max:9999999999999.99',
+            'pelaksana' => 'nullable|string|max:255',
+            'status' => 'required|in:Proses,Selesai,Tidak Dapat Diperbaiki',
+            'catatan' => 'nullable|string|max:2000',
+        ]);
+
+        DB::transaction(function () use ($validated, $kerusakan) {
+            $kerusakan->riwayatPerbaikan()->create([
+                ...$validated,
+                'biaya' => $validated['biaya'] ?? 0,
+                'user_id' => Auth::id(),
+            ]);
+
+            if ($validated['status'] === 'Selesai') {
+                $kerusakan->update(['kondisi' => 'Baik']);
+            }
+        });
+
+        return redirect()->route('adminsarpras.data-kerusakan')
+            ->with('success', 'Riwayat perbaikan berhasil ditambahkan.');
+    }
+
+    public function riwayatKerusakan(Kerusakan $kerusakan)
+    {
+        $kerusakan->load(['riwayat.pencatat', 'riwayatPerbaikan.dicatatOleh']);
+        return view('adminsarpras.riwayat_kerusakan', compact('kerusakan'));
     }
 
     /**

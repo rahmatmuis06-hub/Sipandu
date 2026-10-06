@@ -66,7 +66,7 @@
             return trim($terbilang);
         }
 
-        $tgl = $peminjaman->created_at ?? now();
+        $tgl = $tanggalSurat ?? $peminjaman->created_at ?? now();
         $hari = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('dddd');
         $tgl_angka = \Carbon\Carbon::parse($tgl)->format('j');
         $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('MMMM');

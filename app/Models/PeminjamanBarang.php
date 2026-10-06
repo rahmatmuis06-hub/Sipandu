@@ -66,6 +66,12 @@ class PeminjamanBarang extends Model
         return $this->belongsTo(User::class, 'approved_by_kasubag_id');
     }
 
+    // Detail item peminjaman multi-item
+    public function items(): HasMany
+    {
+        return $this->hasMany(DetailPeminjamanBarang::class, 'peminjaman_barang_id');
+    }
+
     // Pengembalian barang
     // ✅ RELASI PENGEMBALIAN (YANG HILANG!)
     public function pengembalianBarang(): HasOne

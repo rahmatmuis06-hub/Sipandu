@@ -16,7 +16,7 @@ return new class extends Migration
             
             $table->date('tanggal_input'); // Tanggal input kerusakan
             $table->string('nama_barang'); // Nama barang yang rusak
-            $table->string('kode_barang')->unique(); // Kode unik barang
+            $table->string('kode_barang'); // Kode barang
             $table->string('nup')->nullable(); // Nomor Urut Pola (opsional)
             $table->enum('kondisi', ['Baik', 'Rusak Ringan', 'Rusak Berat'])->default('Rusak Ringan');
             $table->string('foto')->nullable(); // Path foto kerusakan

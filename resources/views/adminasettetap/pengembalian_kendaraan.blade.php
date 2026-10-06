@@ -161,9 +161,10 @@
                                                 <i class="fas fa-times"></i> Tolak
                                             </button>
                                         @elseif($item->status_verifikasi == 'diterima')
-                                            <a href="{{ route('adminasettetap.pengembalian-kendaraan.cetak', $item->id) }}" target="_blank" class="action-btn" style="color: var(--purple);">
-                                                <i class="fas fa-file-pdf"></i> Cetak Berita Acara
-                                            </a>
+                                            <form action="{{ route('adminasettetap.pengembalian-kendaraan.cetak', $item->id) }}" method="GET" target="_blank" style="display:inline-flex; gap:4px; align-items:center;">
+                                                <input type="date" name="tanggal_surat" value="{{ optional($item->tanggal_pengembalian_aktual)->format('Y-m-d') ?? now()->format('Y-m-d') }}" required title="Tanggal surat" style="padding:5px; max-width:135px;">
+                                                <button type="submit" class="action-btn" style="color: var(--purple);"><i class="fas fa-file-pdf"></i> Cetak Berita Acara</button>
+                                            </form>
                                         @endif
                                     @endif
                                 </td>

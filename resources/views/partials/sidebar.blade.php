@@ -86,43 +86,6 @@
                 ],
             ],
         ],
-        'tamu' => [
-            'bgGradient' => 'from-slate-900 to-slate-800',
-            'badgeText' => 'Tamu',
-            'badgeColor' => 'bg-cyan-500/20 text-cyan-300',
-            'navItems' => [
-                [
-                    'href' => route('tamu.dashboard'),
-                    'label' => 'Dashboard',
-                    'icon' => 'fas fa-door-open',
-                    'route' => 'tamu.dashboard',
-                ],
-                [
-                    'href' => route('tamu.info-fasilitas'),
-                    'label' => 'Informasi Fasilitas',
-                    'icon' => 'fas fa-info-circle',
-                    'route' => 'tamu.info-fasilitas',
-                ],
-                [
-                    'href' => route('tamu.peminjaman-gedung'),
-                    'label' => 'Peminjaman Gedung',
-                    'icon' => 'fas fa-building',
-                    'route' => 'tamu.peminjaman-gedung',
-                ],
-                [
-                    'href' => route('tamu.survei-layanan'),
-                    'label' => 'Survei Layanan Fasilitas',
-                    'icon' => 'fas fa-comment',
-                    'route' => 'tamu.survei-layanan',
-                ],
-                [
-                    'href' => route('tamu.pengaturan-akun'),
-                    'label' => 'Pengaturan Akun',
-                    'icon' => 'fas fa-gear',
-                    'route' => 'tamu.pengaturan-akun',
-                ],
-            ],
-        ],
         'adminasettetap' => [
             'bgGradient' => 'from-orange-900 to-orange-800',
             'badgeText' => 'Admin Aset Tetap',
@@ -200,23 +163,22 @@
                         ],
                     ],
                 ],
-                // [
-                //     'href' => route('adminasettetap.pengaduan'),
-                //     'label' => 'Pengaduan',
-                //     'icon' => 'fas fa-flag',
-                //     'route' => 'adminasettetap.pengaduan',
-                // ],
-                // [
-                //     'href' => route('adminasettetap.survey-kepuasan'),
-                //     'label' => 'Survey Kepuasan',
-                //     'icon' => 'fas fa-chart-line',
-                //     'route' => 'adminasettetap.survey-kepuasan',
-                // ],
                 [
-                    'href' => route('adminasettetap.laporan'),
                     'label' => 'Laporan & Statistik',
                     'icon' => 'fas fa-chart-pie',
-                    'route' => 'adminasettetap.laporan',
+                    'route' => 'NONE',
+                    'children' => [
+                        [
+                            'href' => route('adminasettetap.laporan'),
+                            'label' => 'Ringkasan & Analitik',
+                            'route' => 'adminasettetap.laporan',
+                        ],
+                        [
+                            'href' => route('adminasettetap.laporan-transaksi-keluar'),
+                            'label' => 'Laporan Transaksi Keluar',
+                            'route' => 'adminasettetap.laporan-transaksi-keluar',
+                        ],
+                    ],
                 ],
                 [
                     'href' => route('adminasettetap.pengaturan-akun'),
@@ -224,17 +186,6 @@
                     'icon' => 'fas fa-gear',
                     'route' => 'adminasettetap.pengaturan-akun',
                 ],
-                // [
-                // 'label' => 'Laporan & Statistik',
-                // 'icon' => 'fas fa-chart-bar',
-                // 'route' => 'NONE',
-                // 'children' => [
-                // ['href' => route('adminasettetap.laporan-transaksi-masuk'), 'label' => ' Laporan Transaksi Masuk', 'route' => 'adminasettetap.laporan-transaksi-masuk'],
-                // ['href' => route('adminasettetap.laporan-transaksi-keluar'), 'label' => 'Laporan Transaksi Keluar', 'route' => 'adminasettetap.laporan-transaksi-keluar'],
-                // ['href' => route('adminasettetap.laporan-mutasi-barang'), 'label' => 'Laporan Mutasi Barang', 'route' => 'adminasettetap.laporan-mutasi-barang'],
-                // ['href' => route('adminasettetap.laporan-peminjaman-pengembalian'), 'label' => 'Laporan Peminjaman & Pengembalian', 'route' => 'adminasettetap.laporan-peminjaman-pengembalian'],
-                // ]
-                // ],
             ],
         ],
         'adminpersediaan' => [
@@ -254,6 +205,12 @@
                     'icon' => 'fas fa-database',
                     'route' => 'adminpersediaan.data-persediaan',
                 ],
+                ...(config('features.show_stok_opname') ? [[
+                    'href' => route('adminpersediaan.opname.index'),
+                    'label' => 'Stok Opname Bulanan',
+                    'icon' => 'fas fa-clipboard-check',
+                    'route' => 'adminpersediaan.opname.*',
+                ]] : []),
                 [
                     'href' => route('adminpersediaan.transaksi-masuk'),
                     'label' => 'Transaksi Masuk',
@@ -334,19 +291,6 @@
                     'icon' => 'fas fa-wrench',
                     'route' => 'adminsarpras.data-kerusakan',
                 ],
-                // [
-                //     'href' => route('adminsarpras.daftar-peminjaman'),
-                //     'label' => 'Daftar Peminjaman',
-                //     'icon' => 'fas fa-door-open',
-                //     'route' => 'adminsarpras.daftar-peminjaman',
-                // ],
-                // ['href' => route('adminsarpras.daftar-pengembalian'), 'label' => 'Daftar Pengembalian', 'icon' => 'fas fa-undo', 'route' => 'adminsarpras.daftar-pengembalian'],
-                // [
-                //     'href' => route('adminsarpras.laporan-peminjaman-gedung'),
-                //     'label' => 'Laporan Peminjaman Gedung',
-                //     'icon' => 'fas fa-file-alt',
-                //     'route' => 'adminsarpras.laporan-peminjaman-gedung',
-                // ],
                 [
                     'href' => route('adminsarpras.laporan-kerusakan'),
                     'label' => 'Laporan Kerusakan',
@@ -380,11 +324,6 @@
                     'icon' => 'fas fa-check-square',
                     'route' => 'NONE',
                     'children' => [
-                        // [
-                        //     'href' => route('kasubag.persetujuan-peminjaman-gedung'),
-                        //     'label' => 'Peminjaman Gedung',
-                        //     'route' => 'kasubag.persetujuan-peminjaman-gedung',
-                        // ],
                         [
                             'href' => route('kasubag.persetujuan-peminjaman-barang'),
                             'label' => 'Peminjaman Barang',
@@ -395,25 +334,37 @@
                             'label' => 'Peminjaman Kendaraan',
                             'route' => 'kasubag.persetujuan-peminjaman-kendaraan',
                         ],
+                    ],
+                ],
+                // ✅ DROPDOWN MENU - MONITORING
+                [
+                    'label' => 'Monitoring',
+                    'icon' => 'fas fa-chart-line',
+                    'route' => 'NONE',
+                    'children' => [
                         [
-                            'href' => route('kasubag.persetujuan-permintaan-persediaan'),
+                            'href' => route('kasubag.monitoring-persediaan'),
                             'label' => 'Permintaan Persediaan',
-                            'route' => 'kasubag.persetujuan-permintaan-persediaan',
+                            'route' => 'kasubag.monitoring-persediaan*',
+                        ],
+                        [
+                            'href' => route('kasubag.monitoring-aset-tetap'),
+                            'label' => 'Barang / Aset Tetap',
+                            'route' => 'kasubag.monitoring-aset-tetap*',
+                        ],
+                        [
+                            'href' => route('kasubag.monitoring-kendaraan'),
+                            'label' => 'Kendaraan',
+                            'route' => 'kasubag.monitoring-kendaraan*',
                         ],
                     ],
                 ],
-
-                // // ✅ DROPDOWN MENU - LAPORAN & MONITORING
-                // [
-                // 'label' => 'Laporan & Monitoring',
-                // 'icon' => 'fas fa-chart-bar',
-                // 'route' => 'NONE',
-                // 'children' => [
-                // ['href' => '#', 'label' => 'Laporan Peminjaman', 'route' => 'kasubag.laporan-peminjaman'],
-                // ['href' => '#', 'label' => 'Laporan Persediaan', 'route' => 'kasubag.laporan-persediaan'],
-                // ['href' => '#', 'label' => 'Dashboard Monitoring', 'route' => 'kasubag.monitoring'],
-                // ]
-                // ],
+                [
+                    'href' => route('kasubag.laporan-transaksi-keluar'),
+                    'label' => 'Laporan Transaksi Keluar',
+                    'icon' => 'fas fa-file-invoice',
+                    'route' => 'kasubag.laporan-transaksi-keluar*',
+                ],
 
                 [
                     'href' => route('kasubag.pengaturan-akun'),
@@ -1027,7 +978,7 @@
                 <p class="text-slate-500 text-[10px]">{{ $config['badgeText'] }}</p>
             </div>
         </div>
-        <form method="POST" action="{{ route('logout') }}" class="mt-4">
+        <form method="POST" action="{{ route('logout', [], false) }}" class="mt-4">
             @csrf
             <button type="submit"
                 class="w-full flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 logout-btn">
@@ -1055,7 +1006,7 @@
   <div class="user-role">{{ $config['badgeText'] }}</div>
 </div>
 </div>
-<form method="POST" action="{{ route('logout') }}" style="margin: 0;">
+<form method="POST" action="{{ route('logout', [], false) }}" style="margin: 0;">
   @csrf
   <button type="submit" class="logout-btn">
     <i class="fas fa-sign-out-alt"></i>

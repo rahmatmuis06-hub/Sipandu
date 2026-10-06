@@ -555,6 +555,10 @@
             transition: all .2s;
         }
 
+        .modal.modal-wide {
+            max-width: 860px;
+        }
+
         .modal-overlay.show .modal {
             transform: scale(1) translateY(0);
         }
@@ -760,6 +764,7 @@
                         <tr>
                             <th>No</th>
                             <th>Kode Barang</th>
+                            <th>NUP</th>
                             <th>Nama Barang</th>
                             <th>Merek</th>
                             <th>Kategori</th>
@@ -775,6 +780,7 @@
                             <tr>
                                 <td><strong>{{ $asetTetap->firstItem() + $index }}</strong></td>
                                 <td><strong>{{ $aset->kode_barang ?? '-' }}</strong></td>
+                                <td><span class="status-badge" style="background:#F1F5F9; color:#475569; font-weight:700; font-family:monospace;">{{ $aset->nup ?? '-' }}</span></td>
                                 <td>{{ $aset->nama_barang ?? '-' }}</td>
                                 <td>{{ $aset->merek ?? '-' }}</td>
                                 <td>{{ $aset->kategori ?? '-' }}</td>
@@ -802,12 +808,12 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="#modal-detail-{{ $aset->id }}" class="action-btn" onclick="openModal('modal-detail-{{ $aset->id }}')" title="Detail">
+                                    <a href="javascript:void(0)" class="action-btn" onclick="event.preventDefault(); openModal('modal-detail-{{ $aset->id }}')" title="Detail">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
                                             <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
                                         </svg>
                                     </a>
-                                    <a href="#modal-edit-{{ $aset->id }}" class="action-btn" onclick="openModal('modal-edit-{{ $aset->id }}')" title="Edit">
+                                    <a href="javascript:void(0)" class="action-btn" onclick="event.preventDefault(); openModal('modal-edit-{{ $aset->id }}')" title="Edit">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
                                             <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm18-11.5c0-.41-.17-.79-.44-1.06l-2.25-2.25a1.5 1.5 0 0 0-2.12 0l-1.83 1.83 3.75 3.75 1.83-1.83c.27-.27.44-.65.44-1.06z" />
                                         </svg>
@@ -1047,7 +1053,7 @@
                             </div>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center py-8">
+                                <td colspan="11" class="text-center py-8">
                                     <div class="text-center py-12">
                                         <h3 style="color:var(--muted); text-align: center; width: 100%;">Belum ada data aset tetap yang ditemukan</h3>
                                     </div>
@@ -1099,123 +1105,142 @@
         </div>
     </div>
     
-    {{-- MODAL TAMBAH --}}
+    {{-- MODAL TAMBAH (MULTI-ITEM SUPPORT) --}}
     <div id="modal-tambah" class="modal-overlay">
-        <div class="modal">
-            <h2 class="modal-title">Tambah Aset Tetap</h2>
-            <form action="{{ route('adminasettetap.data-aset-tetap.store') }}" method="POST">
+        <div class="modal modal-wide">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                <div>
+                    <h2 class="modal-title" style="margin-bottom: 4px;">Tambah Aset Tetap</h2>
+                    <p style="font-size: 13px; color: var(--muted);">Tambahkan satu atau banyak aset sekaligus dalam satu kali penginputan</p>
+                </div>
+                <button type="button" class="btn btn-secondary" style="padding: 8px 14px; font-size: 12px;" onclick="closeModal('modal-tambah')">✕ Tutup</button>
+            </div>
+
+            <form action="{{ route('adminasettetap.data-aset-tetap.store') }}" method="POST" id="formTambahAsetMulti">
                 @csrf
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Tanggal Input <span class="text-red-500">*</span></label>
-                        <input type="date" name="tanggal_input" class="form-input" value="{{ old('tanggal_input') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kode Barang <span class="text-red-500">*</span></label>
-                        <input type="text" name="kode_barang" class="form-input" value="{{ old('kode_barang') }}" required>
-                    </div>
+                <div class="form-group" style="max-width: 320px; margin-bottom: 20px;">
+                    <label class="form-label">Tanggal Input <span class="text-red-500">*</span></label>
+                    <input type="date" name="tanggal_input" class="form-input" value="{{ old('tanggal_input', date('Y-m-d')) }}" required>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">NUP <span class="text-red-500">*</span></label>
-                        <input type="text" name="nup" class="form-input" value="{{ old('nup') }}" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nama Barang <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_barang" class="form-input" value="{{ old('nama_barang') }}" required>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Merek</label>
-                        <input type="text" name="merek" class="form-input" value="{{ old('merek') }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kategori <span class="text-red-500">*</span></label>
-                        <input type="text" name="kategori" class="form-input" value="{{ old('kategori') }}" required oninput="toggleKendaraanFields(this, 'kendaraan_fields_tambah')" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR">
-                    </div>
-                </div>
-
-                <!-- PERBAIKAN 2: AREA DETAIL KENDARAAN (Menghapus pemanggilan variabel $aset karena ini form Tambah) -->
-                @php
-                    $katTambah = strtolower(old('kategori', ''));
-                    $showTambah = (str_contains($katTambah, 'kendaraan') || str_contains($katTambah, 'angkutan bermotor')) ? 'block' : 'none';
-                @endphp
-
-                <div id="kendaraan_fields_tambah" class="form-kendaraan" style="display: {{ $showTambah }};">
-                    <div class="form-kendaraan-title">Informasi Detail Kendaraan</div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Nomor Polisi</label>
-                            <input type="text" name="nomor_polisi" class="form-input" value="{{ old('nomor_polisi') }}" placeholder="Contoh: DM 1234 A">
+                <!-- Container Multi Item -->
+                <div id="asetItemsContainer" style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px;">
+                    <!-- Item 1 -->
+                    <div class="aset-item-box" style="border: 1.5px solid var(--border); border-radius: 12px; padding: 18px; background: #FAFBFD; position: relative;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                            <span style="font-size: 13px; font-weight: 700; color: var(--blue);">📦 Data Barang #<span class="item-num">1</span></span>
+                            <button type="button" class="btn-hapus-item" onclick="hapusBarisAset(this)" style="display: none; background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                                <i class="fas fa-trash"></i> Hapus Baris
+                            </button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Nomor BPKB</label>
-                            <input type="text" name="no_bpkb" class="form-input" value="{{ old('no_bpkb') }}" placeholder="Contoh: BPKB-12345">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kode Barang <span class="text-red-500">*</span></label>
+                                <input type="text" name="items[0][kode_barang]" class="form-input" placeholder="Contoh: 3.05.01.05.002" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">NUP <span class="text-red-500">*</span></label>
+                                <input type="text" name="items[0][nup]" class="form-input" placeholder="Contoh: 1" required>
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Nomor Rangka</label>
-                            <input type="text" name="nomor_rangka" class="form-input" value="{{ old('nomor_rangka') }}" placeholder="Nomor Rangka">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Nama Barang <span class="text-red-500">*</span></label>
+                                <input type="text" name="items[0][nama_barang]" class="form-input" placeholder="Nama spesifikasi aset..." required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Merek</label>
+                                <input type="text" name="items[0][merek]" class="form-input" placeholder="Contoh: Asus, Honda, dll">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Nomor Mesin</label>
-                            <input type="text" name="nomor_mesin" class="form-input" value="{{ old('nomor_mesin') }}" placeholder="Nomor Mesin">
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kategori <span class="text-red-500">*</span></label>
+                                <input type="text" name="items[0][kategori]" class="form-input input-kategori-multi" required oninput="toggleKendaraanMulti(this)" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR / ELEKTRONIK">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tanggal Perolehan</label>
+                                <input type="date" name="items[0][tanggal_perolehan]" class="form-input">
+                            </div>
+                        </div>
+
+                        <!-- Field Kendaraan Khusus Multi -->
+                        <div class="kendaraan-fields-box" style="display: none; background: #FFFBEB; border: 1px dashed #F59E0B; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+                            <div style="font-size: 12px; font-weight: 700; color: #B45309; margin-bottom: 10px;">Detail Kendaraan:</div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nomor Polisi</label>
+                                    <input type="text" name="items[0][nomor_polisi]" class="form-input" placeholder="Contoh: DM 1234 A">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Nomor BPKB</label>
+                                    <input type="text" name="items[0][no_bpkb]" class="form-input" placeholder="Contoh: BPKB-12345">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Nomor Rangka</label>
+                                    <input type="text" name="items[0][nomor_rangka]" class="form-input" placeholder="Nomor Rangka">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Nomor Mesin</label>
+                                    <input type="text" name="items[0][nomor_mesin]" class="form-input" placeholder="Nomor Mesin">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kondisi <span class="text-red-500">*</span></label>
+                                <select name="items[0][kondisi]" class="form-select" required>
+                                    <option value="baik">Baik</option>
+                                    <option value="rusak ringan">Rusak Ringan</option>
+                                    <option value="rusak berat">Rusak Berat</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Status <span class="text-red-500">*</span></label>
+                                <select name="items[0][status]" class="form-select" required>
+                                    <option value="Tersedia">🟢 Tersedia</option>
+                                    <option value="Dipinjam">🔵 Dipinjam</option>
+                                    <option value="Keluar">🟡 Keluar</option>
+                                    <option value="Rusak">🔴 Rusak</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Jumlah <span class="text-red-500">*</span></label>
+                                <input type="number" name="items[0][jumlah]" class="form-input" value="1" min="1" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nilai Perolehan (Rp)</label>
+                                <input type="number" name="items[0][nilai_perolehan]" class="form-input" value="0" step="0.01" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label">Lokasi</label>
+                            <input type="text" name="items[0][lokasi]" class="form-input" placeholder="Ruang Server / Gudang Utama">
                         </div>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Tanggal Perolehan</label>
-                        <input type="date" name="tanggal_perolehan" class="form-input" value="{{ old('tanggal_perolehan') }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Kondisi <span class="text-red-500">*</span></label>
-                        <select name="kondisi" class="form-select" required>
-                            <option value="baik" {{ old('kondisi') == 'baik' ? 'selected' : '' }}>Baik</option>
-                            <option value="rusak ringan" {{ old('kondisi') == 'rusak ringan' ? 'selected' : '' }}>Rusak Ringan</option>
-                            <option value="rusak berat" {{ old('kondisi') == 'rusak berat' ? 'selected' : '' }}>Rusak Berat</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Status <span class="text-red-500">*</span></label>
-                        <select name="status" class="form-select" required>
-                            <option value="Tersedia" {{ old('status') == 'Tersedia' ? 'selected' : '' }}>🟢 Tersedia</option>
-                            <option value="Dipinjam" {{ old('status') == 'Dipinjam' ? 'selected' : '' }}>🔵 Dipinjam</option>
-                            <option value="Keluar" {{ old('status') == 'Keluar' ? 'selected' : '' }}>🟡 Keluar</option>
-                            <option value="Rusak" {{ old('status') == 'Rusak' ? 'selected' : '' }}>🔴 Rusak</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Nilai Perolehan (Rp)</label>
-                        <input type="number" name="nilai_perolehan" class="form-input" value="{{ old('nilai_perolehan') }}" step="0.01" min="0">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Jumlah <span class="text-red-500">*</span></label>
-                        <input type="number" name="jumlah" class="form-input" value="{{ old('jumlah') }}" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Lokasi</label>
-                        <input type="text" name="lokasi" class="form-input" value="{{ old('lokasi') }}" placeholder="Ruang Server / Gudang Utama">
-                    </div>
+                <!-- Tombol Tambah Baris Item -->
+                <div style="margin-bottom: 24px;">
+                    <button type="button" onclick="tambahBarisAset()" class="btn" style="background: #EEF2FF; color: var(--blue); border: 1.5px dashed #A5B4FC; width: 100%; padding: 12px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-plus-circle"></i> + Tambah Baris Aset Lainnya
+                    </button>
                 </div>
 
                 <div class="btn-group">
                     <button type="button" class="btn btn-secondary" onclick="closeModal('modal-tambah')">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Aset</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitMultiAset">Simpan Semua Aset</button>
                 </div>
             </form>
         </div>
@@ -1237,12 +1262,157 @@
             var container = document.getElementById(containerId);
             var val = inputElement.value.toLowerCase().trim();
             
-            // Logika baru: jika teks mengandung kata 'kendaraan' atau 'angkutan bermotor'
             if(val.includes('kendaraan') || val.includes('angkutan bermotor')) {
                 container.style.display = 'block';
             } else {
                 container.style.display = 'none';
             }
+        }
+
+        // FUNGSI TOGGLE KENDARAAN DI ITEM MULTI
+        function toggleKendaraanMulti(inputElement) {
+            const card = inputElement.closest('.aset-item-box');
+            const box = card.querySelector('.kendaraan-fields-box');
+            const val = inputElement.value.toLowerCase().trim();
+            if (val.includes('kendaraan') || val.includes('angkutan bermotor')) {
+                box.style.display = 'block';
+            } else {
+                box.style.display = 'none';
+            }
+        }
+
+        let assetItemCount = 1;
+
+        function tambahBarisAset() {
+            const container = document.getElementById('asetItemsContainer');
+            const newIndex = assetItemCount;
+            assetItemCount++;
+
+            const div = document.createElement('div');
+            div.className = 'aset-item-box';
+            div.style.cssText = 'border: 1.5px solid var(--border); border-radius: 12px; padding: 18px; background: #FAFBFD; position: relative;';
+            div.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border);">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--blue);">📦 Data Barang #<span class="item-num">${newIndex + 1}</span></span>
+                    <button type="button" class="btn-hapus-item" onclick="hapusBarisAset(this)" style="background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                        <i class="fas fa-trash"></i> Hapus Baris
+                    </button>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Kode Barang <span class="text-red-500">*</span></label>
+                        <input type="text" name="items[${newIndex}][kode_barang]" class="form-input" placeholder="Contoh: 3.05.01.05.002" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">NUP <span class="text-red-500">*</span></label>
+                        <input type="text" name="items[${newIndex}][nup]" class="form-input" placeholder="Contoh: 1" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nama Barang <span class="text-red-500">*</span></label>
+                        <input type="text" name="items[${newIndex}][nama_barang]" class="form-input" placeholder="Nama spesifikasi aset..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Merek</label>
+                        <input type="text" name="items[${newIndex}][merek]" class="form-input" placeholder="Contoh: Asus, Honda, dll">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Kategori <span class="text-red-500">*</span></label>
+                        <input type="text" name="items[${newIndex}][kategori]" class="form-input input-kategori-multi" required oninput="toggleKendaraanMulti(this)" placeholder="Contoh: ALAT ANGKUTAN BERMOTOR / ELEKTRONIK">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal Perolehan</label>
+                        <input type="date" name="items[${newIndex}][tanggal_perolehan]" class="form-input">
+                    </div>
+                </div>
+
+                <!-- Field Kendaraan Khusus Multi -->
+                <div class="kendaraan-fields-box" style="display: none; background: #FFFBEB; border: 1px dashed #F59E0B; border-radius: 8px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 12px; font-weight: 700; color: #B45309; margin-bottom: 10px;">Detail Kendaraan:</div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nomor Polisi</label>
+                            <input type="text" name="items[${newIndex}][nomor_polisi]" class="form-input" placeholder="Contoh: DM 1234 A">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor BPKB</label>
+                            <input type="text" name="items[${newIndex}][no_bpkb]" class="form-input" placeholder="Contoh: BPKB-12345">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nomor Rangka</label>
+                            <input type="text" name="items[${newIndex}][nomor_rangka]" class="form-input" placeholder="Nomor Rangka">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nomor Mesin</label>
+                            <input type="text" name="items[${newIndex}][nomor_mesin]" class="form-input" placeholder="Nomor Mesin">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Kondisi <span class="text-red-500">*</span></label>
+                        <select name="items[${newIndex}][kondisi]" class="form-select" required>
+                            <option value="baik">Baik</option>
+                            <option value="rusak ringan">Rusak Ringan</option>
+                            <option value="rusak berat">Rusak Berat</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status <span class="text-red-500">*</span></label>
+                        <select name="items[${newIndex}][status]" class="form-select" required>
+                            <option value="Tersedia">🟢 Tersedia</option>
+                            <option value="Dipinjam">🔵 Dipinjam</option>
+                            <option value="Keluar">🟡 Keluar</option>
+                            <option value="Rusak">🔴 Rusak</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Jumlah <span class="text-red-500">*</span></label>
+                        <input type="number" name="items[${newIndex}][jumlah]" class="form-input" value="1" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nilai Perolehan (Rp)</label>
+                        <input type="number" name="items[${newIndex}][nilai_perolehan]" class="form-input" value="0" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label">Lokasi</label>
+                    <input type="text" name="items[${newIndex}][lokasi]" class="form-input" placeholder="Ruang Server / Gudang Utama">
+                </div>
+            `;
+            container.appendChild(div);
+            updateItemNumbers();
+        }
+
+        function hapusBarisAset(btn) {
+            const card = btn.closest('.aset-item-box');
+            card.remove();
+            updateItemNumbers();
+        }
+
+        function updateItemNumbers() {
+            const boxes = document.querySelectorAll('#asetItemsContainer .aset-item-box');
+            boxes.forEach((box, i) => {
+                const numSpan = box.querySelector('.item-num');
+                if (numSpan) numSpan.textContent = i + 1;
+                const delBtn = box.querySelector('.btn-hapus-item');
+                if (delBtn) {
+                    delBtn.style.display = (boxes.length > 1) ? 'inline-block' : 'none';
+                }
+            });
         }
 
         document.querySelectorAll('.modal-overlay').forEach(overlay => {

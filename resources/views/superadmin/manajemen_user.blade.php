@@ -286,7 +286,6 @@
             <option value="adminsarpras">Admin Sarana Prasarana</option>
             <option value="adminasettetap">Admin Aset Tetap</option>
             <option value="pegawai">Pegawai</option>
-            <option value="tamu">Tamu</option>
           </select>
         </div>
       </div>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Persetujuan Kendaraan - Dashboard Kasubag</title>
+<title>Peminjaman Kendaraan - Dashboard Kasubag</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
@@ -100,7 +100,7 @@
   <div class="page-header">
     <div class="page-header-icon"><svg viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1 .4-1 1v10H2v2h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/></svg></div>
     <div class="page-header-text">
-        <h1>Persetujuan Peminjaman Kendaraan</h1>
+        <h1>Peminjaman Kendaraan</h1>
         <p>Kelola dan tinjau seluruh pengajuan penggunaan kendaraan dinas</p>
     </div>
   </div>
@@ -191,9 +191,23 @@
           </button>
         </form>
       @else
-        <div style="background: var(--gray-100); color: var(--gray-600); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 700; border: 1px dashed var(--gray-200); margin-top: auto; width: 100%;">
-            Telah Diproses
-        </div>
+        @if(in_array($item->status, ['disetujui', 'dikembalikan']))
+          <form action="{{ route('adminasettetap.peminjaman-kendaraan.print', $item->id) }}" method="GET" target="_blank" style="display:flex; gap:4px; align-items:center; width:100%; margin-top:auto;">
+            <input type="date" name="tanggal_surat" value="{{ now()->format('Y-m-d') }}" required title="Tanggal surat" style="padding:6px; font-size:11px; border:1px solid var(--gray-200); border-radius:8px; flex:1;">
+            <button type="submit" class="btn btn-detail" style="color:var(--blue); width:auto; padding:8px 12px;" title="Cetak Berita Acara">
+              <i class="fas fa-file-pdf"></i> Cetak BAST
+            </button>
+          </form>
+          @if(!empty($item->surat_bast_path))
+            <a href="{{ asset('storage/' . $item->surat_bast_path) }}" target="_blank" class="btn btn-detail" style="color:var(--green); text-decoration:none; margin-top:4px;" title="Lihat BAST Terunggah">
+              <i class="fas fa-file-circle-check"></i> BAST Fisik
+            </a>
+          @endif
+        @else
+          <div style="background: var(--gray-100); color: var(--gray-600); padding: 10px; border-radius: 8px; text-align: center; font-size: 12px; font-weight: 700; border: 1px dashed var(--gray-200); margin-top: auto; width: 100%;">
+              Telah Diproses
+          </div>
+        @endif
       @endif
     </div>
   </div>

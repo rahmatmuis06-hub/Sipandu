@@ -41,10 +41,20 @@ class Gedung extends Model
     public static function kategoriOptions()
     {
         return [
+            'kantor' => 'Kantor',
+            'ruang' => 'Ruang Pertemuan',
+            'kelas' => 'Ruang Kelas',
+            'penginapan' => 'Asrama / Mess',
+            'ruang_makan' => 'Ruang Makan',
+            'gedung' => 'Gedung Arsip',
+            'outdoor' => 'Fasilitas Olahraga',
+            'lapangan_Upacara' => 'Lapangan Upacara',
+            'sarana_ibadah' => 'Sarana Ibadah',
+            'kesehatan' => 'Kesehatan',
+            // Opsi kompatibilitas lama
             'ruang_sidang' => 'Ruang Sidang',
             'mess' => 'Mess',
             'asrama' => 'Asrama',
-            'ruang_makan' => 'Ruang Makan',
             'aula' => 'Aula',
             'ruang_kelas' => 'Ruang Kelas',
         ];
@@ -67,12 +77,30 @@ class Gedung extends Model
         return match($this->kategori) {
             'ruang_sidang' => 'door-open',
             'mess' => 'bed',
-            'asrama' => 'home',
+            'asrama', 'penginapan' => 'home',
             'ruang_makan' => 'utensils',
-            'aula' => 'university',
-            'ruang_kelas' => 'chalkboard-teacher',
+            'aula', 'ruang' => 'university',
+            'ruang_kelas', 'kelas' => 'chalkboard-teacher',
+            'kantor' => 'briefcase',
+            'outdoor' => 'futbol',
+            'lapangan_Upacara' => 'flag',
+            'sarana_ibadah' => 'mosque',
+            'kesehatan' => 'hospital',
+            'gedung' => 'archive',
             default => 'building'
         };
+    }
+
+    public function getFotoPathAttribute()
+    {
+        if (!$this->foto_url) {
+            return null;
+        }
+        if (str_starts_with($this->foto_url, 'http://') || str_starts_with($this->foto_url, 'https://')) {
+            return $this->foto_url;
+        }
+        $clean = ltrim(preg_replace('#^/?storage/#', '', $this->foto_url), '/');
+        return asset('storage/' . $clean);
     }
 
     /**

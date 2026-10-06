@@ -192,13 +192,7 @@
             </div>
         </div>
 
-        <div class="dashboard-grid columns-2">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fas fa-chart-line"></i> Tren Permintaan & Peminjaman</div>
-                </div>
-                <canvas id="requestsChart" width="400" height="220"></canvas>
-            </div>
+        <div class="dashboard-grid" style="margin-bottom: 24px;">
             <div class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title"><i class="fas fa-chart-pie"></i> Distribusi Logistik & Infrastruktur</div>
@@ -255,28 +249,6 @@
     </div>
 
     <script>
-        const requestsCtx = document.getElementById('requestsChart').getContext('2d');
-        new Chart(requestsCtx, {
-            type: 'line',
-            data: {
-                labels: @json($chartLabels),
-                datasets: [{
-                    label: 'Permintaan Persediaan',
-                    data: @json($chartPermintaan),
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.18)',
-                    tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#2563eb'
-                },{
-                    label: 'Peminjaman',
-                    data: @json($chartPeminjaman),
-                    borderColor: '#22c55e',
-                    backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                    tension: 0.4, fill: true, pointRadius: 4, pointBackgroundColor: '#22c55e'
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true, grid: { display: false } }, x: { grid: { display: false } } } }
-        });
-
         const assetsCtx = document.getElementById('assetsChart').getContext('2d');
         new Chart(assetsCtx, {
             type: 'doughnut',

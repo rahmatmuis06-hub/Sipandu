@@ -102,9 +102,8 @@
                 <th style="width: 3%;">No</th>
                 <th style="width: 10%;">No. Transaksi</th>
                 <th style="width: 8%;">Tanggal</th>
-                <th style="width: 9%;">Kode Kat.</th>
+                <th style="width: 17%;">Kode Unik Barang</th>
                 <th style="width: 12%;">Kategori</th>
-                <th style="width: 10%;">Kode Brg</th>
                 <th style="width: 18%;">Nama Barang</th>
                 <th style="width: 8%;">Jml Keluar</th>
                 <th style="width: 10%;">Harga</th>
@@ -117,29 +116,28 @@
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td class="text-center">{{ $item->nomor_transaksi ?? '-' }}</td>
                 <td class="text-center">{{ $item->tanggal_input ? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') : '-' }}</td>
-                <td class="text-center">{{ $item->kode_kategori ?? '-' }}</td>
+                <td class="text-center">{{ $item->kode_unik_barang }}</td>
                 <td class="text-left">{{ $item->kategori ?? '-' }}</td>
-                <td class="text-center">{{ $item->kode_barang ?? '-' }}</td>
                 <td class="text-left">{{ $item->nama_barang ?? '-' }}</td>
-                <td class="text-center"><b>{{ number_format($item->jumlah_keluar ?? 0, 0, ',', '.') }}</b> Unit</td>
+                <td class="text-center"><b>{{ number_format($item->jumlah_keluar ?? 0, 0, ',', '.') }}</b> {{ $item->satuan ?? ($item->persediaan->satuan ?? 'Unit') }}</td>
                 <td class="text-right">Rp {{ number_format($item->harga ?? 0, 0, ',', '.') }}</td>
                 <td class="text-right">Rp {{ number_format($item->total ?? 0, 0, ',', '.') }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="10" class="text-center" style="padding: 20px;">Tidak ada data transaksi keluar persediaan pada filter/periode ini.</td>
+                <td colspan="9" class="text-center" style="padding: 20px;">Tidak ada data transaksi keluar persediaan pada filter/periode ini.</td>
             </tr>
             @endforelse
         </tbody>
         @if($transaksi->count() > 0)
         <tfoot>
             <tr>
-                <td colspan="9" class="text-right"><strong>Total Keseluruhan:</strong></td>
+                <td colspan="8" class="text-right"><strong>Total Keseluruhan:</strong></td>
                 <td class="text-right"><strong>Rp {{ number_format($transaksi->sum('total'), 0, ',', '.') }}</strong></td>
             </tr>
             <tr>
-                <td colspan="9" class="text-right"><strong>Total Item Keluar:</strong></td>
-                <td class="text-right"><strong>{{ number_format($transaksi->sum('jumlah_keluar'), 0, ',', '.') }} Unit</strong></td>
+                <td colspan="8" class="text-right"><strong>Total Item Keluar:</strong></td>
+                <td class="text-right"><strong>{{ number_format($transaksi->sum('jumlah_keluar'), 0, ',', '.') }} Item</strong></td>
             </tr>
         </tfoot>
         @endif

@@ -365,13 +365,25 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
     <div class="page-hdr">
       <div>
         <h1>Data Gedung</h1>
-        <p>Kelola data gedung yang tersedia untuk dipinjam</p>
       </div>
       <button class="btn-add" onclick="openModal('tambah')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Tambah Gedung
       </button>
     </div>
+
+    @if(session('success'))
+    <div style="background: rgba(13,148,136,0.1); color: var(--teal); padding: 12px 16px; border-radius: var(--r); margin-bottom: 18px; font-size: 13px; border: 1px solid rgba(13,148,136,0.25); display: flex; align-items: center; gap: 8px;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+      {{ session('success') }}
+    </div>
+    @endif
+    @if(session('error'))
+    <div style="background: rgba(225,29,72,0.1); color: var(--rose); padding: 12px 16px; border-radius: var(--r); margin-bottom: 18px; font-size: 13px; border: 1px solid rgba(225,29,72,0.25); display: flex; align-items: center; gap: 8px;">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+      {{ session('error') }}
+    </div>
+    @endif
 
     <!-- STATS -->
     <div class="stats">
@@ -414,6 +426,12 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
         <option value="Renovasi">Renovasi</option>
         <option value="Perlu Perbaikan">Perlu Perbaikan</option>
       </select>
+      <select class="filter-select" id="kategoriFilter" onchange="filterTable()">
+        <option value="">Semua Kategori</option>
+        @foreach(\App\Models\Gedung::kategoriOptions() as $kVal => $kLabel)
+          <option value="{{ $kVal }}">{{ $kLabel }}</option>
+        @endforeach
+      </select>
     </div>
 
     <!-- TABLE -->
@@ -440,14 +458,15 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
               data-nama="{{ strtolower($item->nama_gedung) }}"
               data-lokasi="{{ strtolower($item->lokasi) }}"
               data-status="{{ $item->ketersediaan }}"
+              data-kategori="{{ $item->kategori }}"
             >
               <td style="color:var(--hint);font-family:'DM Mono',monospace;font-size:12px">
                 {{ str_pad($gedung->firstItem() + $index, 2, '0', STR_PAD_LEFT) }}
               </td>
               <td>
                 <div class="foto-thumb">
-                  @if($item->foto_url)
-                    <img src="{{ asset('storage/' . $item->foto_url) }}" alt="{{ $item->nama_gedung }}">
+                  @if($item->foto_path)
+                    <img src="{{ $item->foto_path }}" alt="{{ $item->nama_gedung }}">
                   @else
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
                   @endif
@@ -488,7 +507,7 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
             </tr>
             @empty
             <tr>
-              <td colspan="9">
+              <td colspan="10">
                 <div class="empty-state">
                   <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
                   <h4>Belum ada data gedung</h4>
@@ -499,7 +518,7 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
             @endforelse
           @else
           <tr>
-            <td colspan="9">
+            <td colspan="10">
               <div class="empty-state">
                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
                 <h4>Belum ada data gedung</h4>
@@ -833,14 +852,17 @@ function showToast(msg,type){
 function filterTable(){
   var q=document.getElementById('searchInput').value.toLowerCase();
   var s=document.getElementById('statusFilter').value;
+  var k=document.getElementById('kategoriFilter') ? document.getElementById('kategoriFilter').value : '';
   var rows=document.querySelectorAll('#tBody tr[data-nama]');
   rows.forEach(function(row){
     var nama=row.getAttribute('data-nama')||'';
     var lokasi=row.getAttribute('data-lokasi')||'';
     var status=row.getAttribute('data-status')||'';
+    var kategori=row.getAttribute('data-kategori')||'';
     var matchQ=!q||(nama.includes(q)||lokasi.includes(q));
     var matchS=!s||(status===s);
-    row.style.display=(matchQ&&matchS)?'':'none';
+    var matchK=!k||(kategori===k);
+    row.style.display=(matchQ&&matchS&&matchK)?'':'none';
   });
 }
 
@@ -870,9 +892,10 @@ function openDetailAjax(id) {
       <div class="det-photo">${data.foto_url?`<img src="${data.foto_url}" alt="${data.nama_gedung}" style="width:100%;height:100%;object-fit:cover;">`:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-9-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm1-9h-2v2h2V5z"/></svg>`}</div>
       <div class="det-grid">
         <div class="det-item"><label>LOKASI</label><strong>${data.lokasi||'-'}</strong></div>
+        <div class="det-item"><label>KATEGORI</label><strong>${data.kategori||'-'}</strong></div>
         <div class="det-item"><label>KAPASITAS</label><strong>${data.kapasitas?parseInt(data.kapasitas).toLocaleString()+' orang':'-'}</strong></div>
         <div class="det-item"><label>TARIF SEWA</label><strong>${data.tarif_sewa?'Rp '+parseInt(data.tarif_sewa).toLocaleString():'-'}</strong></div>
-        <div class="det-item"><label>LUAS</label><strong>${data.luas_bangunan||'-'}</strong></div>
+        <div class="det-item"><label>LUAS</label><strong>${data.luas_bangunan||'-'} m²</strong></div>
         <div class="det-item"><label>STATUS</label><strong>${data.ketersediaan||'-'}</strong></div>
         <div class="det-item"><label>DITAMBAHKAN</label><strong>${data.created_at?new Date(data.created_at).toLocaleDateString('id-ID'):'-'}</strong></div>
       </div>${data.fasilitas?`<div><div class="section-lbl">FASILITAS</div><div class="det-fac">${data.fasilitas}</div></div>`:''}`;
@@ -893,6 +916,9 @@ function openEditAjax(id){
   .then(function(data){
     document.getElementById('e-id').value=data.id;
     document.getElementById('e-nama').value=data.nama_gedung;
+    if (document.getElementById('e-kategori')) {
+      document.getElementById('e-kategori').value=data.kategori||'';
+    }
     document.getElementById('e-lokasi').value=data.lokasi;
     document.getElementById('e-luas').value=data.luas_bangunan;
     document.getElementById('e-kap').value=data.kapasitas;

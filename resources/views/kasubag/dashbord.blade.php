@@ -129,124 +129,132 @@
     <div class="hero-left">
       <div class="hero-greeting">👋 Selamat datang kembali!</div>
       <div class="hero-title">Halo, {{ auth()->user()->name ?? 'Kasubag' }}!</div>
-      <div class="hero-sub">Sebagai Kasubag, Anda dapat meninjau dan memverifikasi permintaan peminjaman aset dan fasilitas di BPMP Provinsi Gorontalo.</div>
+      <div class="hero-sub">Sebagai Kasubag, Anda memverifikasi persetujuan peminjaman barang dan peminjaman kendaraan, serta memantau transaksi keluar barang & aset di BPMP Provinsi Gorontalo.</div>
     </div>
     <div class="hero-right">
       <div class="hero-inst">BPMP Provinsi Gorontalo</div>
       <div class="hero-nip">NIP: {{ auth()->user()->nip ?? '-' }}</div>
-      <a href="#" class="hero-btn">
-        <i class="fas fa-gear"></i> Pengaturan Akun
-      </a>
+      <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+        <a href="{{ route('kasubag.persetujuan-peminjaman-barang') }}" class="hero-btn">
+          <i class="fas fa-box"></i> Persetujuan Barang
+        </a>
+        <a href="{{ route('kasubag.persetujuan-peminjaman-kendaraan') }}" class="hero-btn">
+          <i class="fas fa-car"></i> Persetujuan Kendaraan
+        </a>
+        <a href="{{ route('kasubag.monitoring-persediaan') }}" class="hero-btn">
+          <i class="fas fa-boxes"></i> Monitoring Persediaan
+        </a>
+        <a href="{{ route('kasubag.monitoring-kendaraan') }}" class="hero-btn">
+          <i class="fas fa-car-side"></i> Monitoring Kendaraan
+        </a>
+      </div>
     </div>
   </div>
 
   <div class="stats">
     <div class="stat-card">
-      <div class="stat-icon orange"><i class="fas fa-clock"></i></div>
-      <div class="stat-value">{{ $totalPending ?? 0 }}</div>
-      <div class="stat-label">Menunggu Verifikasi</div>
+      <div class="stat-icon blue"><i class="fas fa-box"></i></div>
+      <div class="stat-value" style="color:var(--blue);">{{ $barangPending ?? 0 }}</div>
+      <div class="stat-label">Peminjaman Barang (Pending)</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-      <div class="stat-value">{{ $totalDisetujui ?? 0 }}</div>
-      <div class="stat-label">Disetujui</div>
+      <div class="stat-icon orange"><i class="fas fa-car"></i></div>
+      <div class="stat-value" style="color:var(--orange);">{{ $kendaraanPending ?? 0 }}</div>
+      <div class="stat-label">Peminjaman Kendaraan (Pending)</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon red"><i class="fas fa-times-circle"></i></div>
-      <div class="stat-value">{{ $totalDitolak ?? 0 }}</div>
-      <div class="stat-label">Ditolak</div>
+      <div class="stat-icon purple" style="background:#f5f3ff;color:#8b5cf6;"><i class="fas fa-dolly"></i></div>
+      <div class="stat-value" style="color:#8b5cf6;">{{ number_format($totalTransaksiKeluar ?? 0, 0, ',', '.') }}</div>
+      <div class="stat-label">Total Transaksi Keluar</div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon blue"><i class="fas fa-folder-open"></i></div>
-      <div class="stat-value">{{ $totalPermintaan ?? 0 }}</div>
-      <div class="stat-label">Total Permintaan</div>
+      <div class="stat-icon red"><i class="fas fa-coins"></i></div>
+      <div class="stat-value" style="font-size:20px; color:#D97706;">Rp {{ number_format($totalNilaiKeluar ?? 0, 0, ',', '.') }}</div>
+      <div class="stat-label">Nilai Pengeluaran Barang</div>
     </div>
   </div>
 
   <div class="bottom-grid">
     <div class="card">
-      <div class="card-title">Permintaan per Kategori (Total Keseluruhan)</div>
+      <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Monitoring Terpadu</span>
+        <a href="{{ route('kasubag.laporan-transaksi-keluar') }}" style="font-size:12px; color:var(--primary); text-decoration:none; font-weight:600;">
+          Laporan Transaksi Keluar &rarr;
+        </a>
+      </div>
       
-      @php
-          $totBarang = $barangTotal ?? 0;
-          $pctBarang = $totalPermintaan > 0 ? ($totBarang / $totalPermintaan) * 100 : 0;
-          
-          $totKendaraan = $kendaraanTotal ?? 0;
-          $pctKendaraan = $totalPermintaan > 0 ? ($totKendaraan / $totalPermintaan) * 100 : 0;
-          
-          $totGedung = $gedungTotal ?? 0;
-          $pctGedung = $totalPermintaan > 0 ? ($totGedung / $totalPermintaan) * 100 : 0;
-          
-          $totPersediaan = $persediaanTotal ?? 0;
-          $pctPersediaan = $totalPermintaan > 0 ? ($totPersediaan / $totalPermintaan) * 100 : 0;
-      @endphp
-
-      <div class="cat-row">
-        <div class="cat-icon blue" style="background:#eff6ff;color:#3b82f6"><i class="fas fa-box"></i></div>
-        <span class="cat-label">Barang</span>
-        <div class="bar-wrap">
-            <div class="bar blue" style="width:{{ $totBarang > 0 ? max($pctBarang, 15) : 0 }}%; {{ $totBarang == 0 ? 'display:none;' : '' }}">
-                {{ $totBarang }} ({{ $barangPending ?? 0 }} pending)
+      <div style="margin-top:10px; display:flex; flex-direction:column; gap:12px;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:8px; background:#eff6ff; color:#3b82f6; display:flex; align-items:center; justify-content:center;">
+              <i class="fas fa-boxes"></i>
             </div>
+            <div>
+              <strong style="font-size:13px; display:block;">Permintaan Persediaan</strong>
+              <span style="font-size:11.5px; color:#64748b;">Pengajuan ATK, kertas & barang habis pakai</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <a href="{{ route('kasubag.monitoring-persediaan') }}" style="display:inline-block; font-size:12px; color:#3b82f6; text-decoration:none; font-weight:600;">Pantau &rarr;</a>
+          </div>
         </div>
-      </div>
 
-      <div class="cat-row">
-        <div class="cat-icon" style="background:#f5f3ff;color:#8b5cf6"><i class="fas fa-car"></i></div>
-        <span class="cat-label">Kendaraan</span>
-        <div class="bar-wrap">
-            <div class="bar purple" style="width:{{ $totKendaraan > 0 ? max($pctKendaraan, 15) : 0 }}%; {{ $totKendaraan == 0 ? 'display:none;' : '' }}">
-                {{ $totKendaraan }} ({{ $kendaraanPending ?? 0 }} pending)
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:8px; background:#ecfdf5; color:#10b981; display:flex; align-items:center; justify-content:center;">
+              <i class="fas fa-cubes"></i>
             </div>
+            <div>
+              <strong style="font-size:13px; display:block;">Barang / Aset Tetap</strong>
+              <span style="font-size:11.5px; color:#64748b;">Master BMN, ketersediaan, kondisi & NUP</span>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <a href="{{ route('kasubag.monitoring-aset-tetap') }}" style="display:inline-block; font-size:12px; color:#10b981; text-decoration:none; font-weight:600;">Pantau &rarr;</a>
+          </div>
         </div>
-      </div>
 
-      <div class="cat-row">
-        <div class="cat-icon" style="background:#fffbeb;color:#f59e0b"><i class="fas fa-building"></i></div>
-        <span class="cat-label">Gedung/Ruang</span>
-        <div class="bar-wrap">
-            <div class="bar orange" style="width:{{ $totGedung > 0 ? max($pctGedung, 15) : 0 }}%; {{ $totGedung == 0 ? 'display:none;' : '' }}">
-                {{ $totGedung }} ({{ $gedungPending ?? 0 }} pending)
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:34px; height:34px; border-radius:8px; background:#fffbeb; color:#f59e0b; display:flex; align-items:center; justify-content:center;">
+              <i class="fas fa-car-side"></i>
             </div>
-        </div>
-      </div>
-
-      <div class="cat-row">
-        <div class="cat-icon" style="background:#ecfdf5;color:#10b981"><i class="fas fa-cubes"></i></div>
-        <span class="cat-label">Persediaan</span>
-        <div class="bar-wrap">
-            <div class="bar green" style="width:{{ $totPersediaan > 0 ? max($pctPersediaan, 15) : 0 }}%; {{ $totPersediaan == 0 ? 'display:none;' : '' }}">
-                {{ $totPersediaan }} ({{ $persediaanPending ?? 0 }} pending)
+            <div>
+              <strong style="font-size:13px; display:block;">Kendaraan Dinas</strong>
+              <span style="font-size:11.5px; color:#64748b;">Unit sedang dipinjam, ketersediaan & jadwal</span>
             </div>
+          </div>
+          <div style="text-align:right;">
+            <a href="{{ route('kasubag.monitoring-kendaraan') }}" style="display:inline-block; font-size:12px; color:#f59e0b; text-decoration:none; font-weight:600;">Pantau &rarr;</a>
+          </div>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="card-title">Menunggu Verifikasi Terbaru</div>
+      <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+        <span>Antrean Persetujuan (Barang & Kendaraan)</span>
+        <span style="font-size:11.5px; color:#64748b;">{{ $totalPending ?? 0 }} Pengajuan Menunggu</span>
+      </div>
       
       @forelse($recentPending as $item)
           <div class="pending-item">
-            @if($item['tipe'] == 'Barang')
-                <div class="pending-ico" style="background:#eff6ff;color:#3b82f6"><i class="fas fa-box"></i></div>
-            @elseif($item['tipe'] == 'Kendaraan')
-                <div class="pending-ico" style="background:#f5f3ff;color:#8b5cf6"><i class="fas fa-car"></i></div>
-            @elseif($item['tipe'] == 'Gedung')
-                <div class="pending-ico" style="background:#fffbeb;color:#f59e0b"><i class="fas fa-building"></i></div>
+            @if($item['tipe'] === 'Barang')
+              <div class="pending-ico" style="background:#eff6ff;color:#3b82f6"><i class="fas fa-box"></i></div>
             @else
-                <div class="pending-ico" style="background:#ecfdf5;color:#10b981"><i class="fas fa-cubes"></i></div>
+              <div class="pending-ico" style="background:#f5f3ff;color:#8b5cf6"><i class="fas fa-car"></i></div>
             @endif
 
             <div class="pending-text">
               <strong>{{ $item['nama_item'] }}</strong>
-              <span>{{ $item['nama_peminjam'] }} &middot; {{ \Carbon\Carbon::parse($item['tanggal'])->format('d M Y') }}</span>
+              <span>{{ $item['nama_peminjam'] }} &middot; {{ \Carbon\Carbon::parse($item['tanggal'])->format('d M Y H:i') }}</span>
             </div>
-            <span class="badge-pending">Pending</span>
+            <a href="{{ $item['url'] ?? route('kasubag.persetujuan-peminjaman-kendaraan') }}" class="badge-pending" style="text-decoration:none;">Periksa</a>
           </div>
       @empty
           <div class="empty-state">
-              <i class="fas fa-check-circle" style="font-size: 30px; color: var(--gray-200); margin-bottom: 10px; display: block;"></i>
-              Bagus! Tidak ada permintaan yang menunggu verifikasi saat ini.
+              <i class="fas fa-check-circle" style="font-size: 30px; color: var(--green); margin-bottom: 10px; display: block;"></i>
+              Bagus! Tidak ada pengajuan barang atau kendaraan yang menunggu persetujuan Kasubag saat ini.
           </div>
       @endforelse
 
