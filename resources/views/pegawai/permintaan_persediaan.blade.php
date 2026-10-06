@@ -340,6 +340,18 @@
                 </div>
               </div>
 
+              @if(in_array($rawStatus, ['disetujui', 'disetujui_admin', 'disetujui_kasubag', 'selesai']))
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; margin: 10px 0; display: flex; align-items: flex-start; gap: 10px; font-size: 12.5px; color: #166534;">
+                <i class="fas fa-check-circle" style="color: #16a34a; font-size: 16px; margin-top: 2px;"></i>
+                <div>
+                  <strong>Permintaan Telah Disetujui!</strong>
+                  <div style="margin-top: 2px; color: #15803d; line-height: 1.4;">
+                    Silakan mengambil barang di Gudang Persediaan dengan menemui Pengelola Persediaan serta menunjukkan bukti permohonan ini.
+                  </div>
+                </div>
+              </div>
+              @endif
+
               <div class="req-card-footer">
                 <button class="card-btn detail" onclick="showDetail({{ $item->id }})">
                   <i class="fas fa-eye"></i> Detail

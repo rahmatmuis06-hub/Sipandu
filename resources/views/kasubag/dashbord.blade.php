@@ -94,9 +94,28 @@
   
   .empty-state { text-align: center; padding: 30px 10px; color: var(--gray-400); font-size: 13px; font-weight: 500; }
 
+  /* TREND & ANALYTICS */
+  .trend-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+  .trend-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; }
+  .trend-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .trend-title { font-size: 12.5px; font-weight: 600; color: var(--text-secondary); }
+  .trend-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+  .trend-badge.up { background: #dcfce7; color: #15803d; }
+  .trend-badge.down { background: #fee2e2; color: #b91c1c; }
+  .trend-value { font-size: 24px; font-weight: 800; color: var(--text-primary); }
+  .trend-sub { font-size: 11.5px; color: var(--gray-400); margin-top: 4px; }
+  .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .rank-list { display: flex; flex-direction: column; gap: 10px; }
+  .rank-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f8fafc; border-radius: 10px; border: 1px solid #eef2f6; }
+  .rank-item-info { display: flex; align-items: center; gap: 10px; }
+  .rank-num { width: 24px; height: 24px; border-radius: 6px; background: #e0e7ff; color: #3730a3; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .rank-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .rank-meta { font-size: 11px; color: var(--gray-400); }
+  .rank-badge { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 14px; }
+
   @media (max-width: 1024px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
-    .bottom-grid { grid-template-columns: 1fr; }
+    .bottom-grid, .trend-grid, .analytics-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
     .main { margin-left: 0; padding: 0 16px 32px; padding-top: 60px; }
@@ -171,6 +190,105 @@
       <div class="stat-icon red"><i class="fas fa-coins"></i></div>
       <div class="stat-value" style="font-size:20px; color:#D97706;">Rp {{ number_format($totalNilaiKeluar ?? 0, 0, ',', '.') }}</div>
       <div class="stat-label">Nilai Pengeluaran Barang</div>
+    </div>
+  </div>
+
+  <!-- DISPLAY TREN KHUSUS KASUBAG -->
+  <div class="trend-grid">
+    <div class="trend-card">
+      <div class="trend-header">
+        <span class="trend-title">Tren Permintaan Dinas</span>
+        <span class="trend-badge {{ $trendPersen >= 0 ? 'up' : 'down' }}">
+          <i class="fas fa-arrow-{{ $trendPersen >= 0 ? 'up' : 'down' }}"></i> {{ abs($trendPersen) }}%
+        </span>
+      </div>
+      <div class="trend-value">{{ $permintaanBulanIni }} Pengajuan</div>
+      <div class="trend-sub">Bulan lalu: {{ $permintaanBulanLalu }} pengajuan dinas</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-header">
+        <span class="trend-title">Antrean Otorisasi</span>
+        <span class="trend-badge {{ $totalPending > 0 ? 'down' : 'up' }}">
+          <i class="fas fa-hourglass-half"></i> {{ $totalPending }} Berkas
+        </span>
+      </div>
+      <div class="trend-value">{{ $totalPending }} Menunggu</div>
+      <div class="trend-sub">Peminjaman barang & kendaraan dinas</div>
+    </div>
+
+    <div class="trend-card">
+      <div class="trend-header">
+        <span class="trend-title">Tingkat Persetujuan</span>
+        <span class="trend-badge up">
+          <i class="fas fa-check-double"></i> {{ $totalDisetujui }} Selesai
+        </span>
+      </div>
+      <div class="trend-value">{{ $totalDisetujui }} Disetujui</div>
+      <div class="trend-sub">Total pengajuan yang telah diotorisasi</div>
+    </div>
+  </div>
+
+  <!-- ANALITIK: TOP 5 BARANG DIPINJAM & PALING SERING RUSAK -->
+  <div class="analytics-grid">
+    <!-- TOP BARANG PALING BANYAK DIPINJAM -->
+    <div class="card" style="padding: 20px;">
+      <div class="card-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-fire" style="color:#f59e0b"></i> Barang Paling Sering Dipinjam
+        </span>
+        <span style="font-size:11.5px; color:#64748b; font-weight:600">Top 5</span>
+      </div>
+      <div class="rank-list">
+        @forelse($topDipinjam as $index => $item)
+        <div class="rank-item">
+          <div class="rank-item-info">
+            <div class="rank-num">{{ $index + 1 }}</div>
+            <div>
+              <div class="rank-name">{{ $item->nama_barang }}</div>
+              <div class="rank-meta">Aset Sarana Kerja</div>
+            </div>
+          </div>
+          <div class="rank-badge" style="background:#e0e7ff;color:#3730a3">
+            {{ $item->total_dipinjam }}x Dipinjam
+          </div>
+        </div>
+        @empty
+        <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px">
+          Belum ada data peminjaman barang tercatat.
+        </div>
+        @endforelse
+      </div>
+    </div>
+
+    <!-- TOP BARANG PALING SERING RUSAK -->
+    <div class="card" style="padding: 20px;">
+      <div class="card-title" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <span style="display:flex; align-items:center; gap:8px;">
+          <i class="fas fa-triangle-exclamation" style="color:#ef4444"></i> Barang Paling Sering Rusak
+        </span>
+        <span style="font-size:11.5px; color:#64748b; font-weight:600">Evaluasi Pemeliharaan</span>
+      </div>
+      <div class="rank-list">
+        @forelse($topRusak as $index => $item)
+        <div class="rank-item">
+          <div class="rank-item-info">
+            <div class="rank-num" style="background:#fee2e2;color:#b91c1c">{{ $index + 1 }}</div>
+            <div>
+              <div class="rank-name">{{ $item->nama_barang }}</div>
+              <div class="rank-meta">Kode: {{ $item->kode_barang ?? '-' }}</div>
+            </div>
+          </div>
+          <div class="rank-badge" style="background:#fee2e2;color:#b91c1c">
+            {{ $item->total_rusak }}x Rusak
+          </div>
+        </div>
+        @empty
+        <div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:13px">
+          Belum ada data kerusakan barang yang dilaporkan.
+        </div>
+        @endforelse
+      </div>
     </div>
   </div>
 

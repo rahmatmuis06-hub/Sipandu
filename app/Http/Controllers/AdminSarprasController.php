@@ -1137,4 +1137,27 @@ class AdminSarprasController extends Controller
         // Kembalikan file untuk di-download
         return $pdf->download('Laporan_Kerusakan_Sarpras_' . now()->format('Y-m-d') . '.pdf');
     }
+
+    /**
+     * Halaman Monitoring & Penjajakan Integrasi ULT (Unit Layanan Terpadu)
+     */
+    public function integrasiUlt()
+    {
+        $gedungList = Gedung::all();
+        $peminjamanUlt = PeminjamanGedung::with('gedung')
+            ->where(function ($q) {
+                $q->where('tujuan_penggunaan', 'like', '%Tiket ULT%')
+                  ->orWhere('nama_lengkap', 'like', '%Loket ULT%');
+            })
+            ->latest()
+            ->paginate(15);
+
+        $stats = [
+            'total'     => PeminjamanGedung::where(fn($q) => $q->where('tujuan_penggunaan', 'like', '%Tiket ULT%')->orWhere('nama_lengkap', 'like', '%Loket ULT%'))->count(),
+            'pending'   => PeminjamanGedung::where(fn($q) => $q->where('tujuan_penggunaan', 'like', '%Tiket ULT%')->orWhere('nama_lengkap', 'like', '%Loket ULT%'))->where('status', 'pending')->count(),
+            'disetujui' => PeminjamanGedung::where(fn($q) => $q->where('tujuan_penggunaan', 'like', '%Tiket ULT%')->orWhere('nama_lengkap', 'like', '%Loket ULT%'))->whereIn('status', ['disetujui', 'disetujui_kasubag'])->count(),
+        ];
+
+        return view('adminsarpras.integrasi_ult', compact('gedungList', 'peminjamanUlt', 'stats'));
+    }
 }

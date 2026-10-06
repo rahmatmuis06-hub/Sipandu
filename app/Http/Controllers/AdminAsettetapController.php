@@ -1,4 +1,4 @@
-.<?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -70,7 +70,12 @@ class AdminAsettetapController extends Controller
                 });
             })
             ->when($request->filled('kondisi'), function ($q) use ($request) {
-                $q->where('kondisi', $request->kondisi);
+                $kondisi = $request->kondisi;
+                $q->where(function ($sub) use ($kondisi) {
+                    $sub->where('kondisi', $kondisi)
+                        ->orWhere('kondisi', strtolower($kondisi))
+                        ->orWhere('kondisi', ucwords(strtolower($kondisi)));
+                });
             })
             ->orderBy('created_at', 'desc');
 
@@ -85,8 +90,62 @@ class AdminAsettetapController extends Controller
             ->orderBy('kode_barang', 'asc')
             ->get();
 
-        // ✅ FIXED: Pass asetTetapOptions to view
-        return view('adminasettetap.data_asettetap', compact('asetTetap', 'asetTetapOptions'));
+        $stats = [
+            'total' => AssetTetap::count(),
+            'baik' => AssetTetap::whereIn('kondisi', ['Baik', 'baik'])->count(),
+            'rusak_ringan' => AssetTetap::whereIn('kondisi', ['Rusak Ringan', 'rusak ringan'])->count(),
+            'rusak_berat' => AssetTetap::whereIn('kondisi', ['Rusak Berat', 'rusak berat'])->count(),
+        ];
+
+        // ✅ FIXED: Pass asetTetapOptions dan stats to view
+        return view('adminasettetap.data_asettetap', compact('asetTetap', 'asetTetapOptions', 'stats'));
+    }
+
+    // ========== INPUT BARANG RUSAK DARI ADMIN ASET TETAP ==========
+    public function storeKerusakanAset(Request $request)
+    {
+        $validated = $request->validate([
+            'aset_id' => 'required|exists:aset_tetap,id',
+            'kondisi' => 'required|in:Baik,Rusak Ringan,Rusak Berat,baik,rusak ringan,rusak berat',
+            'tanggal_input' => 'required|date',
+            'deskripsi' => 'nullable|string',
+            'lokasi' => 'required|string|max:255',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $aset = AssetTetap::findOrFail($validated['aset_id']);
+        $kondisi = ucwords(strtolower($validated['kondisi']));
+
+        $fotoPath = null;
+        if ($request->hasFile('foto')) {
+            $fotoPath = $request->file('foto')->store('kerusakan_photos', 'public');
+        }
+
+        // Catat ke tabel master Kerusakan
+        \App\Models\Kerusakan::create([
+            'tanggal_input' => $validated['tanggal_input'],
+            'nama_barang' => $aset->nama_barang,
+            'kode_barang' => $aset->kode_barang,
+            'nup' => $aset->nup,
+            'kondisi' => $kondisi,
+            'lokasi' => $validated['lokasi'],
+            'deskripsi' => $validated['deskripsi'] ?? 'Pencatatan kerusakan via Admin Aset Tetap',
+            'foto' => $fotoPath,
+        ]);
+
+        // Perbarui kondisi pada master Aset Tetap
+        $statusAset = $aset->status;
+        if ($kondisi === 'Rusak Berat') {
+            $statusAset = 'Rusak';
+        }
+        $aset->update([
+            'kondisi' => $kondisi,
+            'lokasi' => $validated['lokasi'],
+            'status' => $statusAset
+        ]);
+
+        return redirect()->route('adminasettetap.data-aset-tetap')
+            ->with('success', "Data kerusakan barang '{$aset->nama_barang}' (NUP: {$aset->nup}) berhasil dicatat sebagai {$kondisi}!");
     }
 
     // ========== DOWNLOAD TEMPLATE EXCEL ==========
@@ -1767,6 +1826,8 @@ class AdminAsettetapController extends Controller
         $persentaseKondisiBaik = $totalAset > 0 ? round(($asetBaik / $totalAset) * 100, 1) : 0;
 
         return view('welcome', compact(
+            'totalAset',
+            'totalPersediaan',
             'totalItemBMN',
             'formattedNilaiAset',
             'totalTransaksiBulanIni',

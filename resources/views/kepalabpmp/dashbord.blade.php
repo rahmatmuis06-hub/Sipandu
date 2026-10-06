@@ -6,7 +6,6 @@
     <title>SIPANDU - Dashboard Kepala BPMP</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #2563eb;
@@ -77,8 +76,29 @@
         .action-icon { width: 46px; height: 46px; border-radius: 16px; display: grid; place-items: center; color: #fff; font-size: 18px; }
         .action-label { font-size: 13px; font-weight: 700; text-align: center; }
         
+        .trend-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+        .trend-card { background: #fff; border-radius: var(--radius); padding: 20px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .trend-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .trend-title { font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+        .trend-badge { font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+        .trend-badge.up { background: #dcfce7; color: #15803d; }
+        .trend-badge.down { background: #fee2e2; color: #b91c1c; }
+        .trend-value { font-size: 26px; font-weight: 800; color: var(--text-primary); }
+        .trend-sub { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+        .analytics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .rank-card { background: #fff; border-radius: var(--radius); padding: 22px; border: 1px solid var(--border); }
+        .rank-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
+        .rank-title { font-size: 15px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .rank-list { display: flex; flex-direction: column; gap: 10px; }
+        .rank-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #eef2f6; }
+        .rank-item-info { display: flex; align-items: center; gap: 10px; }
+        .rank-num { width: 26px; height: 26px; border-radius: 8px; background: #e0e7ff; color: #3730a3; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+        .rank-name { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+        .rank-meta { font-size: 11px; color: var(--text-secondary); }
+        .rank-badge { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+
         @media (max-width: 1120px) {
-            .hero-grid, .dashboard-grid.columns-2 { grid-template-columns: 1fr; }
+            .hero-grid, .dashboard-grid.columns-2, .trend-grid, .analytics-grid { grid-template-columns: 1fr; }
             .main { margin-left: 0; padding: 20px; padding-top: 70px; }
         }
         @media (max-width: 768px) {
@@ -192,12 +212,104 @@
             </div>
         </div>
 
-        <div class="dashboard-grid" style="margin-bottom: 24px;">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <div class="chart-title"><i class="fas fa-chart-pie"></i> Distribusi Logistik & Infrastruktur</div>
+        <!-- DISPLAY TREN KHUSUS OPERASIONAL -->
+        <div class="trend-grid">
+            <div class="trend-card">
+                <div class="trend-header">
+                    <span class="trend-title">Tren Permintaan Dinas</span>
+                    <span class="trend-badge {{ $trendPersen >= 0 ? 'up' : 'down' }}">
+                        <i class="fas fa-arrow-{{ $trendPersen >= 0 ? 'up' : 'down' }}"></i> {{ abs($trendPersen) }}%
+                    </span>
                 </div>
-                <canvas id="assetsChart" width="400" height="220"></canvas>
+                <div class="trend-value">{{ $permintaanBulanIni }} Transaksi</div>
+                <div class="trend-sub">Bulan lalu: {{ $permintaanBulanLalu }} transaksi dinas</div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <span class="trend-title">Rasio Kelaikan Aset Tetap</span>
+                    <span class="trend-badge up">
+                        <i class="fas fa-check-circle"></i> {{ $persenKondisiBaik }}%
+                    </span>
+                </div>
+                <div class="trend-value">{{ $persenKondisiBaik }}% Siap Pakai</div>
+                <div class="trend-sub">{{ number_format($totalAsetTetap) }} total unit aset terinventarisasi</div>
+            </div>
+
+            <div class="trend-card">
+                <div class="trend-header">
+                    <span class="trend-title">Beban Pemeliharaan Sarpras</span>
+                    <span class="trend-badge {{ $totalKerusakan > 0 ? 'down' : 'up' }}">
+                        <i class="fas fa-wrench"></i> {{ $totalKerusakan }} Laporan
+                    </span>
+                </div>
+                <div class="trend-value">{{ $totalKerusakan }} Kerusakan</div>
+                <div class="trend-sub">Tercatat dalam riwayat perbaikan</div>
+            </div>
+        </div>
+
+        <!-- ANALITIK: TOP 5 BARANG DIPINJAM & PALING SERING RUSAK -->
+        <div class="analytics-grid">
+            <!-- TOP BARANG PALING BANYAK DIPINJAM -->
+            <div class="rank-card">
+                <div class="rank-header">
+                    <div class="rank-title">
+                        <i class="fas fa-fire" style="color:#f59e0b"></i>
+                        <span>Barang Paling Sering Dipinjam</span>
+                    </div>
+                    <span style="font-size:12px;color:var(--text-secondary);font-weight:600">Top 5</span>
+                </div>
+                <div class="rank-list">
+                    @forelse($topDipinjam as $index => $item)
+                    <div class="rank-item">
+                        <div class="rank-item-info">
+                            <div class="rank-num">{{ $index + 1 }}</div>
+                            <div>
+                                <div class="rank-name">{{ $item->nama_barang }}</div>
+                                <div class="rank-meta">Aset Sarana Kerja</div>
+                            </div>
+                        </div>
+                        <div class="rank-badge" style="background:#e0e7ff;color:#3730a3">
+                            {{ $item->total_dipinjam }}x Dipinjam
+                        </div>
+                    </div>
+                    @empty
+                    <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px">
+                        Belum ada data peminjaman barang tercatat.
+                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- TOP BARANG PALING SERING RUSAK -->
+            <div class="rank-card">
+                <div class="rank-header">
+                    <div class="rank-title">
+                        <i class="fas fa-triangle-exclamation" style="color:#ef4444"></i>
+                        <span>Barang Paling Sering Rusak</span>
+                    </div>
+                    <span style="font-size:12px;color:var(--text-secondary);font-weight:600">Evaluasi Pemeliharaan</span>
+                </div>
+                <div class="rank-list">
+                    @forelse($topRusak as $index => $item)
+                    <div class="rank-item">
+                        <div class="rank-item-info">
+                            <div class="rank-num" style="background:#fee2e2;color:#b91c1c">{{ $index + 1 }}</div>
+                            <div>
+                                <div class="rank-name">{{ $item->nama_barang }}</div>
+                                <div class="rank-meta">Kode: {{ $item->kode_barang ?? '-' }}</div>
+                            </div>
+                        </div>
+                        <div class="rank-badge" style="background:#fee2e2;color:#b91c1c">
+                            {{ $item->total_rusak }}x Kerusakan
+                        </div>
+                    </div>
+                    @empty
+                    <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px">
+                        Belum ada data kerusakan barang yang dilaporkan.
+                    </div>
+                    @endforelse
+                </div>
             </div>
         </div>
 
@@ -247,20 +359,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        const assetsCtx = document.getElementById('assetsChart').getContext('2d');
-        new Chart(assetsCtx, {
-            type: 'doughnut',
-            data: {
-                labels: @json(array_keys($distribusiAset)),
-                datasets: [{
-                    data: @json(array_values($distribusiAset)),
-                    backgroundColor: ['#8b5cf6', '#2563eb', '#0ea5e9', '#f97316']
-                }]
-            },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
-        });
-    </script>
 </body>
 </html>

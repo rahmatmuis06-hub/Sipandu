@@ -237,6 +237,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
             Route::get('/laporan-peminjaman/download', [AdminSarprasController::class, 'downloadLaporanPeminjaman'])->name('laporan.peminjaman.download');
             Route::get('/laporan-kerusakan/download', [AdminSarprasController::class, 'downloadLaporanKerusakan'])->name('laporan.kerusakan.download');
+            Route::get('/integrasi-ult', [AdminSarprasController::class, 'integrasiUlt'])->name('integrasi-ult');
 
             //DATA GEDUNG
             Route::get('/fasilitas-beranda', [\App\Http\Controllers\FasilitasBerandaController::class, 'index'])->name('fasilitas-beranda.index');
@@ -299,6 +300,7 @@ Route::middleware('auth')->group(function () {
 
             // Rute untuk memproses file Excel yang diunggah oleh admin
             Route::post('/data-aset-tetap/import', [AdminAsettetapController::class, 'importAset'])->name('data-aset-tetap.import');
+            Route::post('/data-aset-tetap/catat-kerusakan', [AdminAsettetapController::class, 'storeKerusakanAset'])->name('data-aset-tetap.catat-kerusakan');
 
             // Route untuk fitur Info Ajuan Mutasi
             Route::get('info-ajuan', [AdminAsettetapController::class, 'infoAjuanIndex'])->name('info-ajuan.index');
@@ -455,8 +457,18 @@ Route::middleware('auth')->group(function () {
             Route::post('/permintaan-persediaan/{id}/cancel', [PegawaiController::class, 'cancelPermintaanPersediaan'])->name('permintaan_persediaan.cancel');
             Route::get('/permintaan-persediaan/{id}/json', [PegawaiController::class, 'showPermintaanPersediaanJson']);
 
-            //PENGATURAN AKUN
-            Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
-        });
+        //PENGATURAN AKUN
+        Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
+    });
 
+    // ──────────────────────────────────────────────────────────────────
+    // ENDPOINT API INTEGRASI SISTEM ULT (UNIT LAYANAN TERPADU)
+    // ──────────────────────────────────────────────────────────────────
+    Route::prefix('api/ult')->group(function () {
+        Route::get('/ketersediaan-gedung', [\App\Http\Controllers\Api\UltIntegrationController::class, 'ketersediaanGedung']);
+        Route::get('/katalog-layanan', [\App\Http\Controllers\Api\UltIntegrationController::class, 'katalogLayanan']);
+        Route::post('/permohonan-sarpras', [\App\Http\Controllers\Api\UltIntegrationController::class, 'storePermohonanSarpras']);
+        Route::get('/tracking-layanan/{kode_tiket}', [\App\Http\Controllers\Api\UltIntegrationController::class, 'trackingLayanan']);
+        Route::get('/ringkasan-layanan', [\App\Http\Controllers\Api\UltIntegrationController::class, 'ringkasanLayanan']);
+    });
 });

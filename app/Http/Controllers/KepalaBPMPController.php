@@ -106,12 +106,41 @@ class KepalaBPMPController extends Controller
         );
         $recentActivities = $activities->sortByDesc('time')->take(5)->values();
 
+        // 📊 ANALITIK: Top 5 Barang Paling Banyak Dipinjam
+        $topDipinjam = PeminjamanBarang::select('nama_barang')
+            ->selectRaw('COUNT(*) as total_dipinjam')
+            ->groupBy('nama_barang')
+            ->orderByDesc('total_dipinjam')
+            ->limit(5)
+            ->get();
+
+        // 📊 ANALITIK: Top 5 Barang Paling Sering Rusak
+        $topRusak = Kerusakan::select('nama_barang', 'kode_barang')
+            ->selectRaw('COUNT(*) as total_rusak')
+            ->groupBy('nama_barang', 'kode_barang')
+            ->orderByDesc('total_rusak')
+            ->limit(5)
+            ->get();
+
+        // 📈 DISPLAY TREN KHUSUS: Bulan Ini vs Bulan Lalu
+        $prevMonth = now()->subMonth();
+        $permintaanBulanLalu = PermintaanPersediaan::whereMonth('created_at', $prevMonth->month)->whereYear('created_at', $prevMonth->year)->count()
+            + PeminjamanBarang::whereMonth('created_at', $prevMonth->month)->whereYear('created_at', $prevMonth->year)->count()
+            + PeminjamanKendaraan::whereMonth('created_at', $prevMonth->month)->whereYear('created_at', $prevMonth->year)->count();
+
+        $trendPersen = $permintaanBulanLalu > 0
+            ? round((($permintaanBulanIni - $permintaanBulanLalu) / $permintaanBulanLalu) * 100, 1)
+            : ($permintaanBulanIni > 0 ? 100 : 0);
+
+        $asetKondisiBaik = AssetTetap::where('kondisi', 'Baik')->count();
+        $persenKondisiBaik = $totalAsetTetap > 0 ? round(($asetKondisiBaik / $totalAsetTetap) * 100, 1) : 0;
+
         // Mengirimkan semua variabel ke view dashbord
         return view('kepalabpmp.dashbord', compact(
             'totalAsetTetap', 'totalPersediaan', 'totalPengguna', 'totalGedung',
             'totalMutasi', 'totalPeminjaman', 'permintaanBulanIni', 'menungguApproval', 'totalKerusakan',
             'chartLabels', 'chartPermintaan', 'chartPeminjaman', 'distribusiAset',
-            'recentActivities'
+            'recentActivities', 'topDipinjam', 'topRusak', 'permintaanBulanLalu', 'trendPersen', 'persenKondisiBaik'
         ));
     }
 

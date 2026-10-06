@@ -96,6 +96,38 @@ class KasubagController extends Controller
 
         $recentPending = collect($recentBarang)->merge($recentKendaraan)->sortByDesc('tanggal')->take(5);
 
+        // 📊 ANALITIK: Top 5 Barang Paling Banyak Dipinjam
+        $topDipinjam = PeminjamanBarang::select('nama_barang')
+            ->selectRaw('COUNT(*) as total_dipinjam')
+            ->groupBy('nama_barang')
+            ->orderByDesc('total_dipinjam')
+            ->limit(5)
+            ->get();
+
+        // 📊 ANALITIK: Top 5 Barang Paling Sering Rusak
+        $topRusak = \App\Models\Kerusakan::select('nama_barang', 'kode_barang')
+            ->selectRaw('COUNT(*) as total_rusak')
+            ->groupBy('nama_barang', 'kode_barang')
+            ->orderByDesc('total_rusak')
+            ->limit(5)
+            ->get();
+
+        // 📈 DISPLAY TREN KHUSUS: Bulan Ini vs Bulan Lalu
+        $bulanIni = now()->month;
+        $tahunIni = now()->year;
+        $prevMonth = now()->subMonth();
+        $permintaanBulanIni = PeminjamanBarang::whereMonth('created_at', $bulanIni)->whereYear('created_at', $tahunIni)->count()
+            + PeminjamanKendaraan::whereMonth('created_at', $bulanIni)->whereYear('created_at', $tahunIni)->count()
+            + PermintaanPersediaan::whereMonth('created_at', $bulanIni)->whereYear('created_at', $tahunIni)->count();
+
+        $permintaanBulanLalu = PeminjamanBarang::whereMonth('created_at', $prevMonth->month)->whereYear('created_at', $prevMonth->year)->count()
+            + PeminjamanKendaraan::whereMonth('created_at', $prevMonth->month)->whereYear('created_at', $prevMonth->year)->count()
+            + PermintaanPersediaan::whereMonth('created_at', $prevMonth->month)->whereYear('created_at', $prevMonth->year)->count();
+
+        $trendPersen = $permintaanBulanLalu > 0
+            ? round((($permintaanBulanIni - $permintaanBulanLalu) / $permintaanBulanLalu) * 100, 1)
+            : ($permintaanBulanIni > 0 ? 100 : 0);
+
         // 6. Kirim data ke View
         return view('kasubag.dashbord', compact(
             'totalPending',
@@ -114,7 +146,12 @@ class KasubagController extends Controller
             'totalNilaiKeluar',
             'totalTrxPersediaan',
             'totalTrxAset',
-            'recentPending'
+            'recentPending',
+            'topDipinjam',
+            'topRusak',
+            'permintaanBulanIni',
+            'permintaanBulanLalu',
+            'trendPersen'
         ));
     }
 

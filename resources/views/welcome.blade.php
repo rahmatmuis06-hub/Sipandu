@@ -402,38 +402,46 @@
         </div>
         <h2 class="text-3xl md:text-4xl font-bold text-white">Statistik BMN BPMP Gorontalo</h2>
       </div>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
         
-        <div class="stat-card glass rounded-2xl p-6 text-center">
-            <div class="w-14 h-14 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-300"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+        <div class="stat-card glass rounded-2xl p-5 text-center">
+            <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-300"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             </div>
-            <div class="text-3xl md:text-4xl font-extrabold text-white mb-1">{{ number_format($totalItemBMN) }}</div>
-            <div class="text-blue-200 text-sm">Total Item BMN</div>
+            <div class="text-2xl md:text-3xl font-extrabold text-white mb-1">{{ number_format($totalAset ?? 0) }}</div>
+            <div class="text-blue-200 text-xs md:text-sm font-medium">Total Aset Tetap</div>
         </div>
 
-        <div class="stat-card glass rounded-2xl p-6 text-center">
-            <div class="w-14 h-14 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-300"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div class="stat-card glass rounded-2xl p-5 text-center">
+            <div class="w-12 h-12 bg-indigo-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-300"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
             </div>
-            <div class="text-3xl md:text-4xl font-extrabold text-white mb-1">Rp {{ $formattedNilaiAset }}M</div>
-            <div class="text-blue-200 text-sm">Nilai Aset Terkelola</div>
+            <div class="text-2xl md:text-3xl font-extrabold text-white mb-1">{{ number_format($totalPersediaan ?? 0) }}</div>
+            <div class="text-blue-200 text-xs md:text-sm font-medium">Total Persediaan</div>
         </div>
 
-        <div class="stat-card glass rounded-2xl p-6 text-center">
-            <div class="w-14 h-14 bg-yellow-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-300"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        <div class="stat-card glass rounded-2xl p-5 text-center">
+            <div class="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-300"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
-            <div class="text-3xl md:text-4xl font-extrabold text-white mb-1">{{ $totalTransaksiBulanIni }}</div>
-            <div class="text-blue-200 text-sm">Transaksi Bulan Ini</div>
+            <div class="text-2xl md:text-3xl font-extrabold text-white mb-1">Rp {{ $formattedNilaiAset }}M</div>
+            <div class="text-blue-200 text-xs md:text-sm font-medium">Nilai Aset Terkelola</div>
         </div>
 
-        <div class="stat-card glass rounded-2xl p-6 text-center">
-            <div class="w-14 h-14 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-300"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div class="stat-card glass rounded-2xl p-5 text-center">
+            <div class="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-yellow-300"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
             </div>
-            <div class="text-3xl md:text-4xl font-extrabold text-white mb-1">{{ $persentaseKondisiBaik }}%</div>
-            <div class="text-blue-200 text-sm">Kondisi Baik</div>
+            <div class="text-2xl md:text-3xl font-extrabold text-white mb-1">{{ $totalTransaksiBulanIni }}</div>
+            <div class="text-blue-200 text-xs md:text-sm font-medium">Transaksi Bulan Ini</div>
+        </div>
+
+        <div class="stat-card glass rounded-2xl p-5 text-center col-span-2 lg:col-span-1">
+            <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-300"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="text-2xl md:text-3xl font-extrabold text-white mb-1">{{ $persentaseKondisiBaik }}%</div>
+            <div class="text-blue-200 text-xs md:text-sm font-medium">Kondisi Baik</div>
         </div>
 
       </div>

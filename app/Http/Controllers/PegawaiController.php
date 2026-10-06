@@ -507,7 +507,7 @@ class PegawaiController extends Controller
      */
     public function permintaanPersediaan(Request $request)
     {
-        $persediaan = Persediaan::select('id', 'kode_barang', 'nama_barang', 'jumlah', 'satuan')
+        $persediaan = Persediaan::select('id', 'kode_barang', 'nama_barang', 'jumlah', 'satuan', 'kategori')
             ->where('jumlah', '>', 0)
             ->orderBy('nama_barang')
             ->get();

@@ -796,21 +796,25 @@
     ]
   },
   {
-    "name": "Ruang Laboratorium BPMP Gorontalo",
+    "name": "Ruang SNT BPMP Gorontalo",
     "category": "Ruang",
-    "location": "Gedung Laboratorium Lt. 2",
-    "capacity": "30 Orang",
-    "luas": "61 m²",
-    "operasional": "Sesuai Jadwal Pelatihan",
-    "kontak": "Unit TIK",
-    "description": "Laboratorium komputer dan multimedia untuk uji kompetensi, pelatihan IT, serta pengembangan media pembelajaran digital.",
+    "location": "Gedung SNT Lt. 2 BPMP Gorontalo",
+    "capacity": "40 Orang",
+    "luas": "65 m²",
+    "operasional": "Senin–Jumat 07.30–16.00 WITA",
+    "kontak": "Subbagian Umum / Sarpras",
+    "description": "Ruangan SNT yang representatif dan nyaman, dilengkapi sarana multimedia, proyektor, serta AC untuk rapat koordinasi dan kegiatan penjaminan mutu.",
     "features": [
-      ""
+      "AC",
+      "Proyektor / Layar Presentasi",
+      "Sound System",
+      "Meja & Kursi Rapat",
+      "WiFi Internet"
     ],
     "rules": [
-      "Dilarang mengubah konfigurasi software/hardware",
-      "Dilarang membawa makanan/minuman ke meja komputer",
-      "Gunakan alas kaki khusus atau melepas alas kaki"
+      "Dilarang membawa makanan berbau tajam",
+      "Menjaga kebersihan dan ketertiban ruangan",
+      "Mematikan AC dan alat elektronik setelah selesai digunakan"
     ],
     "images": [
       "/storage/fasilitas/gedung_laboratorium.jpeg"

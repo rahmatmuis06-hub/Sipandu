@@ -734,6 +734,14 @@
                     <p>{{ $asetTetap->total() }} data ditemukan</p>
                 </div>
                 <div class="header-actions">
+                    <button class="btn-import" onclick="openModal('modal-pilih-kerusakan')" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        Catat Kerusakan
+                    </button>
                     <button class="btn-import" onclick="openModal('modal-import')">
                         <svg viewBox="0 0 24 24">
                             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
@@ -750,6 +758,21 @@
             </div>
 
             <div class="table-card">
+                <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                    <a href="{{ route('adminasettetap.data-aset-tetap') }}" style="text-decoration:none; padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:600; background:{{ !request('kondisi') ? '#2563eb' : '#fff' }}; color:{{ !request('kondisi') ? '#fff' : '#64748b' }}; border:1px solid #e2e8f0;">
+                        Semua Aset ({{ $stats['total'] ?? 0 }})
+                    </a>
+                    <a href="{{ route('adminasettetap.data-aset-tetap', ['kondisi' => 'Baik']) }}" style="text-decoration:none; padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:600; background:{{ request('kondisi') == 'Baik' ? '#10b981' : '#fff' }}; color:{{ request('kondisi') == 'Baik' ? '#fff' : '#166534' }}; border:1px solid #e2e8f0;">
+                        🟢 Baik ({{ $stats['baik'] ?? 0 }})
+                    </a>
+                    <a href="{{ route('adminasettetap.data-aset-tetap', ['kondisi' => 'Rusak Ringan']) }}" style="text-decoration:none; padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:600; background:{{ request('kondisi') == 'Rusak Ringan' ? '#f59e0b' : '#fff' }}; color:{{ request('kondisi') == 'Rusak Ringan' ? '#fff' : '#92400e' }}; border:1px solid #e2e8f0;">
+                        🟡 Rusak Ringan ({{ $stats['rusak_ringan'] ?? 0 }})
+                    </a>
+                    <a href="{{ route('adminasettetap.data-aset-tetap', ['kondisi' => 'Rusak Berat']) }}" style="text-decoration:none; padding:7px 14px; border-radius:20px; font-size:12.5px; font-weight:600; background:{{ request('kondisi') == 'Rusak Berat' ? '#ef4444' : '#fff' }}; color:{{ request('kondisi') == 'Rusak Berat' ? '#fff' : '#991b1b' }}; border:1px solid #e2e8f0;">
+                        🔴 Rusak Berat ({{ $stats['rusak_berat'] ?? 0 }})
+                    </a>
+                </div>
+
                 <div class="table-toolbar">
                     <form method="GET" action="{{ route('adminasettetap.data-aset-tetap') }}" class="search-wrap">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
@@ -816,6 +839,13 @@
                                     <a href="javascript:void(0)" class="action-btn" onclick="event.preventDefault(); openModal('modal-edit-{{ $aset->id }}')" title="Edit">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
                                             <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm18-11.5c0-.41-.17-.79-.44-1.06l-2.25-2.25a1.5 1.5 0 0 0-2.12 0l-1.83 1.83 3.75 3.75 1.83-1.83c.27-.27.44-.65.44-1.06z" />
+                                        </svg>
+                                    </a>
+                                    <a href="javascript:void(0)" class="action-btn" onclick="event.preventDefault(); openModal('modal-rusak-{{ $aset->id }}')" title="Catat Kerusakan" style="background:#fef2f2; border-color:#fecaca; color:#ef4444;">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <line x1="12" y1="9" x2="12" y2="13"/>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"/>
                                         </svg>
                                     </a>
                                     <form action="{{ route('adminasettetap.data-aset-tetap.destroy', $aset->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus aset tetap ini?')">
@@ -1040,13 +1070,69 @@
                                             </div>
                                             <div class="form-group">
                                                 <label class="form-label">Lokasi</label>
-                                                <input type="text" name="lokasi" class="form-input" value="{{ old('lokasi', $aset->lokasi) }}" placeholder="Ruang Server / Gudang Utama">
+                                                <input type="text" name="lokasi" list="lokasi-list" class="form-input" value="{{ old('lokasi', $aset->lokasi) }}" placeholder="Ruang Server / Gudang Utama / Ruang SNT">
                                             </div>
                                         </div>
 
                                         <div class="btn-group">
                                             <button type="button" class="btn btn-secondary" onclick="closeModal('modal-edit-{{ $aset->id }}')">Batal</button>
                                             <button type="submit" class="btn btn-primary">Update Aset</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            {{-- MODAL CATAT KERUSAKAN ROW --}}
+                            <div id="modal-rusak-{{ $aset->id }}" class="modal-overlay">
+                                <div class="modal">
+                                    <h2 class="modal-title" style="color:#dc2626; display:flex; align-items:center; gap:8px;">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                            <line x1="12" y1="9" x2="12" y2="13"/>
+                                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                                        </svg>
+                                        Catat Kerusakan Barang
+                                    </h2>
+                                    <div style="background:#fef2f2; border:1px solid #fee2e2; border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:13px; color:#991b1b;">
+                                        Barang: <strong>{{ $aset->nama_barang }}</strong> | Kode: <strong>{{ $aset->kode_barang ?? '-' }}</strong> | NUP: <strong>{{ $aset->nup ?? '-' }}</strong>
+                                    </div>
+                                    <form action="{{ route('adminasettetap.data-aset-tetap.catat-kerusakan') }}" method="POST" enctype="multipart/form-data">
+                                        @csrf
+                                        <input type="hidden" name="aset_id" value="{{ $aset->id }}">
+
+                                        <div class="form-row">
+                                            <div class="form-group">
+                                                <label class="form-label">Tanggal Pelaporan / Temuan <span class="text-red-500">*</span></label>
+                                                <input type="date" name="tanggal_input" class="form-input" value="{{ date('Y-m-d') }}" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">Tingkat Kerusakan <span class="text-red-500">*</span></label>
+                                                <select name="kondisi" class="form-select" required>
+                                                    <option value="Rusak Ringan">🟡 Rusak Ringan</option>
+                                                    <option value="Rusak Berat" selected>🔴 Rusak Berat</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Lokasi Keberadaan Barang <span class="text-red-500">*</span></label>
+                                            <input type="text" name="lokasi" list="lokasi-list" class="form-input" value="{{ old('lokasi', $aset->lokasi) }}" placeholder="Contoh: Ruang SNT / Gudang Rusak" required>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Deskripsi / Kronologi Kerusakan</label>
+                                            <textarea name="deskripsi" class="form-input" rows="3" placeholder="Jelaskan detail kerusakan fisik/sistem, penyebab, atau bagian yang rusak..."></textarea>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="form-label">Foto Bukti Kerusakan (Opsional)</label>
+                                            <input type="file" name="foto" class="form-input" accept="image/*">
+                                            <span style="font-size:11.5px; color:#94a3b8;">Format JPG, JPEG, PNG maksimal 2MB</span>
+                                        </div>
+
+                                        <div class="btn-group" style="margin-top:20px;">
+                                            <button type="button" class="btn btn-secondary" onclick="closeModal('modal-rusak-{{ $aset->id }}')">Batal</button>
+                                            <button type="submit" class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;">Simpan Kerusakan</button>
                                         </div>
                                     </form>
                                 </div>
@@ -1226,7 +1312,7 @@
 
                         <div class="form-group" style="margin-bottom: 0;">
                             <label class="form-label">Lokasi</label>
-                            <input type="text" name="items[0][lokasi]" class="form-input" placeholder="Ruang Server / Gudang Utama">
+                            <input type="text" name="items[0][lokasi]" list="lokasi-list" class="form-input" placeholder="Ruang Server / Gudang Utama / Ruang SNT">
                         </div>
                     </div>
                 </div>
@@ -1246,7 +1332,100 @@
         </div>
     </div>
 
+    {{-- MODAL INPUT KERUSAKAN BARU DARI ADMIN ASET TETAP --}}
+    <div id="modal-pilih-kerusakan" class="modal-overlay">
+        <div class="modal">
+            <h2 class="modal-title" style="color:#dc2626; display:flex; align-items:center; gap:8px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                Input Pencatatan Barang Rusak
+            </h2>
+            <p style="font-size:13px; color:var(--muted); margin-top:-8px; margin-bottom:16px;">
+                Pencatatan aset rusak akan otomatis tersinkronisasi ke Data Aset dan Manajemen Kerusakan Sarpras.
+            </p>
+            <form action="{{ route('adminasettetap.data-aset-tetap.catat-kerusakan') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="form-group">
+                    <label class="form-label">Pilih Aset Tetap <span class="text-red-500">*</span></label>
+                    <select name="aset_id" class="form-select" id="pilihAsetKerusakan" required onchange="updateAsetInfoKerusakan(this)">
+                        <option value="">-- Pilih Barang Aset --</option>
+                        @foreach($asetTetapOptions as $opt)
+                            <option value="{{ $opt->id }}" data-lokasi="{{ $opt->lokasi }}" data-nup="{{ $opt->nup }}" data-kode="{{ $opt->kode_barang }}">
+                                {{ $opt->nama_barang }} (Kode: {{ $opt->kode_barang }} | NUP: {{ $opt->nup }}) - {{ $opt->lokasi ?? 'Lokasi: -' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tanggal Pelaporan / Temuan <span class="text-red-500">*</span></label>
+                        <input type="date" name="tanggal_input" class="form-input" value="{{ date('Y-m-d') }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tingkat Kerusakan <span class="text-red-500">*</span></label>
+                        <select name="kondisi" class="form-select" required>
+                            <option value="Rusak Ringan">🟡 Rusak Ringan (Perlu servis ringan)</option>
+                            <option value="Rusak Berat" selected>🔴 Rusak Berat (Mati total / usul afkir)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Lokasi Keberadaan Barang <span class="text-red-500">*</span></label>
+                    <input type="text" name="lokasi" id="lokasiKerusakanGlobal" list="lokasi-list" class="form-input" placeholder="Contoh: Ruang SNT / Gudang Rusak" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Deskripsi / Detail Kerusakan</label>
+                    <textarea name="deskripsi" class="form-input" rows="3" placeholder="Jelaskan kendala, kronologi, atau bagian yang rusak..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Foto Bukti Kerusakan (Opsional)</label>
+                    <input type="file" name="foto" class="form-input" accept="image/*">
+                    <span style="font-size:11.5px; color:#94a3b8;">Format JPG, JPEG, PNG maksimal 2MB</span>
+                </div>
+
+                <div class="btn-group" style="margin-top:20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modal-pilih-kerusakan')">Batal</button>
+                    <button type="submit" class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;">Simpan Kerusakan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- DATALIST LOKASI DENGAN PILIHAN TERUPDATE (TERMASUK RUANG SNT) --}}
+    <datalist id="lokasi-list">
+        <option value="Ruang SNT">
+        <option value="Ruang SNT Lantai 1">
+        <option value="Ruang SNT Lantai 2">
+        <option value="Kantor Ponuwa 1">
+        <option value="Kantor Ponuwa 2">
+        <option value="Ruang Pertemuan Aula Dulohupa">
+        <option value="Ruang Pertemuan Huyula">
+        <option value="Ruang Kelas Tilango 1 BPMP Gorontalo">
+        <option value="Ruang Kelas Tilango 2 BPMP Gorontalo">
+        <option value="Ruang Kelas Tinelo 1 BPMP Gorontalo">
+        <option value="Ruang Kelas Tinelo 2 BPMP Gorontalo">
+        <option value="Gedung Arsip BPMP Gorontalo">
+        <option value="Gudang Persediaan">
+        <option value="Gudang Utama">
+        <option value="Unit Layanan Terpadu (ULT)">
+        <option value="Ruang Subbagian Umum">
+    </datalist>
+
     <script>
+        function updateAsetInfoKerusakan(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            if (opt && opt.dataset.lokasi && opt.dataset.lokasi !== '-') {
+                document.getElementById('lokasiKerusakanGlobal').value = opt.dataset.lokasi;
+            }
+        }
+
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('show');
             document.body.style.overflow = 'hidden';
@@ -1390,7 +1569,7 @@
 
                 <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label">Lokasi</label>
-                    <input type="text" name="items[${newIndex}][lokasi]" class="form-input" placeholder="Ruang Server / Gudang Utama">
+                    <input type="text" name="items[${newIndex}][lokasi]" list="lokasi-list" class="form-input" placeholder="Ruang Server / Gudang Utama / Ruang SNT">
                 </div>
             `;
             container.appendChild(div);
