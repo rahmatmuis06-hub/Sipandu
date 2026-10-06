@@ -73,10 +73,11 @@ class AdminPersediaanController extends Controller
         ));
     }
 
-    // 📋 DATA PERSEDIAAN
+    // 📋 DATA PERSEDIAAN (ATK & PERSEDIAAN UTAMA)
     public function dataPersediaan(Request $request)
     {
-        $query = Persediaan::query();
+        $query = Persediaan::where('kode_kategori', '!=', 'BLN')
+            ->where('kategori', 'not like', '%lainnya%');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -88,24 +89,42 @@ class AdminPersediaanController extends Controller
         }
 
         if ($request->filled('kategori')) {
-            if ($request->kategori === 'BLN') {
-                $query->where(function ($q) {
-                    $q->where('kode_kategori', 'BLN')
-                        ->orWhere('kategori', 'like', '%lainnya%');
-                });
-            } else {
-                $query->where('kode_kategori', $request->kategori);
-            }
+            $query->where('kode_kategori', $request->kategori);
         }
 
         $persediaan = $query->latest()->paginate(10)->withQueryString();
 
+        return view('adminpersediian.data_persediaan', compact('persediaan'));
+    }
+
+    /**
+     * ⚡ MENU DEDIKASI BARANG LAINNYA (Colokan, Steker, Kabel Roll, Adaptor, Baterai, dll)
+     */
+    public function barangLainnya(Request $request)
+    {
+        $query = Persediaan::where(function ($q) {
+            $q->where('kode_kategori', 'BLN')
+              ->orWhere('kategori', 'like', '%lainnya%');
+        });
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nama_barang', 'like', '%' . $request->search . '%')
+                    ->orWhere('kode_unik_barang', 'like', '%' . $request->search . '%')
+                    ->orWhere('kode_barang', 'like', '%' . $request->search . '%')
+                    ->orWhere('satuan', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        $barangLainnya = $query->latest()->paginate(10)->withQueryString();
+
         $stats = [
-            'total'          => Persediaan::count(),
-            'barang_lainnya' => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->count(),
+            'total_item'  => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->count(),
+            'total_stok'  => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->sum('jumlah'),
+            'total_nilai' => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->sum('harga_total'),
         ];
 
-        return view('adminpersediian.data_persediaan', compact('persediaan', 'stats'));
+        return view('adminpersediian.barang_lainnya', compact('barangLainnya', 'stats'));
     }
 
     /**
@@ -155,8 +174,36 @@ class AdminPersediaanController extends Controller
             'tanggal_masuk'    => $validated['tanggal_masuk'],
         ]);
 
-        return redirect()->route('adminpersediaan.data-persediaan', ['kategori' => 'BLN'])
-            ->with('success', "Barang '{$validated['nama_barang']}' berhasil ditambahkan ke kategori Barang Lainnya!");
+        return redirect()->route('adminpersediaan.barang-lainnya')
+            ->with('success', "Barang '{$validated['nama_barang']}' berhasil ditambahkan ke menu Barang Lainnya!");
+    }
+
+    /**
+     * ⚡ UPDATE BARANG LAINNYA
+     */
+    public function updateBarangLainnya(Request $request, Persediaan $persediaan)
+    {
+        $cleanHarga = (int) preg_replace('/[^\d]/', '', (string) $request->harga_satuan);
+
+        $validated = $request->validate([
+            'nama_barang'   => 'required|string|max:200',
+            'satuan'        => 'required|string|max:50',
+            'jumlah'        => 'required|integer|min:0',
+            'harga_satuan'  => 'required',
+            'tanggal_masuk' => 'required|date',
+        ]);
+
+        $persediaan->update([
+            'nama_barang'   => strtoupper($validated['nama_barang']),
+            'satuan'        => strtolower($validated['satuan']),
+            'jumlah'        => $validated['jumlah'],
+            'harga_satuan'  => $cleanHarga,
+            'harga_total'   => $cleanHarga * $validated['jumlah'],
+            'tanggal_masuk' => $validated['tanggal_masuk'],
+        ]);
+
+        return redirect()->route('adminpersediaan.barang-lainnya')
+            ->with('success', "Barang '{$validated['nama_barang']}' berhasil diperbarui!");
     }
 
     public function create()
@@ -277,8 +324,7 @@ class AdminPersediaanController extends Controller
     public function destroy(Persediaan $persediaan)
     {
         $persediaan->delete();
-        return redirect()->route('adminpersediaan.data-persediaan')
-            ->with('success', 'Data persediaan berhasil dihapus!');
+        return back()->with('success', 'Data persediaan berhasil dihapus!');
     }
 
     /** Pecah kode unik pada tanda hubung pertama untuk menjaga kompatibilitas laporan lama. */

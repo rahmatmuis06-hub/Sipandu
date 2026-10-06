@@ -312,10 +312,7 @@
         <h1>Data Persediaan</h1>
         <p>{{ $persediaan->total() }} data ditemukan</p>
       </div>
-      <div class="header-actions" style="display:flex; gap:10px; align-items:center;">
-        <button type="button" onclick="openModal('modalTambahLainnya')" class="btn-tambah" style="background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 14px rgba(245, 158, 11, .35);">
-          ⚡ Tambah Barang Lainnya
-        </button>
+      <div class="header-actions">
         <button onclick="openModal('importModal')" class="btn-import">
           <svg viewBox="0 0 24 24">
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
@@ -332,14 +329,6 @@
     </div>
 
     <div class="table-card">
-      <div style="display: flex; gap: 8px; padding: 16px 20px 14px 20px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border);">
-        <a href="{{ route('adminpersediaan.data-persediaan') }}" style="text-decoration:none; padding:7px 15px; border-radius:20px; font-size:12.5px; font-weight:700; background:{{ !request('kategori') ? '#4F6FFF' : '#fff' }}; color:{{ !request('kategori') ? '#fff' : '#64748b' }}; border:1px solid #e2e8f0;">
-          Semua Persediaan ({{ $stats['total'] ?? \App\Models\Persediaan::count() }})
-        </a>
-        <a href="{{ route('adminpersediaan.data-persediaan', ['kategori' => 'BLN']) }}" style="text-decoration:none; padding:7px 15px; border-radius:20px; font-size:12.5px; font-weight:700; background:{{ request('kategori') == 'BLN' ? '#f59e0b' : '#fff' }}; color:{{ request('kategori') == 'BLN' ? '#fff' : '#b45309' }}; border:1px solid #fed7aa; display:inline-flex; align-items:center; gap:6px;">
-          ⚡ Barang Lainnya (Colokan, Steker, dll) ({{ $stats['barang_lainnya'] ?? 0 }})
-        </a>
-      </div>
       <div class="table-toolbar">
         <form method="GET" action="{{ route('adminpersediaan.data-persediaan') }}" class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">

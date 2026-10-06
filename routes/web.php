@@ -170,6 +170,9 @@ Route::middleware('auth')->group(function () {
 
             Route::post('/data-persediaan', [AdminPersediaanController::class, 'store'])->name('data-persediaan.store');
             Route::post('/data-persediaan/barang-lainnya', [AdminPersediaanController::class, 'storeBarangLainnya'])->name('data-persediaan.store-barang-lainnya');
+            Route::get('/barang-lainnya', [AdminPersediaanController::class, 'barangLainnya'])->name('barang-lainnya');
+            Route::post('/barang-lainnya', [AdminPersediaanController::class, 'storeBarangLainnya'])->name('barang-lainnya.store');
+            Route::put('/barang-lainnya/{persediaan}', [AdminPersediaanController::class, 'updateBarangLainnya'])->name('barang-lainnya.update');
             Route::get('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'show'])->name('data-persediaan.show');
             Route::get('/data-persediaan/{persediaan}/edit', [AdminPersediaanController::class, 'edit'])->name('data-persediaan.edit');
             Route::put('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'update'])->name('data-persediaan.update');

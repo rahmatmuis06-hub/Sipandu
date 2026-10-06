@@ -205,6 +205,12 @@
                     'icon' => 'fas fa-database',
                     'route' => 'adminpersediaan.data-persediaan',
                 ],
+                [
+                    'href' => route('adminpersediaan.barang-lainnya'),
+                    'label' => 'Barang Lainnya',
+                    'icon' => 'fas fa-plug',
+                    'route' => 'adminpersediaan.barang-lainnya',
+                ],
                 ...(config('features.show_stok_opname') ? [[
                     'href' => route('adminpersediaan.opname.index'),
                     'label' => 'Stok Opname Bulanan',
