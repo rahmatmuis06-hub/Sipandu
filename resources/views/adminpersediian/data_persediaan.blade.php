@@ -312,23 +312,34 @@
         <h1>Data Persediaan</h1>
         <p>{{ $persediaan->total() }} data ditemukan</p>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" style="display:flex; gap:10px; align-items:center;">
+        <button type="button" onclick="openModal('modalTambahLainnya')" class="btn-tambah" style="background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 14px rgba(245, 158, 11, .35);">
+          ⚡ Tambah Barang Lainnya
+        </button>
         <button onclick="openModal('importModal')" class="btn-import">
           <svg viewBox="0 0 24 24">
             <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
           </svg>
           Import Excel
         </button>
+        <button onclick="openModal('createModal')" class="btn-tambah">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+          Tambah Baru
+        </button>
       </div>
-      <button onclick="openModal('createModal')" class="btn-tambah">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-          <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-        </svg>
-        Tambah Baru
-      </button>
     </div>
 
     <div class="table-card">
+      <div style="display: flex; gap: 8px; padding: 16px 20px 14px 20px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border);">
+        <a href="{{ route('adminpersediaan.data-persediaan') }}" style="text-decoration:none; padding:7px 15px; border-radius:20px; font-size:12.5px; font-weight:700; background:{{ !request('kategori') ? '#4F6FFF' : '#fff' }}; color:{{ !request('kategori') ? '#fff' : '#64748b' }}; border:1px solid #e2e8f0;">
+          Semua Persediaan ({{ $stats['total'] ?? \App\Models\Persediaan::count() }})
+        </a>
+        <a href="{{ route('adminpersediaan.data-persediaan', ['kategori' => 'BLN']) }}" style="text-decoration:none; padding:7px 15px; border-radius:20px; font-size:12.5px; font-weight:700; background:{{ request('kategori') == 'BLN' ? '#f59e0b' : '#fff' }}; color:{{ request('kategori') == 'BLN' ? '#fff' : '#b45309' }}; border:1px solid #fed7aa; display:inline-flex; align-items:center; gap:6px;">
+          ⚡ Barang Lainnya (Colokan, Steker, dll) ({{ $stats['barang_lainnya'] ?? 0 }})
+        </a>
+      </div>
       <div class="table-toolbar">
         <form method="GET" action="{{ route('adminpersediaan.data-persediaan') }}" class="search-wrap">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
@@ -747,7 +758,140 @@
   </div>
 </div>
 
+{{-- MODAL TAMBAH BARANG LAINNYA --}}
+<div id="modalTambahLainnya" class="modal-overlay">
+  <div class="modal" style="max-width: 620px;">
+    <div style="padding: 24px 28px 18px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 44px; height: 44px; border-radius: 12px; background: #FEF3C7; color: #D97706; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+          ⚡
+        </div>
+        <div>
+          <div style="font-size: 17px; font-weight: 800; color: var(--text);">Tambah Barang Lainnya</div>
+          <div style="font-size: 12.5px; color: var(--muted); margin-top: 2px;">Input steker, colokan, kabel roll, baterai, & barang pendukung lainnya</div>
+        </div>
+      </div>
+      <button type="button" onclick="closeModal('modalTambahLainnya')" style="width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted);">
+        ✕
+      </button>
+    </div>
+
+    <form method="POST" action="{{ route('adminpersediaan.data-persediaan.store-barang-lainnya') }}" style="display: flex; flex-direction: column;">
+      @csrf
+      <div style="padding: 24px 28px; overflow-y: auto; max-height: 70vh;">
+        
+        <!-- Pilihan Cepat Template -->
+        <div class="form-group" style="background: #FFFBEB; border: 1.5px dashed #FCD34D; border-radius: 12px; padding: 14px; margin-bottom: 20px;">
+          <label class="form-label" style="color: #92400E; margin-bottom: 6px;">
+            ⚡ Pilih Template Cepat (Otomatis Isi Data)
+          </label>
+          <select id="presetBarangLainnya" class="form-select" onchange="pilihPresetBarangLainnya(this)" style="background: #FFF; border-color: #FCD34D;">
+            <option value="">-- Ketik Manual atau Pilih Template Cepat di Sini --</option>
+            <option value="STEKER / COLOKAN LISTRIK ARDE" data-satuan="buah" data-harga="15000">🔌 Steker / Colokan Listrik Arde (Buah - Rp 15.000)</option>
+            <option value="STOPKONTAK KABEL ROLL 10 METER" data-satuan="unit" data-harga="75000">🌀 Stopkontak Kabel Roll 10 Meter (Unit - Rp 75.000)</option>
+            <option value="STOPKONTAK KABEL ROLL 15 METER" data-satuan="unit" data-harga="110000">🌀 Stopkontak Kabel Roll 15 Meter (Unit - Rp 110.000)</option>
+            <option value="T-PLUG / STOP KONTAK CABANG 3" data-satuan="buah" data-harga="25000">🔌 T-Plug / Cabang 3 (Buah - Rp 25.000)</option>
+            <option value="ADAPTOR STEKER LISTRIK UNIVERSAL" data-satuan="buah" data-harga="20000">🔌 Adaptor Steker Universal Travel (Buah - Rp 20.000)</option>
+            <option value="KABEL EXTENSION / SAMBUNGAN LISTRIK 5M" data-satuan="unit" data-harga="45000">🔌 Kabel Extension / Sambungan Listrik 5M (Unit - Rp 45.000)</option>
+            <option value="BATERAI AA ALKALINE (ISI 2)" data-satuan="pasang" data-harga="18000">🔋 Baterai AA Alkaline (Pasang - Rp 18.000)</option>
+            <option value="BATERAI AAA ALKALINE (ISI 2)" data-satuan="pasang" data-harga="18000">🔋 Baterai AAA Alkaline (Pasang - Rp 18.000)</option>
+            <option value="LAKBAN / ISOLASI LISTRIK HITAM" data-satuan="roll" data-harga="12000">🩹 Lakban / Isolasi Listrik Hitam (Roll - Rp 12.000)</option>
+            <option value="KABEL HDMI HIGH SPEED 5 METER" data-satuan="unit" data-harga="65000">🖥️ Kabel HDMI High Speed 5M (Unit - Rp 65.000)</option>
+            <option value="LAMPU LED HEMAT ENERGI 14 WATT" data-satuan="buah" data-harga="45000">💡 Lampu LED Hemat Energi 14W (Buah - Rp 45.000)</option>
+            <option value="STOPKONTAK TEMPEL 4 LUBANG KABEL 3M" data-satuan="unit" data-harga="55000">🔌 Stopkontak Tempel 4 Lubang (Unit - Rp 55.000)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Kode Kategori</label>
+            <input type="text" class="form-input" value="BLN" readonly style="background: #F1F5F9; color: #475569; font-weight: 700;">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nama Kategori</label>
+            <input type="text" class="form-input" value="Barang Lainnya" readonly style="background: #F1F5F9; color: #475569; font-weight: 700;">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nama Barang <span style="color:var(--danger);">*</span></label>
+          <input type="text" name="nama_barang" id="inputNamaBarangLainnya" class="form-input" placeholder="Contoh: STOPKONTAK KABEL ROLL 10 METER" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Satuan <span style="color:var(--danger);">*</span></label>
+            <select name="satuan" id="inputSatuanLainnya" class="form-select" required>
+              <option value="">Pilih satuan</option>
+              <option value="buah">Buah</option>
+              <option value="unit">Unit</option>
+              <option value="roll">Roll</option>
+              <option value="pasang">Pasang</option>
+              <option value="dos">Dos</option>
+              <option value="set">Set</option>
+              <option value="pak">Pak</option>
+              <option value="box">Box</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Jumlah Stok Masuk <span style="color:var(--danger);">*</span></label>
+            <input type="number" name="jumlah" id="inputJumlahLainnya" class="form-input" min="1" value="10" required oninput="hitungSubtotalLainnya()">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Harga Satuan (Rp) <span style="color:var(--danger);">*</span></label>
+            <input type="text" name="harga_satuan" id="inputHargaLainnya" class="form-input" placeholder="Contoh: 25.000" required oninput="handlePriceInput(this); hitungSubtotalLainnya();">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tanggal Masuk <span style="color:var(--danger);">*</span></label>
+            <input type="date" name="tanggal_masuk" class="form-input" value="{{ date('Y-m-d') }}" required>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0;">
+          <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; font-weight: 600; color: #475569;">Estimasi Total Nilai:</span>
+            <span id="labelTotalNilaiLainnya" style="font-size: 16px; font-weight: 800; color: #16A34A;">Rp 0</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="padding: 18px 28px; border-top: 1px solid var(--border); background: #FAFBFF; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
+        <button type="button" onclick="closeModal('modalTambahLainnya')" class="btn" style="background: var(--bg); color: var(--text); border: 1.5px solid var(--border); padding: 10px 22px;">
+          Batal
+        </button>
+        <button type="submit" class="btn" style="background: linear-gradient(135deg, #F59E0B, #D97706); color: white; padding: 10px 26px; box-shadow: 0 4px 14px rgba(245,158,11,.35); font-weight: 700;">
+          Simpan Barang Lainnya
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
+function pilihPresetBarangLainnya(el) {
+  const opt = el.options[el.selectedIndex];
+  if (!opt || !opt.value) return;
+
+  document.getElementById('inputNamaBarangLainnya').value = opt.value;
+  if (opt.dataset.satuan) {
+    document.getElementById('inputSatuanLainnya').value = opt.dataset.satuan;
+  }
+  if (opt.dataset.harga) {
+    document.getElementById('inputHargaLainnya').value = formatCurrency(parseFloat(opt.dataset.harga));
+  }
+  hitungSubtotalLainnya();
+}
+
+function hitungSubtotalLainnya() {
+  const qty = parseFloat(document.getElementById('inputJumlahLainnya').value) || 0;
+  const harga = getRawNumber('#inputHargaLainnya');
+  const total = qty * harga;
+  document.getElementById('labelTotalNilaiLainnya').innerText = 'Rp ' + formatCurrency(total);
+}
 // Close modal & ESC key
 document.querySelectorAll('.modal-overlay').forEach(modal => {
   modal.addEventListener('click', e => {

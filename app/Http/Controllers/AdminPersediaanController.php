@@ -88,12 +88,75 @@ class AdminPersediaanController extends Controller
         }
 
         if ($request->filled('kategori')) {
-            $query->where('kode_kategori', $request->kategori);
+            if ($request->kategori === 'BLN') {
+                $query->where(function ($q) {
+                    $q->where('kode_kategori', 'BLN')
+                        ->orWhere('kategori', 'like', '%lainnya%');
+                });
+            } else {
+                $query->where('kode_kategori', $request->kategori);
+            }
         }
 
-        $persediaan = $query->latest()->paginate(10);
+        $persediaan = $query->latest()->paginate(10)->withQueryString();
 
-        return view('adminpersediian.data_persediaan', compact('persediaan'));
+        $stats = [
+            'total'          => Persediaan::count(),
+            'barang_lainnya' => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->count(),
+        ];
+
+        return view('adminpersediian.data_persediaan', compact('persediaan', 'stats'));
+    }
+
+    /**
+     * Tambah Barang Khusus Kategori Barang Lainnya (Colokan, Steker, Kabel, Adaptor, dll)
+     */
+    public function storeBarangLainnya(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_barang'   => 'required|string|max:200',
+            'satuan'        => 'required|string|max:50',
+            'jumlah'        => 'required|integer|min:1',
+            'harga_satuan'  => 'required',
+            'tanggal_masuk' => 'required|date',
+            'kode_barang'   => 'nullable|string|max:50',
+        ]);
+
+        $cleanHarga = $this->cleanRupiah($validated['harga_satuan']);
+
+        // Auto-generate kode_barang jika belum diisi
+        $kodeBarang = $validated['kode_barang'] ?? null;
+        if (!$kodeBarang) {
+            $lastItem = Persediaan::where('kode_kategori', 'BLN')->orderBy('id', 'desc')->first();
+            $nextNum = $lastItem ? ((int) preg_replace('/\D/', '', $lastItem->kode_barang) + 1) : 1;
+            $kodeBarang = str_pad($nextNum, 6, '0', STR_PAD_LEFT);
+        }
+
+        $kodeUnik = 'BLN-' . $kodeBarang;
+
+        // Pastikan kode unik tidak bentrok
+        $counter = 1;
+        while (Persediaan::where('kode_unik_barang', $kodeUnik)->exists()) {
+            $kodeBarang = str_pad(((int) preg_replace('/\D/', '', $kodeBarang) + $counter), 6, '0', STR_PAD_LEFT);
+            $kodeUnik = 'BLN-' . $kodeBarang;
+            $counter++;
+        }
+
+        Persediaan::create([
+            'kode_kategori'    => 'BLN',
+            'kategori'         => 'Barang Lainnya',
+            'kode_barang'      => $kodeBarang,
+            'kode_unik_barang' => $kodeUnik,
+            'nama_barang'      => strtoupper($validated['nama_barang']),
+            'satuan'           => $validated['satuan'],
+            'jumlah'           => $validated['jumlah'],
+            'harga_satuan'     => $cleanHarga,
+            'harga_total'      => $cleanHarga * $validated['jumlah'],
+            'tanggal_masuk'    => $validated['tanggal_masuk'],
+        ]);
+
+        return redirect()->route('adminpersediaan.data-persediaan', ['kategori' => 'BLN'])
+            ->with('success', "Barang '{$validated['nama_barang']}' berhasil ditambahkan ke kategori Barang Lainnya!");
     }
 
     public function create()

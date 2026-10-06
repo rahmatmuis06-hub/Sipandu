@@ -165,20 +165,46 @@
             </div>
 
             <div class="form-group" style="margin-bottom: 12px;">
-              <div class="form-label"><i class="fas fa-box"></i> Pilih Barang</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <div class="form-label" style="margin-bottom:0;"><i class="fas fa-box"></i> Pilih Barang</div>
+                <div style="display:flex; gap:6px;">
+                  <button type="button" onclick="filterKategoriSelect('semua')" id="btnKatSemua" style="padding:3px 10px; font-size:11px; border-radius:12px; border:1px solid #c7d2fe; background:#4361ee; color:#fff; cursor:pointer; font-weight:700;">Semua</button>
+                  <button type="button" onclick="filterKategoriSelect('Barang Lainnya')" id="btnKatLainnya" style="padding:3px 10px; font-size:11px; border-radius:12px; border:1px solid #fed7aa; background:#fffbeb; color:#b45309; cursor:pointer; font-weight:700;">⚡ Barang Lainnya</button>
+                </div>
+              </div>
               <select class="form-select" id="persediaanSelect">
                 <option value="">📦 Ketik untuk mencari barang persediaan...</option>
                 @foreach($persediaan as $item)
+                  @php
+                    $isLainnya = (stripos($item->kategori ?? '', 'lainnya') !== false);
+                    $icon = $isLainnya ? '⚡' : '📦';
+                  @endphp
                   <option value="{{ $item->id }}" 
                           data-kode="{{ $item->kode_barang }}"
                           data-nama="{{ $item->nama_barang }}" 
                           data-kategori="{{ $item->kategori ?? 'Umum' }}"
+                          data-islainnya="{{ $isLainnya ? '1' : '0' }}"
                           data-satuan="{{ $item->satuan }}"
                           data-stok="{{ $item->jumlah }}">
-                    {{ $item->kode_barang }} - {{ $item->nama_barang }} (Satuan: {{ $item->satuan }}) (Stok: {{ number_format($item->jumlah) }})
+                    {{ $icon }} [{{ $item->kategori ?? 'Umum' }}] {{ $item->nama_barang }} (Satuan: {{ $item->satuan }}) (Stok: {{ number_format($item->jumlah) }})
                   </option>
                 @endforeach
               </select>
+
+              <!-- Quick Pick Chips Barang Lainnya -->
+              @php
+                $quickItems = $persediaan->filter(fn($p) => stripos($p->kategori ?? '', 'lainnya') !== false || stripos($p->nama_barang, 'steker') !== false || stripos($p->nama_barang, 'kabel') !== false || stripos($p->nama_barang, 'plug') !== false)->take(6);
+              @endphp
+              @if($quickItems->isNotEmpty())
+              <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <span style="font-size: 11px; font-weight: 700; color: #b45309;">⚡ Pilihan Cepat:</span>
+                @foreach($quickItems as $quick)
+                  <button type="button" onclick="pilihCepatBarang({{ $quick->id }})" style="padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; border: 1px solid #fde68a; background: #fffbeb; color: #92400e; cursor: pointer;">
+                    + {{ Str::limit($quick->nama_barang, 22) }}
+                  </button>
+                @endforeach
+              </div>
+              @endif
               
               <div class="facility-preview" id="facilityPreview" style="margin-top: 10px;">
                 <div class="fp-icon" id="fpIcon"><i class="fas fa-box"></i></div>
@@ -1085,6 +1111,54 @@ function showToast(msg, type = 'success') {
   icon.style.color = type === 'error' ? '#ef4444' : '#10b981';
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+function pilihCepatBarang(id) {
+  const sel = $('#persediaanSelect');
+  if (sel.length) {
+    sel.val(id).trigger('change');
+    document.getElementById('persediaanSelect').dispatchEvent(new Event('change'));
+    showToast('Barang berhasil dipilih! Tentukan jumlah dan klik Tambah.', 'success');
+  }
+}
+
+function filterKategoriSelect(kat) {
+  const btnSemua = document.getElementById('btnKatSemua');
+  const btnLainnya = document.getElementById('btnKatLainnya');
+  const sel = document.getElementById('persediaanSelect');
+  if (!sel) return;
+
+  if (kat === 'Barang Lainnya') {
+    btnLainnya.style.background = '#f59e0b';
+    btnLainnya.style.color = '#fff';
+    btnSemua.style.background = '#f1f5f9';
+    btnSemua.style.color = '#64748b';
+
+    Array.from(sel.options).forEach(opt => {
+      if (!opt.value) return;
+      const isLainnya = opt.dataset.islainnya === '1';
+      opt.hidden = !isLainnya;
+    });
+  } else {
+    btnSemua.style.background = '#4361ee';
+    btnSemua.style.color = '#fff';
+    btnLainnya.style.background = '#fffbeb';
+    btnLainnya.style.color = '#b45309';
+
+    Array.from(sel.options).forEach(opt => {
+      opt.hidden = false;
+    });
+  }
+
+  // Refresh Select2 jika terpasang
+  if (window.jQuery && $('#persediaanSelect').data('select2')) {
+    $('#persediaanSelect').select2('destroy');
+    $('#persediaanSelect').select2({
+      placeholder: "-- Ketik untuk mencari barang persediaan... --",
+      allowClear: true,
+      width: '100%'
+    });
+  }
 }
 </script>
 </body>
