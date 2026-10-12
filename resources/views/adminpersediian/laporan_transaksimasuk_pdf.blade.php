@@ -148,7 +148,7 @@
                 <td class="text-right"><strong>Rp {{ number_format($transaksi->sum('total'), 0, ',', '.') }}</strong></td>
             </tr>
             <tr>
-                <td colspan="8" class="text-right"><strong>Total Item Masuk:</strong></td>
+                <td colspan="7" class="text-right"><strong>Total Item Masuk:</strong></td>
                 <td class="text-right"><strong>{{ number_format($transaksi->sum('jumlah_masuk'), 0, ',', '.') }} Unit</strong></td>
             </tr>
         </tfoot>

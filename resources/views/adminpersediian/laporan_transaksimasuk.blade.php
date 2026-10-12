@@ -254,7 +254,7 @@
           <input type="text" name="search" class="filter-input" placeholder="Cari kode barang, nama barang..." value="{{ request('search') }}">
         </div>
         <div class="filter-group">
-          <input type="date" name="tanggal_input" class="filter-input" value="{{ request('tanggal_input') }}">
+          <input type="date" name="tanggal_input" class="filter-input" value="{{ request('tanggal_input') }}" onchange="this.form.submit()">
         </div>
         <div class="filter-group">
           <select name="kode_kategori" class="filter-select" onchange="this.form.submit()">
@@ -268,7 +268,6 @@
           <a href="{{ route('adminpersediaan.laporan-transaksi-masuk') }}" class="filter-input" style="background:#FEF2F2;color:#EF4444;padding:10px 16px;text-decoration:none;border-color:#FECACA;font-weight:600;">Reset</a>
         @endif
       </div>
-      <input type="hidden" name="page" value="{{ request('page', 1) }}">
     </form>
   </div>
 
@@ -301,7 +300,7 @@
         </div>
         <span class="stat-label-sm">Total Item</span>
       </div>
-      <div class="stat-value">{{ number_format($transaksi->sum('jumlah_masuk') ?? 0, 0, ',', '.') }}</div>
+      <div class="stat-value">{{ number_format($stats['total_item'] ?? ($transaksi->sum('jumlah_masuk') ?? 0), 0, ',', '.') }}</div>
       <div class="stat-sub">Unit</div>
     </div>
   </div>

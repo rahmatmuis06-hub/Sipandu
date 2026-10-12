@@ -668,12 +668,18 @@ class AdminPersediaanController extends Controller
 
         // Search
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('kode_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('nama_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('no', 'like', '%' . $request->search . '%')
-                    ->orWhere('kode_kategori', 'like', '%' . $request->search . '%')
-                    ->orWhere('kategori', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+            $concatSql = $isSqlite 
+                ? "(kode_kategori || '-' || kode_barang) like ?"
+                : "CONCAT(kode_kategori, '-', kode_barang) like ?";
+
+            $query->where(function ($q) use ($search, $concatSql) {
+                $q->where('kode_barang', 'like', '%' . $search . '%')
+                    ->orWhere('nama_barang', 'like', '%' . $search . '%')
+                    ->orWhere('kode_kategori', 'like', '%' . $search . '%')
+                    ->orWhere('kategori', 'like', '%' . $search . '%')
+                    ->orWhereRaw($concatSql, ['%' . $search . '%']);
             });
         }
 
@@ -1203,10 +1209,18 @@ class AdminPersediaanController extends Controller
 
         // Filters...
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('kode_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('nama_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('kode_transaksi', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+            $concatSql = $isSqlite 
+                ? "(kode_kategori || '-' || kode_barang) like ?"
+                : "CONCAT(kode_kategori, '-', kode_barang) like ?";
+
+            $query->where(function ($q) use ($search, $concatSql) {
+                $q->where('kode_barang', 'like', '%' . $search . '%')
+                    ->orWhere('nama_barang', 'like', '%' . $search . '%')
+                    ->orWhere('kode_kategori', 'like', '%' . $search . '%')
+                    ->orWhere('kategori', 'like', '%' . $search . '%')
+                    ->orWhereRaw($concatSql, ['%' . $search . '%']);
             });
         }
         if ($request->filled('tanggal_input')) {
@@ -1216,9 +1230,16 @@ class AdminPersediaanController extends Controller
             $query->where('kode_kategori', $request->kode_kategori);
         }
 
-        $transaksi = $query->latest()->paginate(10);
+        // Hitung Summary (TOTAL) BERDASARKAN FILTER SEBELUM PAGINATION
+        $stats = [
+            'total_transaksi' => (clone $query)->count(),
+            'total_nilai'     => (float) (clone $query)->sum('total'),
+            'total_item'      => (int) (clone $query)->sum('jumlah_masuk'),
+        ];
 
-        return view('adminpersediian.laporan_transaksimasuk', compact('transaksi'));
+        $transaksi = $query->latest('tanggal_input')->paginate(10)->withQueryString();
+
+        return view('adminpersediian.laporan_transaksimasuk', compact('transaksi', 'stats'));
     }
 
     /**
@@ -1230,11 +1251,18 @@ class AdminPersediaanController extends Controller
 
         // Filter sama persis
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('kode_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('nama_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('kode_kategori', 'like', '%' . $request->search . '%')
-                    ->orWhere('kategori', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+            $concatSql = $isSqlite 
+                ? "(kode_kategori || '-' || kode_barang) like ?"
+                : "CONCAT(kode_kategori, '-', kode_barang) like ?";
+
+            $query->where(function ($q) use ($search, $concatSql) {
+                $q->where('kode_barang', 'like', '%' . $search . '%')
+                    ->orWhere('nama_barang', 'like', '%' . $search . '%')
+                    ->orWhere('kode_kategori', 'like', '%' . $search . '%')
+                    ->orWhere('kategori', 'like', '%' . $search . '%')
+                    ->orWhereRaw($concatSql, ['%' . $search . '%']);
             });
         }
 
@@ -1246,12 +1274,12 @@ class AdminPersediaanController extends Controller
             $query->where('kode_kategori', $request->kode_kategori);
         }
 
-        $transaksi = $query->latest()->get(); // Semua data untuk PDF
+        $transaksi = $query->latest('tanggal_input')->get(); // Semua data untuk PDF
 
         $stats = [
             'total_transaksi' => $transaksi->count(),
-            'total_nilai' => $transaksi->sum('total'),
-            'total_item' => $transaksi->sum('jumlah_masuk'),
+            'total_nilai'     => (float) $transaksi->sum('total'),
+            'total_item'      => (int) $transaksi->sum('jumlah_masuk'),
         ];
 
         // ✅ PAKAI BLADE YANG SUDAH ADA!
