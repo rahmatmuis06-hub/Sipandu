@@ -271,7 +271,7 @@
             @endphp
             <tr>
               <td><strong>{{ $barangLainnya->firstItem() + $idx }}</strong></td>
-              <td><span class="badge-kode">{{ $item->kode_unik_barang ?? ($item->kode_kategori . '-' . $item->kode_barang) }}</span></td>
+              <td><span class="badge-kode">{{ $item->kode_barang ?? ($item->kode_unik_barang ?? '-') }}</span></td>
               <td>
                 <span style="font-size:15px; margin-right:4px;">{{ $icon }}</span>
                 <strong>{{ $item->nama_barang }}</strong>
@@ -571,7 +571,7 @@ function openDetail(item) {
   const body = document.getElementById('detailBody');
   body.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:12px;">
-      <div><span style="color:#64748b; font-size:12px;">Kode Unik:</span><br><strong>${item.kode_unik_barang || '-'}</strong></div>
+      <div><span style="color:#64748b; font-size:12px;">Kode Barang:</span><br><strong>${item.kode_barang || item.kode_unik_barang || '-'}</strong></div>
       <div><span style="color:#64748b; font-size:12px;">Nama Barang:</span><br><strong style="font-size:15px; color:#d97706;">${item.nama_barang}</strong></div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <div><span style="color:#64748b; font-size:12px;">Kategori:</span><br><strong>${item.kategori || 'Barang Lainnya'}</strong></div>
@@ -612,7 +612,7 @@ function openEdit(item) {
 
 function openDelete(id, nama) {
   document.getElementById('deleteNamaBarang').innerText = nama;
-  document.getElementById('formDelete').action = `/adminpersediaan/data-persediaan/${id}`;
+  document.getElementById('formDelete').action = `/adminpersediaan/barang-lainnya/${id}`;
   openModal('modalDelete');
 }
 </script>

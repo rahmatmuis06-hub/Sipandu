@@ -12,12 +12,15 @@ use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf as PDF;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 use App\Models\{
     User,
     Persediaan,
     PermintaanPersediaan,
     TransaksiKeluarPersediaan,
     TransaksiMasukPersediaan,
+    BarangLainnya,
 };
 use App\Services\FonnteService;
 use Maatwebsite\Excel\Facades\Excel;
@@ -76,8 +79,8 @@ class AdminPersediaanController extends Controller
     // 📋 DATA PERSEDIAAN (ATK & PERSEDIAAN UTAMA)
     public function dataPersediaan(Request $request)
     {
-        $query = Persediaan::where('kode_kategori', '!=', 'BLN')
-            ->where('kategori', 'not like', '%lainnya%');
+        // Hanya kecualikan kode_kategori BLN (jika ada), kategori BMN seperti "Alat/bahan Untuk Kegiatan Kantor Lainnya" TETAP MASUK
+        $query = Persediaan::where('kode_kategori', '!=', 'BLN');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -98,19 +101,17 @@ class AdminPersediaanController extends Controller
     }
 
     /**
-     * ⚡ MENU DEDIKASI BARANG LAINNYA (Colokan, Steker, Kabel Roll, Adaptor, Baterai, dll)
+     * ⚡ MENU DEDIKASI BARANG LAINNYA (Terpisah mandiri dari Persediaan)
      */
     public function barangLainnya(Request $request)
     {
-        $query = Persediaan::where(function ($q) {
-            $q->where('kode_kategori', 'BLN')
-              ->orWhere('kategori', 'like', '%lainnya%');
-        });
+        $this->ensureBarangLainnyaTable();
+
+        $query = BarangLainnya::query();
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('nama_barang', 'like', '%' . $request->search . '%')
-                    ->orWhere('kode_unik_barang', 'like', '%' . $request->search . '%')
                     ->orWhere('kode_barang', 'like', '%' . $request->search . '%')
                     ->orWhere('satuan', 'like', '%' . $request->search . '%');
             });
@@ -119,19 +120,23 @@ class AdminPersediaanController extends Controller
         $barangLainnya = $query->latest()->paginate(10)->withQueryString();
 
         $stats = [
-            'total_item'  => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->count(),
-            'total_stok'  => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->sum('jumlah'),
-            'total_nilai' => Persediaan::where('kode_kategori', 'BLN')->orWhere('kategori', 'like', '%lainnya%')->sum('harga_total'),
+            'total_item'  => (clone $query)->count(),
+            'total_stok'  => (int) (clone $query)->sum('jumlah'),
+            'total_nilai' => (float) (clone $query)->sum('harga_total'),
         ];
 
         return view('adminpersediian.barang_lainnya', compact('barangLainnya', 'stats'));
     }
 
     /**
-     * Tambah Barang Khusus Kategori Barang Lainnya (Colokan, Steker, Kabel, Adaptor, dll)
+     * Tambah Barang Khusus Menu Barang Lainnya
      */
     public function storeBarangLainnya(Request $request)
     {
+        $this->ensureBarangLainnyaTable();
+
+        $cleanHarga = $this->cleanRupiah($request->harga_satuan);
+
         $validated = $request->validate([
             'nama_barang'   => 'required|string|max:200',
             'satuan'        => 'required|string|max:50',
@@ -141,37 +146,21 @@ class AdminPersediaanController extends Controller
             'kode_barang'   => 'nullable|string|max:50',
         ]);
 
-        $cleanHarga = $this->cleanRupiah($validated['harga_satuan']);
-
-        // Auto-generate kode_barang jika belum diisi
         $kodeBarang = $validated['kode_barang'] ?? null;
         if (!$kodeBarang) {
-            $lastItem = Persediaan::where('kode_kategori', 'BLN')->orderBy('id', 'desc')->first();
-            $nextNum = $lastItem ? ((int) preg_replace('/\D/', '', $lastItem->kode_barang) + 1) : 1;
-            $kodeBarang = str_pad($nextNum, 6, '0', STR_PAD_LEFT);
+            $lastItem = BarangLainnya::orderBy('id', 'desc')->first();
+            $nextNum = $lastItem ? ($lastItem->id + 1) : 1;
+            $kodeBarang = 'BLN-' . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
         }
 
-        $kodeUnik = 'BLN-' . $kodeBarang;
-
-        // Pastikan kode unik tidak bentrok
-        $counter = 1;
-        while (Persediaan::where('kode_unik_barang', $kodeUnik)->exists()) {
-            $kodeBarang = str_pad(((int) preg_replace('/\D/', '', $kodeBarang) + $counter), 6, '0', STR_PAD_LEFT);
-            $kodeUnik = 'BLN-' . $kodeBarang;
-            $counter++;
-        }
-
-        Persediaan::create([
-            'kode_kategori'    => 'BLN',
-            'kategori'         => 'Barang Lainnya',
-            'kode_barang'      => $kodeBarang,
-            'kode_unik_barang' => $kodeUnik,
-            'nama_barang'      => strtoupper($validated['nama_barang']),
-            'satuan'           => $validated['satuan'],
-            'jumlah'           => $validated['jumlah'],
-            'harga_satuan'     => $cleanHarga,
-            'harga_total'      => $cleanHarga * $validated['jumlah'],
-            'tanggal_masuk'    => $validated['tanggal_masuk'],
+        BarangLainnya::create([
+            'kode_barang'   => $kodeBarang,
+            'nama_barang'   => strtoupper($validated['nama_barang']),
+            'satuan'        => strtolower($validated['satuan']),
+            'jumlah'        => $validated['jumlah'],
+            'harga_satuan'  => $cleanHarga,
+            'harga_total'   => $cleanHarga * $validated['jumlah'],
+            'tanggal_masuk' => $validated['tanggal_masuk'],
         ]);
 
         return redirect()->route('adminpersediaan.barang-lainnya')
@@ -181,8 +170,10 @@ class AdminPersediaanController extends Controller
     /**
      * ⚡ UPDATE BARANG LAINNYA
      */
-    public function updateBarangLainnya(Request $request, Persediaan $persediaan)
+    public function updateBarangLainnya(Request $request, $id)
     {
+        $this->ensureBarangLainnyaTable();
+
         $cleanHarga = (int) preg_replace('/[^\d]/', '', (string) $request->harga_satuan);
 
         $validated = $request->validate([
@@ -193,7 +184,8 @@ class AdminPersediaanController extends Controller
             'tanggal_masuk' => 'required|date',
         ]);
 
-        $persediaan->update([
+        $item = BarangLainnya::findOrFail($id);
+        $item->update([
             'nama_barang'   => strtoupper($validated['nama_barang']),
             'satuan'        => strtolower($validated['satuan']),
             'jumlah'        => $validated['jumlah'],
@@ -204,6 +196,42 @@ class AdminPersediaanController extends Controller
 
         return redirect()->route('adminpersediaan.barang-lainnya')
             ->with('success', "Barang '{$validated['nama_barang']}' berhasil diperbarui!");
+    }
+
+    /**
+     * ⚡ HAPUS BARANG LAINNYA
+     */
+    public function destroyBarangLainnya($id)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $item = BarangLainnya::findOrFail($id);
+        $item->delete();
+
+        return redirect()->route('adminpersediaan.barang-lainnya')
+            ->with('success', 'Barang berhasil dihapus dari Barang Lainnya!');
+    }
+
+    /**
+     * Pastikan tabel barang_lainnya ada di database secara otomatis
+     */
+    private function ensureBarangLainnyaTable(): void
+    {
+        if (!Schema::hasTable('barang_lainnya')) {
+            Schema::create('barang_lainnya', function (Blueprint $table) {
+                $table->id();
+                $table->string('kode_barang', 50)->nullable();
+                $table->string('nama_barang', 200);
+                $table->string('kategori', 100)->default('Barang Lainnya');
+                $table->string('satuan', 50)->default('buah');
+                $table->integer('jumlah')->default(0);
+                $table->decimal('harga_satuan', 15, 2)->default(0);
+                $table->decimal('harga_total', 15, 2)->default(0);
+                $table->date('tanggal_masuk')->nullable();
+                $table->text('keterangan')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     public function create()
