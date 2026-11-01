@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Persediaan;
 use App\Models\PersediaanBatch;
+use App\Models\TransaksiKeluarPersediaan;
 use App\Models\TransaksiMasukPersediaan;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -152,6 +153,7 @@ class PersediaanBatchService
     public static function syncAllUnbatched(): void
     {
         self::ensureTable();
+        self::ensureSettingsTable();
 
         try {
             if (!Schema::hasTable('persediaan') || !Schema::hasTable('persediaan_batches')) {
@@ -161,6 +163,30 @@ class PersediaanBatchService
             $unbatchedItems = Persediaan::whereDoesntHave('batches')->get();
             foreach ($unbatchedItems as $item) {
                 self::ensureBatchesForItem($item);
+            }
+
+            // Sinkronisasi satu kali agar data eksisting yang sebelumnya terhitung (jumlah * hargaTerbaru)
+            // otomatis disesuaikan menjadi akumulasi harga lama + harga baru / rata-rata campuran (Cara 2)
+            if (Schema::hasTable('system_settings')) {
+                $alreadySynced = DB::table('system_settings')
+                    ->where('key', 'persediaan_moving_avg_v1_synced')
+                    ->value('value');
+
+                if ($alreadySynced !== '1') {
+                    $allItems = Persediaan::all();
+                    foreach ($allItems as $item) {
+                        self::ensureBatchesForItem($item);
+                        self::recalculatePersediaan($item);
+                    }
+
+                    DB::table('system_settings')->updateOrInsert(
+                        ['key' => 'persediaan_moving_avg_v1_synced'],
+                        [
+                            'value'      => '1',
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
             }
         } catch (\Throwable $e) {
             // Jangan gagalkan render halaman jika ada kendala minor
@@ -514,9 +540,12 @@ class PersediaanBatchService
 
         $persediaan = Persediaan::lockForUpdate()->findOrFail($persediaan->id);
         self::ensureBatchesForItem($persediaan);
+        self::recalculatePersediaan($persediaan);
         $persediaan->refresh();
 
+        $stokSebelum = max(0, (int) $persediaan->jumlah);
         $hargaMasterSebelum = (float) ($persediaan->getRawOriginal('harga_satuan') ?? $persediaan->harga_satuan ?? 0);
+        $nilaiMasterSebelum = (float) ($persediaan->getRawOriginal('harga_total') ?? $persediaan->harga_total ?? ($stokSebelum * $hargaMasterSebelum));
 
         if ($persediaan->jumlah < $qtyKeluar) {
             throw ValidationException::withMessages([
@@ -573,11 +602,24 @@ class PersediaanBatchService
 
         self::recalculatePersediaan($persediaan);
 
-        // Jika fitur FIFO dinonaktifkan Super Admin, gunakan perhitungan harga keluar standar (non-FIFO)
+        // Mode Standar (Cara 2: Rata-rata campuran proporsional dari nilai persediaan aktif)
         if (!self::isFifoEnabled()) {
+            $nilaiMasterSesudah = (float) ($persediaan->getRawOriginal('harga_total') ?? $persediaan->harga_total ?? 0);
+            $totalNilaiRataRata = max(0.0, round($nilaiMasterSebelum - $nilaiMasterSesudah, 2));
+
+            if ($totalNilaiRataRata <= 0 && $qtyKeluar > 0 && $nilaiMasterSebelum > 0 && $stokSebelum > 0) {
+                $totalNilaiRataRata = ($qtyKeluar >= $stokSebelum)
+                    ? round($nilaiMasterSebelum, 0)
+                    : round(($nilaiMasterSebelum * $qtyKeluar) / $stokSebelum, 0);
+            }
+
+            $hargaRataRataKeluar = $qtyKeluar > 0
+                ? round($totalNilaiRataRata / $qtyKeluar, 2)
+                : $hargaMasterSebelum;
+
             return [
-                'harga_satuan' => $hargaMasterSebelum,
-                'total_nilai'  => round($hargaMasterSebelum * $qtyKeluar, 2),
+                'harga_satuan' => $hargaRataRataKeluar,
+                'total_nilai'  => $totalNilaiRataRata,
                 'alokasi'      => $alokasi,
             ];
         }
@@ -812,7 +854,7 @@ class PersediaanBatchService
 
         $nilaiMaster = $fifoActive
             ? round($totalNilaiFifo, 2)
-            : round($totalJumlah * $hargaTerbaru, 2);
+            : self::calculateMovingAverageValue($persediaan, $batches, $totalJumlah, $hargaTerbaru);
 
         DB::table('persediaan')
             ->where('id', $persediaan->id)
@@ -825,5 +867,171 @@ class PersediaanBatchService
             ]);
 
         $persediaan->refresh();
+    }
+
+    /**
+     * Hitung Total Nilai Persediaan dengan Metode Akumulasi Masuk + Rata-Rata Campuran (Moving Weighted Average):
+     * - Saat barang masuk: total nilai lama + subtotal barang baru (tidak menimpa harga stok lama).
+     * - Saat barang keluar: total nilai berkurang proporsional sesuai rata-rata harga campuran saat itu.
+     */
+    protected static function calculateMovingAverageValue(
+        Persediaan $persediaan,
+        $batches,
+        int $totalJumlah,
+        float $hargaTerbaru
+    ): float {
+        if ($totalJumlah <= 0 || $batches->isEmpty()) {
+            return 0.0;
+        }
+
+        $totalAwalBatches = 0;
+        $totalNilaiAwalBatches = 0.0;
+
+        foreach ($batches as $b) {
+            $awal = max(0, (int) $b->jumlah_awal);
+            $harga = (float) ($b->getRawOriginal('harga_satuan') ?? $b->harga_satuan ?? 0);
+            $totalAwalBatches += $awal;
+            $totalNilaiAwalBatches += ($awal * $harga);
+        }
+
+        // Jika belum ada stok yang keluar sama sekali, nilainya murni penjumlahan seluruh subtotal masuk
+        if ($totalJumlah >= $totalAwalBatches) {
+            $extraQty = $totalJumlah - $totalAwalBatches;
+            return round($totalNilaiAwalBatches + ($extraQty * $hargaTerbaru), 0);
+        }
+
+        // Terdapat stok keluar: putar ulang (replay) riwayat masuk & keluar secara kronologis
+        $eventsByDate = [];
+
+        foreach ($batches as $b) {
+            $awal = max(0, (int) $b->jumlah_awal);
+            if ($awal <= 0) {
+                continue;
+            }
+            $tgl = $b->tanggal_masuk instanceof \Carbon\Carbon
+                ? $b->tanggal_masuk->format('Y-m-d')
+                : substr((string) ($b->tanggal_masuk ?: '1970-01-01'), 0, 10);
+
+            $eventsByDate[$tgl][] = [
+                'type'      => 'in',
+                'timestamp' => $b->created_at instanceof \Carbon\Carbon ? $b->created_at->getTimestamp() : 0,
+                'id'        => (int) $b->id,
+                'qty'       => $awal,
+                'harga'     => (float) ($b->getRawOriginal('harga_satuan') ?? $b->harga_satuan ?? 0),
+            ];
+        }
+
+        if (Schema::hasTable('transaksi_keluar_persediaan')) {
+            $hasPersediaanIdCol = Schema::hasColumn('transaksi_keluar_persediaan', 'persediaan_id');
+
+            $keluarRows = TransaksiKeluarPersediaan::where(function ($q) use ($persediaan, $hasPersediaanIdCol) {
+                    if ($hasPersediaanIdCol) {
+                        $q->where('persediaan_id', $persediaan->id)
+                            ->orWhere(function ($sub) use ($persediaan) {
+                                $sub->whereNull('persediaan_id')
+                                    ->where('kode_kategori', $persediaan->kode_kategori)
+                                    ->where('kode_barang', $persediaan->kode_barang);
+                            });
+                    } else {
+                        $q->where('kode_kategori', $persediaan->kode_kategori)
+                            ->where('kode_barang', $persediaan->kode_barang);
+                    }
+                })
+                ->orderBy('tanggal_input', 'asc')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($keluarRows as $k) {
+                $qtyKeluar = max(0, (int) $k->jumlah_keluar);
+                if ($qtyKeluar <= 0) {
+                    continue;
+                }
+                $tgl = $k->tanggal_input instanceof \Carbon\Carbon
+                    ? $k->tanggal_input->format('Y-m-d')
+                    : substr((string) ($k->tanggal_input ?: '1970-01-01'), 0, 10);
+
+                $eventsByDate[$tgl][] = [
+                    'type'      => 'out',
+                    'timestamp' => $k->created_at instanceof \Carbon\Carbon ? $k->created_at->getTimestamp() : 0,
+                    'id'        => (int) $k->id,
+                    'qty'       => $qtyKeluar,
+                    'harga'     => 0.0,
+                ];
+            }
+        }
+
+        ksort($eventsByDate);
+
+        $poolQty = 0;
+        $poolNilai = 0.0;
+        $sisaKuotaKeluar = max(0, $totalAwalBatches - $totalJumlah);
+
+        foreach ($eventsByDate as $dayEvents) {
+            usort($dayEvents, function (array $a, array $b) {
+                if ($a['timestamp'] > 0 && $b['timestamp'] > 0 && $a['timestamp'] !== $b['timestamp']) {
+                    return $a['timestamp'] <=> $b['timestamp'];
+                }
+                if ($a['type'] !== $b['type']) {
+                    return $a['type'] === 'in' ? -1 : 1;
+                }
+                return $a['id'] <=> $b['id'];
+            });
+
+            $deferredOuts = [];
+
+            foreach ($dayEvents as $ev) {
+                if ($ev['type'] === 'in') {
+                    $poolQty += $ev['qty'];
+                    $poolNilai += ($ev['qty'] * $ev['harga']);
+                } else {
+                    if ($sisaKuotaKeluar <= 0) {
+                        continue;
+                    }
+                    $qtyOut = min($ev['qty'], $sisaKuotaKeluar);
+                    // Jika pada tanggal yang sama stok pool belum cukup karena barang masuk dicatat sesudahnya, tunda sebentar
+                    if ($qtyOut > $poolQty) {
+                        $deferredOuts[] = $qtyOut;
+                        continue;
+                    }
+                    $potong = ($qtyOut >= $poolQty)
+                        ? $poolNilai
+                        : round(($poolNilai * $qtyOut) / $poolQty, 0);
+                    $poolNilai = max(0.0, $poolNilai - $potong);
+                    $poolQty -= $qtyOut;
+                    $sisaKuotaKeluar -= $qtyOut;
+                }
+            }
+
+            foreach ($deferredOuts as $qtyOut) {
+                if ($sisaKuotaKeluar <= 0 || $poolQty <= 0) {
+                    continue;
+                }
+                $ambil = min($qtyOut, $sisaKuotaKeluar, $poolQty);
+                $potong = ($ambil >= $poolQty)
+                    ? $poolNilai
+                    : round(($poolNilai * $ambil) / $poolQty, 0);
+                $poolNilai = max(0.0, $poolNilai - $potong);
+                $poolQty -= $ambil;
+                $sisaKuotaKeluar -= $ambil;
+            }
+        }
+
+        // Potong proporsional sisa pengurangan stok yang belum tercatat di tabel transaksi_keluar
+        // (misalnya saat deductFifo sedang berjalan sebelum baris transaksi keluar disimpan, atau penyesuaian manual)
+        if ($poolQty > $totalJumlah && $poolQty > 0) {
+            $ambilAkhir = $poolQty - $totalJumlah;
+            $potongAkhir = ($ambilAkhir >= $poolQty)
+                ? $poolNilai
+                : round(($poolNilai * $ambilAkhir) / $poolQty, 0);
+            $poolNilai = max(0.0, $poolNilai - $potongAkhir);
+            $poolQty = $totalJumlah;
+        } elseif ($poolQty < $totalJumlah) {
+            $selisihTambah = $totalJumlah - $poolQty;
+            $hargaRef = $poolQty > 0 ? ($poolNilai / $poolQty) : $hargaTerbaru;
+            $poolNilai += round($selisihTambah * $hargaRef, 0);
+            $poolQty = $totalJumlah;
+        }
+
+        return max(0.0, round($poolNilai, 0));
     }
 }

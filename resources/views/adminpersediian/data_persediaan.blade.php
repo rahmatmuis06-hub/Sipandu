@@ -872,9 +872,28 @@ function handlePriceInput(input) {
 
 // 🔥 CALCULATE
 function calculateTotalEdit() {
+  const form = document.getElementById('editForm');
   const hargaSatuanRaw = getRawNumber('#editHargaSatuan');
   const jumlahRaw = parseFloat(document.getElementById('editJumlah')?.value) || 0;
-  const total = hargaSatuanRaw * jumlahRaw;
+  const isMultiBatch = form && form.dataset.multiBatch === '1';
+  let total = hargaSatuanRaw * jumlahRaw;
+
+  if (isMultiBatch) {
+    const origJumlah = parseFloat(form.dataset.origJumlah || '0') || 0;
+    const origHargaSatuan = parseFloat(form.dataset.origHargaSatuan || '0') || 0;
+    const origHargaTotal = parseFloat(form.dataset.origHargaTotal || '0') || 0;
+
+    if (jumlahRaw === origJumlah && Math.abs(hargaSatuanRaw - origHargaSatuan) < 0.01) {
+      total = origHargaTotal;
+    } else if (jumlahRaw > origJumlah) {
+      total = origHargaTotal + ((jumlahRaw - origJumlah) * hargaSatuanRaw);
+    } else if (jumlahRaw < origJumlah && origJumlah > 0) {
+      total = Math.round((origHargaTotal * jumlahRaw) / origJumlah);
+    } else {
+      total = origHargaTotal;
+    }
+  }
+
   const el = document.getElementById('editHargaTotal');
   if (el) el.value = formatCurrency(total);
 }
@@ -1042,13 +1061,20 @@ function populateDetailModal(data) {
       </div>
     `;
   } else {
-    // MODE STANDAR (FIFO DISEMBUNYIKAN) — Menampilkan Daftar List Harga Masuk saja
+    // MODE STANDAR (FIFO DISEMBUNYIKAN) — Menampilkan Daftar List Harga Masuk & Akumulasi Nilai
     let listHargaRows = '';
+    let totalQtyMasuk = 0;
+    let totalSubtotalMasuk = 0;
+    const sisaStokAktif = parseInt(data.jumlah || 0) || 0;
+    const rawTotalAktif = Math.round(parseDatasetNumber(data.harga_total));
+
     if (batches.length > 0) {
       batches.forEach((b, idx) => {
         const awal = parseInt(b.jumlah_awal) || 0;
         const harga = parseFloat(b.harga_satuan) || 0;
         const subtotalMasuk = awal * harga;
+        totalQtyMasuk += awal;
+        totalSubtotalMasuk += subtotalMasuk;
         const sumberInfo = formatSumberBatch(b.sumber);
         const isLatest = (idx === batches.length - 1);
 
@@ -1078,10 +1104,72 @@ function populateDetailModal(data) {
       listHargaRows = `
         <tr>
           <td colspan="5" style="padding:18px; text-align:center; color:var(--muted); font-size:13px;">
-            Harga Tercatat: Rp ${formattedHargaSatuan} (${parseInt(data.jumlah || 0).toLocaleString('id-ID')} ${satuanLabel})
+            Harga Tercatat: Rp ${formattedHargaSatuan} (${sisaStokAktif.toLocaleString('id-ID')} ${satuanLabel})
           </td>
         </tr>
       `;
+    }
+
+    let tfootHtml = '';
+    if (batches.length > 0) {
+      const qtyKeluar = Math.max(0, totalQtyMasuk - sisaStokAktif);
+      const nilaiKeluar = Math.max(0, Math.round(totalSubtotalMasuk) - rawTotalAktif);
+
+      if (qtyKeluar > 0) {
+        tfootHtml = `
+          <tfoot>
+            <tr style="background:#F8FAFC; border-top:1.5px solid #CBD5E1;">
+              <td colspan="3" style="padding:9px 12px; font-size:12px; font-weight:700; color:var(--muted); text-align:right;">
+                Total Akumulasi Masuk
+              </td>
+              <td style="padding:9px 12px; font-size:12.5px; font-weight:700; color:var(--text); text-align:center; white-space:nowrap;">
+                ${totalQtyMasuk.toLocaleString('id-ID')} ${satuanLabel}
+              </td>
+              <td style="padding:9px 12px; font-size:13px; font-weight:700; color:var(--text); text-align:right; font-family:monospace; white-space:nowrap;">
+                Rp ${formatCurrency(totalSubtotalMasuk)}
+              </td>
+            </tr>
+            <tr style="background:#FFF5F5; border-top:1px solid #FEE2E2;">
+              <td colspan="3" style="padding:9px 12px; font-size:12px; font-weight:700; color:#DC2626; text-align:right;">
+                Dikurangi Barang Keluar (Rata-Rata Campuran)
+              </td>
+              <td style="padding:9px 12px; font-size:12.5px; font-weight:700; color:#DC2626; text-align:center; white-space:nowrap;">
+                - ${qtyKeluar.toLocaleString('id-ID')} ${satuanLabel}
+              </td>
+              <td style="padding:9px 12px; font-size:13px; font-weight:700; color:#DC2626; text-align:right; font-family:monospace; white-space:nowrap;">
+                - Rp ${formatCurrency(nilaiKeluar)}
+              </td>
+            </tr>
+            <tr style="background:#F8FAFF; border-top:2px solid #CBD5E1;">
+              <td colspan="3" style="padding:11px 12px; font-size:12.5px; font-weight:800; color:var(--text); text-align:right;">
+                TOTAL NILAI PERSEDIAAN SAAT INI
+              </td>
+              <td style="padding:11px 12px; font-size:13px; font-weight:800; color:var(--success); text-align:center; white-space:nowrap;">
+                ${sisaStokAktif.toLocaleString('id-ID')} ${satuanLabel}
+              </td>
+              <td style="padding:11px 12px; font-size:14px; font-weight:800; color:var(--blue); text-align:right; font-family:monospace; white-space:nowrap;">
+                Rp ${formattedHargaTotal}
+              </td>
+            </tr>
+          </tfoot>
+        `;
+      } else {
+        tfootHtml = `
+          <tfoot>
+            <tr style="background:#F8FAFF; border-top:2px solid #CBD5E1;">
+              <td colspan="3" style="padding:11px 12px; font-size:12.5px; font-weight:800; color:var(--text); text-align:right;">
+                TOTAL NILAI PERSEDIAAN
+              </td>
+              <td style="padding:11px 12px; font-size:13px; font-weight:800; color:var(--success); text-align:center; white-space:nowrap;">
+                ${sisaStokAktif.toLocaleString('id-ID')} ${satuanLabel}
+              </td>
+              <td style="padding:11px 12px; font-size:14px; font-weight:800; color:var(--blue); text-align:right; font-family:monospace; white-space:nowrap;">
+                Rp ${formattedHargaTotal}
+              </td>
+            </tr>
+          </tfoot>
+        `;
+      }
     }
 
     tableSectionHtml = `
@@ -1108,6 +1196,7 @@ function populateDetailModal(data) {
             <tbody>
               ${listHargaRows}
             </tbody>
+            ${tfootHtml}
           </table>
         </div>
       </div>
@@ -1236,6 +1325,14 @@ function confirmDelete(id) {
 }
 
 function populateEditModal(data) {
+  const form = document.getElementById('editForm');
+  if (form) {
+    form.dataset.multiBatch = data.multi_batch ? '1' : '0';
+    form.dataset.origJumlah = String(parseInt(data.jumlah || '0') || 0);
+    form.dataset.origHargaSatuan = String(parseDatasetNumber(data.harga_satuan));
+    form.dataset.origHargaTotal = String(parseDatasetNumber(data.harga_total));
+  }
+
   document.getElementById('editId').value = data.id;
   document.getElementById('editKodeUnikBarang').value = data.kode_unik_barang;
   document.getElementById('editKategori').value = data.kategori;

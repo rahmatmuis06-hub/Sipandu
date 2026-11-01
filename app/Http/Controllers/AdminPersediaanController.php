@@ -871,9 +871,22 @@ class AdminPersediaanController extends Controller
                     'jumlah_sisa'   => (int) $b->jumlah_sisa,
                 ])->all();
 
+            $stokItem = (int) $item->jumlah;
+            $rawHargaSatuan = (float) ($item->getRawOriginal('harga_satuan') ?? $item->harga_satuan ?? 0);
+            $rawHargaTotal = (float) ($item->getRawOriginal('harga_total') ?? $item->harga_total ?? ($rawHargaSatuan * $stokItem));
+            $distinctPrices = $item->batches
+                ->pluck('harga_satuan')
+                ->map(fn($p) => (string) round((float) $p, 2))
+                ->unique()
+                ->count();
+
+            $hargaRataCampuran = ($stokItem > 0 && $rawHargaTotal > 0)
+                ? round($rawHargaTotal / $stokItem, 2)
+                : $rawHargaSatuan;
+
             $hargaDefault = ($fifoEnabled && !empty($activeBatches))
                 ? (float) $activeBatches[0]['harga_satuan']
-                : (float) $item->getRawOriginal('harga_satuan');
+                : $hargaRataCampuran;
 
             return [
                 'id'               => $item->id,
@@ -884,7 +897,9 @@ class AdminPersediaanController extends Controller
                 'kategori'         => $item->kategori,
                 'satuan'           => $item->satuan, // MAP DATA SATUAN KE FRONTEND
                 'harga_satuan'     => $hargaDefault,
-                'stok_tersedia'    => (int) $item->jumlah,
+                'harga_total'      => $rawHargaTotal,
+                'multi_harga'      => $distinctPrices > 1,
+                'stok_tersedia'    => $stokItem,
                 'batches'          => $fifoEnabled ? $activeBatches : [],
             ];
         });

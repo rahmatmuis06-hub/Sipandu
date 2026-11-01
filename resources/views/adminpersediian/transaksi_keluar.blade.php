@@ -397,6 +397,8 @@
                         data-kat="{{ $item['kategori'] }}"
                         data-satuan="{{ $item['satuan'] }}"
                         data-harga="{{ $item['harga_satuan'] }}"
+                        data-harga-total="{{ $item['harga_total'] ?? 0 }}"
+                        data-multi-harga="{{ !empty($item['multi_harga']) ? '1' : '0' }}"
                         data-stok="{{ $item['stok_tersedia'] ?? 0 }}"
                         data-batches="{{ json_encode($item['batches'] ?? []) }}">
                   {{ $item['kode_barang'] }} - {{ $item['nama_barang'] }} (Stok: {{ $item['stok_tersedia'] ?? 0 }})
@@ -709,6 +711,32 @@
         } else {
           breakdownEl.style.display = 'none';
         }
+      }
+    } else if (!IS_FIFO_ENABLED && prefix === 'create') {
+      const select = document.getElementById('create_select_barang');
+      const selectedOption = select ? select.options[select.selectedIndex] : null;
+      const breakdownEl = document.getElementById('create_fifo_breakdown');
+      const stokTersedia = selectedOption ? (parseInt(selectedOption.getAttribute('data-stok')) || 0) : 0;
+      const hargaTotalPool = selectedOption ? (parseFloat(selectedOption.getAttribute('data-harga-total')) || 0) : 0;
+      const isMultiHarga = selectedOption && selectedOption.getAttribute('data-multi-harga') === '1';
+      const satuan = selectedOption ? (selectedOption.getAttribute('data-satuan') || '') : '';
+
+      if (breakdownEl) {
+        if (isMultiHarga && stokTersedia > 0 && hargaTotalPool > 0) {
+          breakdownEl.style.display = 'block';
+          breakdownEl.innerHTML = `💡 <strong>Harga Rata-Rata Campuran:</strong> Dihitung proporsional dari total nilai persediaan (${formatRupiah(Math.round(hargaTotalPool))} ÷ ${stokTersedia.toLocaleString('id-ID')} ${satuan}).`;
+        } else {
+          breakdownEl.style.display = 'none';
+        }
+      }
+
+      if (stokTersedia > 0 && hargaTotalPool > 0 && jumlah > 0) {
+        const totalProporsional = (jumlah >= stokTersedia)
+          ? Math.round(hargaTotalPool)
+          : Math.round((hargaTotalPool * jumlah) / stokTersedia);
+        document.getElementById('create_total_display').value = formatRupiah(totalProporsional);
+        document.getElementById('create_harga').value = Math.round(totalProporsional / jumlah);
+        return;
       }
     }
 
