@@ -234,8 +234,6 @@
             <th>Nama Barang</th>
             <th>Tanggal Masuk</th>
             <th>Satuan</th>
-            <th>Harga Satuan</th>
-            <th>Total Nilai</th>
             <th>Stok Tersedia</th>
             <th>Aksi</th>
           </tr>
@@ -260,8 +258,6 @@
               </td>
               <td>{{ $item->tanggal_masuk?->format('d/m/Y') ?? '-' }}</td>
               <td><span style="font-weight:600; text-transform:capitalize;">{{ $item->satuan }}</span></td>
-              <td>Rp {{ number_format($item->harga_satuan ?? 0, 0, ',', '.') }}</td>
-              <td><strong style="color:#15803d;">Rp {{ number_format($item->harga_total ?? 0, 0, ',', '.') }}</strong></td>
               <td>
                 <span class="badge-stok {{ $item->jumlah > 5 ? 'badge-stok-aman' : 'badge-stok-kritis' }}">
                   {{ number_format($item->jumlah) }} {{ $item->satuan }}
@@ -283,7 +279,7 @@
             </tr>
           @empty
             <tr>
-              <td colspan="9" style="text-align: center; padding: 40px; color: var(--muted);">
+              <td colspan="7" style="text-align: center; padding: 40px; color: var(--muted);">
                 <div style="font-size: 32px; margin-bottom: 8px;">⚡</div>
                 <strong>Belum ada barang di kategori Barang Lainnya</strong>
                 <p style="font-size: 12.5px; margin-top: 4px;">Klik tombol "Tambah Barang Lainnya" untuk mendaftarkan colokan, steker, atau perlengkapan kantor lainnya.</p>
@@ -422,17 +418,17 @@
           <label class="form-label" style="color: #92400E; margin-bottom: 4px;">⚡ Template Barang Cepat</label>
           <select id="presetBarangLainnya" class="form-select" onchange="pilihPresetBarangLainnya(this)">
             <option value="">-- Ketik Manual atau Pilih Template di Sini --</option>
-            <option value="STEKER / COLOKAN LISTRIK ARDE" data-satuan="buah" data-harga="15000">🔌 Steker / Colokan Listrik Arde (Buah - Rp 15.000)</option>
-            <option value="STOPKONTAK KABEL ROLL 10 METER" data-satuan="unit" data-harga="75000">🌀 Stopkontak Kabel Roll 10 Meter (Unit - Rp 75.000)</option>
-            <option value="STOPKONTAK KABEL ROLL 15 METER" data-satuan="unit" data-harga="110000">🌀 Stopkontak Kabel Roll 15 Meter (Unit - Rp 110.000)</option>
-            <option value="T-PLUG / STOP KONTAK CABANG 3" data-satuan="buah" data-harga="25000">🔌 T-Plug / Cabang 3 (Buah - Rp 25.000)</option>
-            <option value="ADAPTOR STEKER LISTRIK UNIVERSAL" data-satuan="buah" data-harga="20000">🔌 Adaptor Steker Universal Travel (Buah - Rp 20.000)</option>
-            <option value="KABEL EXTENSION / SAMBUNGAN LISTRIK 5M" data-satuan="unit" data-harga="45000">🔌 Kabel Extension / Sambungan Listrik 5M (Unit - Rp 45.000)</option>
-            <option value="BATERAI AA ALKALINE (ISI 2)" data-satuan="pasang" data-harga="18000">🔋 Baterai AA Alkaline (Pasang - Rp 18.000)</option>
-            <option value="BATERAI AAA ALKALINE (ISI 2)" data-satuan="pasang" data-harga="18000">🔋 Baterai AAA Alkaline (Pasang - Rp 18.000)</option>
-            <option value="LAKBAN / ISOLASI LISTRIK HITAM" data-satuan="roll" data-harga="12000">🩹 Lakban / Isolasi Listrik Hitam (Roll - Rp 12.000)</option>
-            <option value="KABEL HDMI HIGH SPEED 5 METER" data-satuan="unit" data-harga="65000">🖥️ Kabel HDMI High Speed 5M (Unit - Rp 65.000)</option>
-            <option value="LAMPU LED HEMAT ENERGI 14 WATT" data-satuan="buah" data-harga="45000">💡 Lampu LED Hemat Energi 14W (Buah - Rp 45.000)</option>
+            <option value="STEKER / COLOKAN LISTRIK ARDE" data-satuan="buah">🔌 Steker / Colokan Listrik Arde (Buah)</option>
+            <option value="STOPKONTAK KABEL ROLL 10 METER" data-satuan="unit">🌀 Stopkontak Kabel Roll 10 Meter (Unit)</option>
+            <option value="STOPKONTAK KABEL ROLL 15 METER" data-satuan="unit">🌀 Stopkontak Kabel Roll 15 Meter (Unit)</option>
+            <option value="T-PLUG / STOP KONTAK CABANG 3" data-satuan="buah">🔌 T-Plug / Cabang 3 (Buah)</option>
+            <option value="ADAPTOR STEKER LISTRIK UNIVERSAL" data-satuan="buah">🔌 Adaptor Steker Universal Travel (Buah)</option>
+            <option value="KABEL EXTENSION / SAMBUNGAN LISTRIK 5M" data-satuan="unit">🔌 Kabel Extension / Sambungan Listrik 5M (Unit)</option>
+            <option value="BATERAI AA ALKALINE (ISI 2)" data-satuan="pasang">🔋 Baterai AA Alkaline (Pasang)</option>
+            <option value="BATERAI AAA ALKALINE (ISI 2)" data-satuan="pasang">🔋 Baterai AAA Alkaline (Pasang)</option>
+            <option value="LAKBAN / ISOLASI LISTRIK HITAM" data-satuan="roll">🩹 Lakban / Isolasi Listrik Hitam (Roll)</option>
+            <option value="KABEL HDMI HIGH SPEED 5 METER" data-satuan="unit">🖥️ Kabel HDMI High Speed 5M (Unit)</option>
+            <option value="LAMPU LED HEMAT ENERGI 14 WATT" data-satuan="buah">💡 Lampu LED Hemat Energi 14W (Buah)</option>
           </select>
         </div>
 
@@ -456,26 +452,13 @@
           </div>
           <div class="form-group">
             <label class="form-label">Jumlah Stok Masuk <span style="color:var(--danger)">*</span></label>
-            <input type="number" name="jumlah" id="inputJumlahLainnya" class="form-input" min="1" value="10" required oninput="hitungSubtotalTambah()">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Harga Satuan (Rp) <span style="color:var(--danger)">*</span></label>
-            <input type="text" name="harga_satuan" id="inputHargaLainnya" class="form-input" placeholder="0" required oninput="handlePriceInput(this); hitungSubtotalTambah();">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tanggal Masuk <span style="color:var(--danger)">*</span></label>
-            <input type="date" name="tanggal_masuk" class="form-input" value="{{ date('Y-m-d') }}" required>
+            <input type="number" name="jumlah" id="inputJumlahLainnya" class="form-input" min="1" value="10" required>
           </div>
         </div>
 
         <div class="form-group">
-          <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12.5px; font-weight: 600; color: #475569;">Estimasi Nilai Total:</span>
-            <span id="labelTotalNilaiTambah" style="font-size: 15px; font-weight: 800; color: #16A34A;">Rp 0</span>
-          </div>
+          <label class="form-label">Tanggal Masuk <span style="color:var(--danger)">*</span></label>
+          <input type="date" name="tanggal_masuk" class="form-input" value="{{ date('Y-m-d') }}" required>
         </div>
 
       </div>
@@ -545,26 +528,13 @@
           </div>
           <div class="form-group">
             <label class="form-label">Jumlah Stok <span style="color:var(--danger)">*</span></label>
-            <input type="number" name="jumlah" id="editJumlahLainnya" class="form-input" min="0" required oninput="hitungSubtotalEdit()">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Harga Satuan (Rp) <span style="color:var(--danger)">*</span></label>
-            <input type="text" name="harga_satuan" id="editHargaLainnya" class="form-input" placeholder="0" required oninput="handlePriceInput(this); hitungSubtotalEdit();">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Tanggal Masuk <span style="color:var(--danger)">*</span></label>
-            <input type="date" name="tanggal_masuk" id="editTanggalLainnya" class="form-input" required>
+            <input type="number" name="jumlah" id="editJumlahLainnya" class="form-input" min="0" required>
           </div>
         </div>
 
         <div class="form-group">
-          <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12.5px; font-weight: 600; color: #475569;">Estimasi Nilai Total:</span>
-            <span id="labelTotalNilaiEdit" style="font-size: 15px; font-weight: 800; color: #16A34A;">Rp 0</span>
-          </div>
+          <label class="form-label">Tanggal Masuk <span style="color:var(--danger)">*</span></label>
+          <input type="date" name="tanggal_masuk" id="editTanggalLainnya" class="form-input" required>
         </div>
 
       </div>
@@ -659,27 +629,10 @@ function pilihPresetBarangLainnya(el) {
   if (opt.dataset.satuan) {
     document.getElementById('inputSatuanLainnya').value = opt.dataset.satuan;
   }
-  if (opt.dataset.harga) {
-    document.getElementById('inputHargaLainnya').value = formatRupiah(opt.dataset.harga);
-  }
-  hitungSubtotalTambah();
-}
-
-function handlePriceInput(input) {
-  const clean = input.value.replace(/\D/g, '');
-  input.value = clean ? formatRupiah(clean) : '';
 }
 
 function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID').format(num || 0);
-}
-
-function hitungSubtotalTambah() {
-  const qty = parseFloat(document.getElementById('inputJumlahLainnya').value) || 0;
-  const hargaRaw = document.getElementById('inputHargaLainnya').value.replace(/\D/g, '');
-  const harga = parseFloat(hargaRaw) || 0;
-  const total = qty * harga;
-  document.getElementById('labelTotalNilaiTambah').innerText = 'Rp ' + formatRupiah(total);
 }
 
 function openDetail(item) {
@@ -694,20 +647,11 @@ function openDetail(item) {
       </div>
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
         <div><span style="color:#64748b; font-size:12px;">Stok Tersedia:</span><br><strong style="color:#059669; font-size:16px;">${item.jumlah} ${item.satuan}</strong></div>
-        <div><span style="color:#64748b; font-size:12px;">Harga Satuan:</span><br><strong>Rp ${formatRupiah(item.harga_satuan)}</strong></div>
+        <div><span style="color:#64748b; font-size:12px;">Tanggal Masuk:</span><br><strong>${item.tanggal_masuk ? item.tanggal_masuk.substring(0, 10) : '-'}</strong></div>
       </div>
-      <div><span style="color:#64748b; font-size:12px;">Total Nilai Persediaan:</span><br><strong style="color:#15803d; font-size:16px;">Rp ${formatRupiah(item.harga_total)}</strong></div>
     </div>
   `;
   openModal('modalDetail');
-}
-
-function hitungSubtotalEdit() {
-  const qty = parseFloat(document.getElementById('editJumlahLainnya').value) || 0;
-  const hargaRaw = document.getElementById('editHargaLainnya').value.replace(/\D/g, '');
-  const harga = parseFloat(hargaRaw) || 0;
-  const total = qty * harga;
-  document.getElementById('labelTotalNilaiEdit').innerText = 'Rp ' + formatRupiah(total);
 }
 
 function openEdit(item) {
@@ -715,13 +659,11 @@ function openEdit(item) {
   document.getElementById('editNamaLainnya').value = item.nama_barang;
   document.getElementById('editSatuanLainnya').value = (item.satuan || 'buah').toLowerCase();
   document.getElementById('editJumlahLainnya').value = item.jumlah;
-  document.getElementById('editHargaLainnya').value = formatRupiah(item.harga_satuan);
   if (item.tanggal_masuk) {
     document.getElementById('editTanggalLainnya').value = item.tanggal_masuk.substring(0, 10);
   } else {
     document.getElementById('editTanggalLainnya').value = new Date().toISOString().substring(0, 10);
   }
-  hitungSubtotalEdit();
   openModal('modalEditLainnya');
 }
 

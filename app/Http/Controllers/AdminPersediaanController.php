@@ -142,13 +142,13 @@ class AdminPersediaanController extends Controller
     {
         $this->ensureBarangLainnyaTable();
 
-        $cleanHarga = $this->cleanRupiah($request->harga_satuan);
+        $cleanHarga = $request->filled('harga_satuan') ? $this->cleanRupiah($request->harga_satuan) : 0;
 
         $validated = $request->validate([
             'nama_barang'   => 'required|string|max:200',
             'satuan'        => 'required|string|max:50',
             'jumlah'        => 'required|integer|min:1',
-            'harga_satuan'  => 'required',
+            'harga_satuan'  => 'nullable',
             'tanggal_masuk' => 'required|date',
             'kode_barang'   => 'nullable|string|max:50',
         ]);
@@ -181,13 +181,13 @@ class AdminPersediaanController extends Controller
     {
         $this->ensureBarangLainnyaTable();
 
-        $cleanHarga = (int) preg_replace('/[^\d]/', '', (string) $request->harga_satuan);
+        $cleanHarga = $request->filled('harga_satuan') ? (int) preg_replace('/[^\d]/', '', (string) $request->harga_satuan) : 0;
 
         $validated = $request->validate([
             'nama_barang'   => 'required|string|max:200',
             'satuan'        => 'required|string|max:50',
             'jumlah'        => 'required|integer|min:0',
-            'harga_satuan'  => 'required',
+            'harga_satuan'  => 'nullable',
             'tanggal_masuk' => 'required|date',
         ]);
 
