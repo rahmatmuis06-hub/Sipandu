@@ -22,14 +22,18 @@ class TransaksiKeluarPersediaan extends Model
         'jumlah_keluar',     // ✅ Sesuai "Jumlah Keluar"
         'harga',             // ✅ Sesuai "Harga"
         'total',             // ✅ Sesuai "Total"
+        'batch_alokasi',
         'satuan',
         'user_id',
     ];
+
+    public bool $preserveExplicitTotal = false;
 
     protected $casts = [
         'tanggal_input' => 'date',
         'harga' => 'decimal:2',
         'total' => 'decimal:2',
+        'batch_alokasi' => 'array',
         'jumlah_keluar' => 'integer',
     ];
 
@@ -39,14 +43,19 @@ class TransaksiKeluarPersediaan extends Model
         return $this->belongsTo(User::class);
     }
 
-    // ✅ MUTATOR: Auto hitung TOTAL = Harga × Jumlah Keluar
+    // ✅ MUTATOR: Auto hitung TOTAL = Harga × Jumlah Keluar (kecuali total FIFO eksplisit sudah dihitung)
     protected static function boot()
     {
         parent::boot();
 
         // Auto calculate total saat saving
         static::saving(function ($model) {
-            $model->total = ($model->harga ?? 0) * ($model->jumlah_keluar ?? 0);
+            if (!$model->preserveExplicitTotal && (!$model->isDirty('total') || $model->total === null)) {
+                $model->total = ($model->harga ?? 0) * ($model->jumlah_keluar ?? 0);
+            }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('transaksi_keluar_persediaan', 'batch_alokasi')) {
+                unset($model->batch_alokasi);
+            }
         });
     }
 

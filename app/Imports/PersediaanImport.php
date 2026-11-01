@@ -133,10 +133,22 @@ class PersediaanImport implements ToCollection, WithHeadingRow
                 }
 
                 if ($persediaan) {
+                    $oldJumlah = (int) $persediaan->jumlah;
+                    $oldHarga = (float) ($persediaan->getRawOriginal('harga_satuan') ?? $persediaan->harga_satuan ?? 0);
                     $persediaan->update($payload);
+                    \App\Services\PersediaanBatchService::syncManualEdit(
+                        $persediaan,
+                        $oldJumlah,
+                        $oldHarga,
+                        (int) $jumlah,
+                        (float) $hargaSatuan,
+                        (string) $tanggalMasuk,
+                        'import'
+                    );
                     $this->updatedCount++;
                 } else {
-                    Persediaan::create($payload);
+                    $createdItem = Persediaan::create($payload);
+                    \App\Services\PersediaanBatchService::recordInitialBatch($createdItem, 'import', 'Import Excel');
                     $this->insertedCount++;
                 }
             } catch (\Throwable $e) {

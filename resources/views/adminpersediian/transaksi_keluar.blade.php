@@ -397,7 +397,8 @@
                         data-kat="{{ $item['kategori'] }}"
                         data-satuan="{{ $item['satuan'] }}"
                         data-harga="{{ $item['harga_satuan'] }}"
-                        data-stok="{{ $item['stok_tersedia'] ?? 0 }}">
+                        data-stok="{{ $item['stok_tersedia'] ?? 0 }}"
+                        data-batches="{{ json_encode($item['batches'] ?? []) }}">
                   {{ $item['kode_barang'] }} - {{ $item['nama_barang'] }} (Stok: {{ $item['stok_tersedia'] ?? 0 }})
                 </option>
               @endforeach
@@ -463,10 +464,11 @@
 
         {{-- Total --}}
         <div style="display:flex; align-items:center; border:2px solid #FECACA; border-radius:12px; overflow:hidden; background:#FFF5F5;">
-          <span style="padding:12px 14px; font-size:13px; font-weight:700; color:var(--danger); border-right:2px solid #FECACA; background:#FEF2F2; white-space:nowrap;">Total</span>
+          <span style="padding:12px 14px; font-size:13px; font-weight:700; color:var(--danger); border-right:2px solid #FECACA; background:#FEF2F2; white-space:nowrap;">Total (FIFO)</span>
           <input type="text" id="create_total_display" readonly
             style="border:none; outline:none; width:100%; padding:14px 16px; font-family:inherit; font-size:18px; font-weight:800; color:var(--danger); background:#FFF5F5;" value="Rp 0">
         </div>
+        <div id="create_fifo_breakdown" style="display:none; margin-top:10px; padding:10px 14px; border-radius:10px; background:#EEF2FF; border:1px solid #C7D2FE; color:#3730A3; font-size:12px; line-height:1.5;"></div>
 
       </div>
 
@@ -647,8 +649,68 @@
 
   function calculateTotal(prefix) {
     const jumlah = parseInt(document.getElementById(prefix + '_jumlah_keluar').value) || 0;
-    const harga  = parseInt(document.getElementById(prefix + '_harga').value) || 0;
-    document.getElementById(prefix + '_total_display').value = formatRupiah(jumlah * harga);
+    const harga  = parseFloat(document.getElementById(prefix + '_harga').value) || 0;
+
+    if (prefix === 'create') {
+      const select = document.getElementById('create_select_barang');
+      const selectedOption = select ? select.options[select.selectedIndex] : null;
+      const breakdownEl = document.getElementById('create_fifo_breakdown');
+      let batches = [];
+      if (selectedOption && selectedOption.getAttribute('data-batches')) {
+        try {
+          batches = JSON.parse(selectedOption.getAttribute('data-batches') || '[]');
+        } catch (e) {
+          batches = [];
+        }
+      }
+
+      if (batches.length > 0 && jumlah > 0) {
+        let sisa = jumlah;
+        let totalFifo = 0;
+        const parts = [];
+        const satuan = selectedOption.getAttribute('data-satuan') || '';
+
+        batches.forEach((b) => {
+          if (sisa <= 0) return;
+          const bSisa = parseInt(b.jumlah_sisa) || 0;
+          if (bSisa <= 0) return;
+          const ambil = Math.min(sisa, bSisa);
+          const bHarga = parseFloat(b.harga_satuan) || 0;
+          totalFifo += ambil * bHarga;
+          sisa -= ambil;
+          parts.push(`<strong>${ambil} ${satuan}</strong> × ${formatRupiah(bHarga)}`);
+        });
+
+        if (sisa > 0) {
+          totalFifo += sisa * harga;
+          parts.push(`<strong>${sisa} ${satuan}</strong> × ${formatRupiah(harga)}`);
+        }
+
+        document.getElementById('create_total_display').value = formatRupiah(Math.round(totalFifo));
+        document.getElementById('create_harga').value = Math.round(totalFifo / jumlah);
+
+        if (breakdownEl) {
+          if (batches.length > 1 || parts.length > 1) {
+            breakdownEl.style.display = 'block';
+            breakdownEl.innerHTML = `🏷️ <strong>Simulasi FIFO Otomatis:</strong> ${parts.join(' + ')}`;
+          } else {
+            breakdownEl.style.display = 'none';
+          }
+        }
+        return;
+      } else if (breakdownEl) {
+        if (batches.length > 1) {
+          const satuan = selectedOption ? (selectedOption.getAttribute('data-satuan') || '') : '';
+          const summary = batches.map(b => `${b.jumlah_sisa} ${satuan} @ ${formatRupiah(b.harga_satuan)}`).join(' • ');
+          breakdownEl.style.display = 'block';
+          breakdownEl.innerHTML = `📦 <strong>Stok Batch Aktif (FIFO):</strong> ${summary}`;
+        } else {
+          breakdownEl.style.display = 'none';
+        }
+      }
+    }
+
+    document.getElementById(prefix + '_total_display').value = formatRupiah(Math.round(jumlah * harga));
   }
 
   function autofillMasterData(kodeBarang) {
@@ -729,6 +791,11 @@
     
     document.getElementById('create_tanggal_input').value = new Date().toISOString().split('T')[0];
     document.getElementById('create_total_display').value = 'Rp 0';
+    const breakdownEl = document.getElementById('create_fifo_breakdown');
+    if (breakdownEl) {
+      breakdownEl.style.display = 'none';
+      breakdownEl.innerHTML = '';
+    }
     
     document.getElementById('create_kode_barang').value = '';
     document.getElementById('create_nama_barang').value = '';

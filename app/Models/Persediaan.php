@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Persediaan extends Model
 {
@@ -48,6 +49,23 @@ class Persediaan extends Model
                 unset($persediaan->kode_unik_barang);
             }
         });
+
+        static::deleting(function (Persediaan $persediaan) {
+            try {
+                if (\Illuminate\Support\Facades\Schema::hasTable('persediaan_batches')) {
+                    $persediaan->batches()->delete();
+                }
+            } catch (\Throwable $e) {
+                // Abaikan jika tabel belum tersedia
+            }
+        });
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->hasMany(PersediaanBatch::class, 'persediaan_id')
+            ->orderBy('tanggal_masuk', 'asc')
+            ->orderBy('id', 'asc');
     }
 
     public function getKodeUnikBarangAttribute(): string
@@ -76,7 +94,14 @@ class Persediaan extends Model
     protected function hargaTotalFormat(): Attribute
     {
         return Attribute::make(
-            get: fn () => 'Rp ' . number_format($this->harga_satuan * $this->jumlah, 0, ',', '.'),
+            get: function () {
+                $rawTotal = $this->attributes['harga_total'] ?? null;
+                $nilai = $rawTotal !== null
+                    ? (float) $rawTotal
+                    : ((float) ($this->attributes['harga_satuan'] ?? 0) * (int) ($this->attributes['jumlah'] ?? 0));
+
+                return 'Rp ' . number_format($nilai, 0, ',', '.');
+            },
         );
     }
 

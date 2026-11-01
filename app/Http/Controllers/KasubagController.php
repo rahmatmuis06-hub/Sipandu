@@ -632,13 +632,13 @@ class KasubagController extends Controller
                     'tanggal_penerimaan' => $request->tanggal_penerimaan,
                 ]);
 
-                // POTONG STOK & CATAT TRANSAKSI KELUAR UNTUK TIAP ITEM
+                // POTONG STOK (FIFO) & CATAT TRANSAKSI KELUAR UNTUK TIAP ITEM
                 foreach ($permintaan->items as $detail) {
                     $pers = $detail->persediaan ?? Persediaan::find($detail->persediaan_id);
                     if ($pers) {
-                        $pers->decrement('jumlah', $detail->jumlah_diminta);
+                        $fifo = \App\Services\PersediaanBatchService::deductFifo($pers, (int) $detail->jumlah_diminta);
 
-                        TransaksiKeluarPersediaan::create([
+                        $trxKeluar = new TransaksiKeluarPersediaan([
                             'persediaan_id' => $pers->id,
                             'tanggal_input' => $request->tanggal_penerimaan,
                             'kode_kategori' => $pers->kode_kategori,
@@ -646,12 +646,15 @@ class KasubagController extends Controller
                             'kode_barang'   => $pers->kode_barang,
                             'nama_barang'   => $pers->nama_barang,
                             'jumlah_keluar' => $detail->jumlah_diminta,
-                            'harga'         => $pers->harga_satuan,
-                            'total'         => $pers->harga_satuan * $detail->jumlah_diminta,
+                            'harga'         => $fifo['harga_satuan'],
+                            'total'         => $fifo['total_nilai'],
+                            'batch_alokasi' => $fifo['alokasi'],
                             'satuan'        => $pers->satuan,
                             'user_id'       => Auth::id(),
                             'keterangan'    => 'Disetujui otomatis dari Permintaan Pegawai: ' . ($permintaan->user->name ?? 'Pegawai')
                         ]);
+                        $trxKeluar->preserveExplicitTotal = true;
+                        $trxKeluar->save();
                     }
                 }
             } else {
@@ -671,9 +674,9 @@ class KasubagController extends Controller
                 ]);
 
                 if ($persediaan) {
-                    $persediaan->decrement('jumlah', $permintaan->jumlah_disetujui);
+                    $fifo = \App\Services\PersediaanBatchService::deductFifo($persediaan, (int) $permintaan->jumlah_disetujui);
 
-                    TransaksiKeluarPersediaan::create([
+                    $trxKeluar = new TransaksiKeluarPersediaan([
                         'persediaan_id' => $persediaan->id,
                         'tanggal_input' => $request->tanggal_penerimaan,
                         'kode_kategori' => $persediaan->kode_kategori,
@@ -681,12 +684,15 @@ class KasubagController extends Controller
                         'kode_barang'   => $persediaan->kode_barang,
                         'nama_barang'   => $persediaan->nama_barang,
                         'jumlah_keluar' => $permintaan->jumlah_disetujui,
-                        'harga'         => $persediaan->harga_satuan,
-                        'total'         => $persediaan->harga_satuan * $permintaan->jumlah_disetujui,
+                        'harga'         => $fifo['harga_satuan'],
+                        'total'         => $fifo['total_nilai'],
+                        'batch_alokasi' => $fifo['alokasi'],
                         'satuan'        => $persediaan->satuan,
                         'user_id'       => Auth::id(),
                         'keterangan'    => 'Disetujui otomatis dari Permintaan Pegawai: ' . ($permintaan->user->name ?? 'Pegawai')
                     ]);
+                    $trxKeluar->preserveExplicitTotal = true;
+                    $trxKeluar->save();
                 }
             }
 

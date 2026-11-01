@@ -196,6 +196,7 @@ class SuperadminController extends Controller
             ],
             'persediaan' => [
                 'persediaan',
+                'persediaan_batches',
                 'transaksi_masuk_persediaan',
                 'transaksi_keluar_persediaan',
                 'permintaan_persediaan',
@@ -306,6 +307,9 @@ class SuperadminController extends Controller
                 if (Schema::hasTable('persediaan')) {
                     $countPersediaan = DB::table('persediaan')->count();
                     DB::table('persediaan')->truncate();
+                }
+                if (Schema::hasTable('persediaan_batches')) {
+                    DB::table('persediaan_batches')->truncate();
                 }
 
                 if ($includeRelations) {

@@ -25,12 +25,14 @@ use App\Models\{
     PengembalianBarangLainnya,
 };
 use App\Services\FonnteService;
+use App\Services\PersediaanBatchService;
 use Maatwebsite\Excel\Facades\Excel;
 
 class AdminPersediaanController extends Controller
 {
     public function dashboard()
     {
+        PersediaanBatchService::syncAllUnbatched();
 
         $bulanIni = now()->month;
         $tahunIni = now()->year;
@@ -85,8 +87,10 @@ class AdminPersediaanController extends Controller
     // 📋 DATA PERSEDIAAN (ATK & PERSEDIAAN UTAMA)
     public function dataPersediaan(Request $request)
     {
+        PersediaanBatchService::syncAllUnbatched();
+
         // Hanya kecualikan kode_kategori BLN (jika ada), kategori BMN seperti "Alat/bahan Untuk Kegiatan Kantor Lainnya" TETAP MASUK
-        $query = Persediaan::where('kode_kategori', '!=', 'BLN');
+        $query = Persediaan::with('batches')->where('kode_kategori', '!=', 'BLN');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -532,7 +536,8 @@ class AdminPersediaanController extends Controller
             DB::transaction(function () use ($request) {
                 foreach ($request->items as $row) {
                     $row['harga_total'] = $row['harga_satuan'] * $row['jumlah'];
-                    Persediaan::create($row);
+                    $created = Persediaan::create($row);
+                    PersediaanBatchService::recordInitialBatch($created, 'stok_awal', 'Stok Awal Persediaan');
                 }
             });
 
@@ -560,9 +565,12 @@ class AdminPersediaanController extends Controller
             'jumlah' => 'required|integer|min:1',
         ]);
 
-        Persediaan::create($validated + [
-            'harga_total' => $validated['harga_satuan'] * $validated['jumlah'],
-        ]);
+        DB::transaction(function () use ($validated) {
+            $created = Persediaan::create($validated + [
+                'harga_total' => $validated['harga_satuan'] * $validated['jumlah'],
+            ]);
+            PersediaanBatchService::recordInitialBatch($created, 'stok_awal', 'Stok Awal Persediaan');
+        });
 
         return redirect()->route('adminpersediaan.data-persediaan')
             ->with('success', 'Data persediaan berhasil ditambahkan!');
@@ -601,9 +609,24 @@ class AdminPersediaanController extends Controller
             'jumlah' => 'required|integer|min:1',
         ]);
 
-        $persediaan->update($validated + [
-            'harga_total' => $validated['harga_satuan'] * $validated['jumlah'],
-        ]);
+        DB::transaction(function () use ($persediaan, $validated) {
+            $oldJumlah = (int) $persediaan->jumlah;
+            $oldHarga = (float) ($persediaan->getRawOriginal('harga_satuan') ?? $persediaan->harga_satuan ?? 0);
+
+            $persediaan->update($validated + [
+                'harga_total' => $validated['harga_satuan'] * $validated['jumlah'],
+            ]);
+
+            PersediaanBatchService::syncManualEdit(
+                $persediaan,
+                $oldJumlah,
+                $oldHarga,
+                (int) $validated['jumlah'],
+                (float) $validated['harga_satuan'],
+                (string) $validated['tanggal_masuk'],
+                'penyesuaian'
+            );
+        });
 
         return redirect()->route('adminpersediaan.data-persediaan')
             ->with('success', 'Data persediaan berhasil diupdate!');
@@ -700,19 +723,36 @@ class AdminPersediaanController extends Controller
 
         $transaksi = $query->latest('tanggal_input')->paginate(10);
 
+        PersediaanBatchService::syncAllUnbatched();
+
         // 🔥 AMBIL DATA MASTER PERSEDIAAN UNTUK DROPDOWN DI MODAL INDEX
         // Menggunakan getRawOriginal() agar harga_satuan murni berupa nominal numerik asli database (tanpa embel-embel string "Rp")
-        $masterPersediaan = Persediaan::orderBy('nama_barang')->get()->map(function($item) {
+        $masterPersediaan = Persediaan::with('batches')->orderBy('nama_barang')->get()->map(function($item) {
+            $activeBatches = $item->batches
+                ->where('jumlah_sisa', '>', 0)
+                ->values()
+                ->map(fn($b) => [
+                    'id'            => $b->id,
+                    'tanggal_masuk' => $b->tanggal_masuk ? $b->tanggal_masuk->format('d/m/Y') : '-',
+                    'harga_satuan'  => (float) ($b->getRawOriginal('harga_satuan') ?? $b->harga_satuan ?? 0),
+                    'jumlah_sisa'   => (int) $b->jumlah_sisa,
+                ])->all();
+
+            $firstFifoPrice = !empty($activeBatches)
+                ? (float) $activeBatches[0]['harga_satuan']
+                : (float) $item->getRawOriginal('harga_satuan');
+
             return [
-                'id'            => $item->id,
+                'id'               => $item->id,
                 'kode_unik_barang' => $item->kode_unik_barang,
-                'kode_barang'   => $item->kode_barang,
-                'nama_barang'   => $item->nama_barang,
-                'kode_kategori' => $item->kode_kategori,
-                'kategori'      => $item->kategori,
-                'satuan'        => $item->satuan, // MAP DATA SATUAN KE FRONTEND
-                'harga_satuan'  => (float) $item->getRawOriginal('harga_satuan'),
-                'stok_tersedia' => (int) $item->jumlah
+                'kode_barang'      => $item->kode_barang,
+                'nama_barang'      => $item->nama_barang,
+                'kode_kategori'    => $item->kode_kategori,
+                'kategori'         => $item->kategori,
+                'satuan'           => $item->satuan, // MAP DATA SATUAN KE FRONTEND
+                'harga_satuan'     => $firstFifoPrice,
+                'stok_tersedia'    => (int) $item->jumlah,
+                'batches'          => $activeBatches,
             ];
         });
         
@@ -755,24 +795,24 @@ class AdminPersediaanController extends Controller
                     ]);
                 }
 
-                TransaksiKeluarPersediaan::create([
+                $fifo = PersediaanBatchService::deductFifo($persediaan, (int) $validated['jumlah_keluar']);
+
+                $trxKeluar = new TransaksiKeluarPersediaan([
                     'persediaan_id' => $persediaan->id,
                     'tanggal_input' => $validated['tanggal_input'],
                     'kode_kategori' => $persediaan->kode_kategori,
-                    'kategori' => $persediaan->kategori,
-                    'kode_barang' => $persediaan->kode_barang,
-                    'nama_barang' => $persediaan->nama_barang,
-                    'satuan' => $persediaan->satuan,
+                    'kategori'      => $persediaan->kategori,
+                    'kode_barang'   => $persediaan->kode_barang,
+                    'nama_barang'   => $persediaan->nama_barang,
+                    'satuan'        => $persediaan->satuan,
                     'jumlah_keluar' => $validated['jumlah_keluar'],
-                    'harga' => $persediaan->harga_satuan,
-                    'user_id' => auth()->id(),
+                    'harga'         => $fifo['harga_satuan'],
+                    'total'         => $fifo['total_nilai'],
+                    'batch_alokasi' => $fifo['alokasi'],
+                    'user_id'       => auth()->id(),
                 ]);
-
-                $jumlahBaru = $persediaan->jumlah - $validated['jumlah_keluar'];
-                $persediaan->update([
-                    'jumlah' => $jumlahBaru,
-                    'harga_total' => $jumlahBaru * $persediaan->harga_satuan,
-                ]);
+                $trxKeluar->preserveExplicitTotal = true;
+                $trxKeluar->save();
             });
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
@@ -880,40 +920,38 @@ class AdminPersediaanController extends Controller
                     ]);
                 }
 
-                $barangSama = $persediaanLama && $persediaanLama->id === $persediaanBaru->id;
-                $stokTersedia = $persediaanBaru->jumlah + ($barangSama ? $transaksiKeluar->jumlah_keluar : 0);
+                if ($persediaanLama) {
+                    PersediaanBatchService::restoreFifo(
+                        $persediaanLama,
+                        (int) $transaksiKeluar->jumlah_keluar,
+                        is_array($transaksiKeluar->batch_alokasi) ? $transaksiKeluar->batch_alokasi : null
+                    );
+                }
 
-                if ($stokTersedia < $validated['jumlah_keluar']) {
+                $persediaanBaru = Persediaan::lockForUpdate()->findOrFail($persediaanBaru->id);
+                if ($persediaanBaru->jumlah < $validated['jumlah_keluar']) {
                     throw \Illuminate\Validation\ValidationException::withMessages([
                         'jumlah_keluar' => 'Stok persediaan tidak mencukupi!',
                     ]);
                 }
 
-                if (!$barangSama && $persediaanLama) {
-                    $stokLama = $persediaanLama->jumlah + $transaksiKeluar->jumlah_keluar;
-                    $persediaanLama->update([
-                        'jumlah' => $stokLama,
-                        'harga_total' => $stokLama * $persediaanLama->harga_satuan,
-                    ]);
-                }
+                $fifo = PersediaanBatchService::deductFifo($persediaanBaru, (int) $validated['jumlah_keluar']);
 
-                $stokBaru = $stokTersedia - $validated['jumlah_keluar'];
-                $persediaanBaru->update([
-                    'jumlah' => $stokBaru,
-                    'harga_total' => $stokBaru * $persediaanBaru->harga_satuan,
-                ]);
-
-                $transaksiKeluar->update([
+                $transaksiKeluar->fill([
                     'persediaan_id' => $persediaanBaru->id,
                     'tanggal_input' => $validated['tanggal_input'] ?? $transaksiKeluar->tanggal_input,
                     'kode_kategori' => $persediaanBaru->kode_kategori,
-                    'kategori' => $persediaanBaru->kategori,
-                    'kode_barang' => $persediaanBaru->kode_barang,
-                    'nama_barang' => $persediaanBaru->nama_barang,
-                    'satuan' => $persediaanBaru->satuan,
+                    'kategori'      => $persediaanBaru->kategori,
+                    'kode_barang'   => $persediaanBaru->kode_barang,
+                    'nama_barang'   => $persediaanBaru->nama_barang,
+                    'satuan'        => $persediaanBaru->satuan,
                     'jumlah_keluar' => $validated['jumlah_keluar'],
-                    'harga' => $persediaanBaru->harga_satuan,
+                    'harga'         => $fifo['harga_satuan'],
+                    'total'         => $fifo['total_nilai'],
+                    'batch_alokasi' => $fifo['alokasi'],
                 ]);
+                $transaksiKeluar->preserveExplicitTotal = true;
+                $transaksiKeluar->save();
             });
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->errors())->withInput();
@@ -934,11 +972,11 @@ class AdminPersediaanController extends Controller
                     ->lockForUpdate()->first();
 
             if ($persediaan) {
-                $jumlahBaru = $persediaan->jumlah + $transaksiKeluar->jumlah_keluar;
-                $persediaan->update([
-                    'jumlah' => $jumlahBaru,
-                    'harga_total' => $jumlahBaru * $persediaan->harga_satuan,
-                ]);
+                PersediaanBatchService::restoreFifo(
+                    $persediaan,
+                    (int) $transaksiKeluar->jumlah_keluar,
+                    is_array($transaksiKeluar->batch_alokasi) ? $transaksiKeluar->batch_alokasi : null
+                );
             }
 
             $transaksiKeluar->delete();
@@ -1042,8 +1080,8 @@ class AdminPersediaanController extends Controller
 
         // Riwayat transaksi dan stok master harus berhasil atau gagal bersama-sama.
         DB::transaction(function () use ($validated) {
-            TransaksiMasukPersediaan::create($validated);
-            $this->tambahkanKePersediaan($validated);
+            $trx = TransaksiMasukPersediaan::create($validated);
+            PersediaanBatchService::recordTransaksiMasuk($trx);
         });
 
         return redirect()->route('adminpersediaan.transaksi-masuk')
@@ -1100,10 +1138,7 @@ class AdminPersediaanController extends Controller
         $validated['total'] = $validated['harga_satuan'] * $validated['jumlah_masuk'];
 
         DB::transaction(function () use ($transaksiMasuk, $validated) {
-            // Batalkan dahulu dampak transaksi lama, lalu terapkan data yang baru.
-            $this->kurangiDariPersediaan($transaksiMasuk);
-            $transaksiMasuk->update($validated);
-            $this->tambahkanKePersediaan($validated);
+            PersediaanBatchService::updateTransaksiMasuk($transaksiMasuk, $validated);
         });
 
         return redirect()->route('adminpersediaan.transaksi-masuk')
@@ -1114,7 +1149,7 @@ class AdminPersediaanController extends Controller
     public function destroyTransaksiMasuk(TransaksiMasukPersediaan $transaksiMasuk)
     {
         DB::transaction(function () use ($transaksiMasuk) {
-            $this->kurangiDariPersediaan($transaksiMasuk);
+            PersediaanBatchService::revertTransaksiMasuk($transaksiMasuk);
             $transaksiMasuk->delete();
         });
 
@@ -1282,15 +1317,9 @@ class AdminPersediaanController extends Controller
 
                 $permintaan->update($updateData);
 
-                // 3. Potong stok dan catat transaksi keluar jika data master persediaan ditemukan
+                // 3. Potong stok (FIFO) dan catat transaksi keluar jika data master persediaan ditemukan
                 if ($persediaan) {
-                    $sisaStok = max(0, $persediaan->jumlah - $jumlahDisetujui);
-                    $hargaSatuan = $persediaan->harga_satuan ?? 0;
-
-                    DB::table('persediaan')->where('id', $persediaan->id)->update([
-                        'jumlah' => $sisaStok,
-                        'harga_total' => $sisaStok * $hargaSatuan,
-                    ]);
+                    $fifo = PersediaanBatchService::deductFifo($persediaan, $jumlahDisetujui);
 
                     $transaksiData = [
                         'tanggal_input' => now()->toDateString(),
@@ -1299,8 +1328,8 @@ class AdminPersediaanController extends Controller
                         'kode_barang'   => $persediaan->kode_barang ?? ($permintaan->kode_barang ?? '-'),
                         'nama_barang'   => $persediaan->nama_barang ?? ($permintaan->nama_barang ?? '-'),
                         'jumlah_keluar' => $jumlahDisetujui,
-                        'harga'         => $hargaSatuan,
-                        'total'         => $hargaSatuan * $jumlahDisetujui,
+                        'harga'         => $fifo['harga_satuan'],
+                        'total'         => $fifo['total_nilai'],
                         'satuan'        => $persediaan->satuan ?? ($permintaan->satuan ?? 'Unit'),
                         'user_id'       => Auth::id() ?? $permintaan->user_id,
                         'created_at'    => now(),
@@ -1309,6 +1338,9 @@ class AdminPersediaanController extends Controller
 
                     if (\Illuminate\Support\Facades\Schema::hasColumn('transaksi_keluar_persediaan', 'persediaan_id')) {
                         $transaksiData['persediaan_id'] = $persediaan->id;
+                    }
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('transaksi_keluar_persediaan', 'batch_alokasi')) {
+                        $transaksiData['batch_alokasi'] = json_encode($fifo['alokasi']);
                     }
 
                     DB::table('transaksi_keluar_persediaan')->insert($transaksiData);

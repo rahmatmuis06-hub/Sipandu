@@ -367,6 +367,28 @@
         </thead>
         <tbody>
           @forelse($persediaan as $index => $item)
+          @php
+            $batchesList = $item->relationLoaded('batches') ? $item->batches : collect([]);
+            $batchesPayload = $batchesList->map(function ($b) {
+                $hargaB = (float) ($b->getRawOriginal('harga_satuan') ?? $b->harga_satuan ?? 0);
+                $sisaB = (int) ($b->jumlah_sisa ?? 0);
+                return [
+                    'id'            => $b->id,
+                    'tanggal_masuk' => $b->tanggal_masuk ? $b->tanggal_masuk->format('d/m/Y') : '-',
+                    'harga_satuan'  => $hargaB,
+                    'jumlah_awal'   => (int) ($b->jumlah_awal ?? 0),
+                    'jumlah_sisa'   => $sisaB,
+                    'sumber'        => $b->sumber ?? 'stok_awal',
+                    'subtotal_sisa' => $hargaB * $sisaB,
+                ];
+            })->values()->all();
+
+            $activeBatchesCol = collect($batchesPayload)->where('jumlah_sisa', '>', 0);
+            $distinctActivePrices = $activeBatchesCol->pluck('harga_satuan')->map(fn($p) => (string) round((float) $p, 2))->unique()->count();
+            $distinctAllPrices = collect($batchesPayload)->pluck('harga_satuan')->map(fn($p) => (string) round((float) $p, 2))->unique()->count();
+            $totalBatchesCount = count($batchesPayload);
+            $rawHargaTotal = $item->getRawOriginal('harga_total') ?? $item->harga_total ?? ($item->harga_satuan * $item->jumlah);
+          @endphp
           <tr data-id="{{ $item->id }}"
             data-kode-kategori="{{ $item->kode_kategori }}"
             data-kategori="{{ $item->kategori }}"
@@ -374,31 +396,46 @@
             data-kode-unik-barang="{{ $item->kode_unik_barang }}"
             data-nama-barang="{{ $item->nama_barang }}"
             data-tanggal-masuk="{{ $item->tanggal_masuk->format('Y-m-d') }}" {{-- Format standar input date --}}
-            data-harga-satuan="{{ $item->harga_satuan }}" {{-- Nilai mentah: 10000 --}}
-            data-harga-total="{{ $item->harga_satuan * $item->jumlah }}" {{-- Nilai mentah total --}}
+            data-harga-satuan="{{ $item->getRawOriginal('harga_satuan') ?? $item->harga_satuan }}" {{-- Nilai mentah: 10000 --}}
+            data-harga-total="{{ $rawHargaTotal }}" {{-- Nilai mentah total akurat dari seluruh batch --}}
             data-jumlah="{{ $item->jumlah }}"
-            data-satuan="{{ $item->satuan }}">
+            data-satuan="{{ $item->satuan }}"
+            data-multi-batch="{{ $totalBatchesCount > 1 ? '1' : '0' }}"
+            data-batches="{{ json_encode($batchesPayload) }}">
             <td><strong>{{ $persediaan->firstItem() + $loop->index }}</strong></td>
             <td><strong>{{ $item->kode_unik_barang }}</strong></td>
             <td>{{ $item->kategori }}</td>
             <td>{{ Str::limit($item->nama_barang, 30) }}</td>
             <td>{{ $item->tanggal_masuk->format('d/m/Y') }}</td>
-            <td class="font-mono">{{ $item->harga_satuan_format }}</td>
-          <td class="font-mono font-semibold text-green-600">{{ $item->harga_total_format }}</td>
+            <td class="font-mono">
+              <div>{{ $item->harga_satuan_format }}</div>
+              @if($distinctActivePrices > 1)
+                <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat daftar variasi harga barang ini"
+                  style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #C7D2FE; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); color:#4338CA; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;">
+                  🏷️ {{ $distinctActivePrices }} Harga • Lihat
+                </button>
+              @elseif($distinctAllPrices > 1 || $totalBatchesCount > 1)
+                <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat riwayat batch harga masuk"
+                  style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #E2E8F0; background:#F8FAFC; color:#475569; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s;">
+                  📋 {{ $totalBatchesCount }} Batch • Lihat
+                </button>
+              @endif
+            </td>
+            <td class="font-mono font-semibold text-green-600">{{ $item->harga_total_format }}</td>
             <td><strong class="text-lg">{{ number_format($item->jumlah) }}</strong></td>
             <td>{{ $item->satuan }}</td>
             <td>
-              <a href="#" onclick="openDetail({{ $item->id }})" class="action-btn" title="Detail">
+              <a href="javascript:void(0)" onclick="openDetail({{ $item->id }})" class="action-btn" title="Detail & List Harga">
                 <svg viewBox="0 0 24 24" fill="#4F6FFF">
                   <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
                 </svg>
               </a>
-              <a href="#" onclick="openEdit({{ $item->id }})" class="action-btn edit" title="Edit">
+              <a href="javascript:void(0)" onclick="openEdit({{ $item->id }})" class="action-btn edit" title="Edit">
                 <svg viewBox="0 0 24 24" fill="#10B981">
                   <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm18-11.5c0-.41-.17-.79-.44-1.06l-2.25-2.25a1.5 1.5 0 0 0-2.12 0l-1.83 1.83 3.75 3.75 1.83-1.83c.27-.27.44-.65.44-1.06z"/>
                 </svg>
               </a>
-              <a href="#" onclick="confirmDelete({{ $item->id }})" class="action-btn delete" title="Hapus">
+              <a href="javascript:void(0)" onclick="confirmDelete({{ $item->id }})" class="action-btn delete" title="Hapus">
                 <svg viewBox="0 0 24 24" fill="#EF4444">
                   <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                 </svg>
@@ -556,14 +593,14 @@
 
 {{-- MODAL DETAIL --}}
 <div id="detailModal" class="modal-overlay">
-  <div class="modal" style="max-width:580px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-bottom:16px; border-bottom:1px solid var(--border);">
+  <div class="modal" style="max-width:760px; max-height:90vh; display:flex; flex-direction:column;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:16px; border-bottom:1px solid var(--border); flex-shrink:0;">
       <div style="display:flex; align-items:center; gap:12px;">
         <div style="width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); display:flex; align-items:center; justify-content:center;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="var(--blue)"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
         </div>
         <div>
-          <h3 style="font-size:18px; font-weight:800; color:var(--text); margin:0;">Detail Persediaan</h3>
+          <h3 style="font-size:18px; font-weight:800; color:var(--text); margin:0;">Detail & Daftar Harga Persediaan</h3>
           <p id="detailTitle" style="font-size:13px; color:var(--muted); margin:4px 0 0 0;"></p>
         </div>
       </div>
@@ -572,9 +609,9 @@
       </button>
     </div>
 
-    <div id="detailContent" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px;"></div>
+    <div id="detailContent" style="overflow-y:auto; flex:1; padding-right:4px;"></div>
 
-    <div style="margin-top:28px; padding-top:20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end;">
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; flex-shrink:0;">
       <button onclick="closeModal('detailModal')" class="btn" style="background:var(--bg); color:var(--text); border:1.5px solid var(--border); padding:12px 24px;">
         Tutup
       </button>
@@ -637,6 +674,10 @@
       @method('PUT')
       <div style="padding:28px; overflow-y:auto; flex:1;">
         <input type="hidden" name="id" id="editId">
+
+        <div id="editMultiBatchNotice" style="display:none; margin-bottom:18px; padding:12px 14px; border-radius:10px; background:#EEF2FF; border:1px solid #C7D2FE; color:#3730A3; font-size:12.5px; line-height:1.5;">
+          <strong>ℹ️ Info Multi-Harga:</strong> Barang ini memiliki beberapa batch harga masuk. Mengubah identitas barang (nama/kategori/satuan) <strong>tidak akan merusak</strong> rincian harga tiap batch.
+        </div>
         
         <div style="font-size:10.5px; font-weight:700; color:var(--blue); letter-spacing:1.2px; text-transform:uppercase; padding-bottom:10px; border-bottom:1.5px solid var(--border); margin-bottom:24px;">
           <span style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF); border-radius:4px; padding:4px 10px;">Identitas Barang</span>
@@ -856,53 +897,165 @@ document.addEventListener('blur', function(e) {
   }
 }, true);
 
-// 🔥 DETAIL MODAL - FIXED FORMATTING HERE
+// 🔥 DETAIL MODAL - MULTI-HARGA BATCH FIFO
+function formatSumberBatch(sumber) {
+  switch (sumber) {
+    case 'transaksi_masuk': return { label: 'Transaksi Masuk', bg: '#EEF2FF', color: '#4338CA' };
+    case 'import':          return { label: 'Import Excel', bg: '#ECFDF5', color: '#047857' };
+    case 'penyesuaian':     return { label: 'Penyesuaian', bg: '#FEF3C7', color: '#B45309' };
+    default:                return { label: 'Stok Awal', bg: '#F1F5F9', color: '#475569' };
+  }
+}
+
+function escapeHtmlSafe(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function populateDetailModal(data) {
-  document.getElementById('detailTitle').textContent = `Kode: ${data.kode_unik_barang}`;
+  document.getElementById('detailTitle').textContent = `Kode: ${data.kode_unik_barang} • ${data.nama_barang}`;
   
-  // Membaca data angka mentah dari dataset lalu diformat ulang dengan rapi ke Rupiah
   const formattedHargaSatuan = formatCurrency(parseDatasetNumber(data.harga_satuan));
   const formattedHargaTotal = formatCurrency(parseDatasetNumber(data.harga_total));
+  const satuanLabel = escapeHtmlSafe(data.satuan || '');
+  const batches = Array.isArray(data.batches) ? data.batches : [];
+
+  let firstActiveFound = false;
+  let batchRowsHtml = '';
+
+  if (batches.length > 0) {
+    batches.forEach((b, idx) => {
+      const sisa = parseInt(b.jumlah_sisa) || 0;
+      const awal = parseInt(b.jumlah_awal) || 0;
+      const harga = parseFloat(b.harga_satuan) || 0;
+      const subtotal = sisa * harga;
+      const isNextFifo = (!firstActiveFound && sisa > 0);
+      if (isNextFifo) firstActiveFound = true;
+
+      const sumberInfo = formatSumberBatch(b.sumber);
+      const rowBg = sisa === 0 ? '#F8FAFC' : (isNextFifo ? '#F0FDF4' : '#FFFFFF');
+      const rowOpacity = sisa === 0 ? '0.68' : '1';
+
+      batchRowsHtml += `
+        <tr style="background:${rowBg}; opacity:${rowOpacity}; border-bottom:1px solid #E2E8F0;">
+          <td style="padding:10px 12px; font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap;">
+            #${idx + 1}
+            ${isNextFifo ? `<div style="margin-top:3px;"><span style="display:inline-block; padding:2px 7px; border-radius:999px; background:#DCFCE7; color:#15803D; font-size:10px; font-weight:800;">Dipakai Duluan (FIFO)</span></div>` : ''}
+          </td>
+          <td style="padding:10px 12px; font-size:12.5px; white-space:nowrap;">
+            <div style="font-weight:600; color:var(--text);">${escapeHtmlSafe(b.tanggal_masuk || '-')}</div>
+            <span style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:6px; background:${sumberInfo.bg}; color:${sumberInfo.color}; font-size:10.5px; font-weight:700;">${sumberInfo.label}</span>
+          </td>
+          <td style="padding:10px 12px; font-size:13px; font-weight:700; color:var(--text); text-align:right; font-family:monospace; white-space:nowrap;">
+            Rp ${formatCurrency(harga)}
+          </td>
+          <td style="padding:10px 12px; font-size:12.5px; color:var(--muted); text-align:center; white-space:nowrap;">
+            ${awal.toLocaleString('id-ID')} ${satuanLabel}
+          </td>
+          <td style="padding:10px 12px; font-size:13px; text-align:center; white-space:nowrap;">
+            ${sisa > 0
+              ? `<span style="display:inline-block; padding:3px 9px; border-radius:999px; background:#ECFDF5; color:#059669; font-weight:800;">${sisa.toLocaleString('id-ID')} ${satuanLabel}</span>`
+              : `<span style="display:inline-block; padding:3px 9px; border-radius:999px; background:#F1F5F9; color:#94A3B8; font-weight:700; font-size:11.5px;">Habis (0)</span>`
+            }
+          </td>
+          <td style="padding:10px 12px; font-size:13px; font-weight:700; color:${sisa > 0 ? 'var(--blue)' : '#94A3B8'}; text-align:right; font-family:monospace; white-space:nowrap;">
+            Rp ${formatCurrency(subtotal)}
+          </td>
+        </tr>
+      `;
+    });
+  } else {
+    batchRowsHtml = `
+      <tr>
+        <td colspan="6" style="padding:18px; text-align:center; color:var(--muted); font-size:13px;">
+          1 Harga Aktif: Rp ${formattedHargaSatuan} (${parseInt(data.jumlah || 0).toLocaleString('id-ID')} ${satuanLabel})
+        </td>
+      </tr>
+    `;
+  }
 
   document.getElementById('detailContent').innerHTML = `
-    <div style="display:flex; flex-direction:column; gap:16px; width: 100%;">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+    <div style="display:flex; flex-direction:column; gap:18px; width: 100%;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
         <div>
-          <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Kode Unik Barang</div>
-          <div style="font-size:16px; font-weight:800; color:var(--text);">${data.kode_unik_barang}</div>
+          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kode Unik Barang</div>
+          <div style="font-size:15px; font-weight:800; color:var(--text);">${escapeHtmlSafe(data.kode_unik_barang)}</div>
         </div>
         <div>
-          <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Kategori</div>
-          <div style="font-size:15px; font-weight:700; color:var(--text); line-height:1.3;">${data.kategori}</div>
+          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kategori</div>
+          <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">${escapeHtmlSafe(data.kategori)}</div>
         </div>
         <div>
-          <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Nama Barang</div>
-          <div style="font-size:15px; font-weight:700; color:var(--text); line-height:1.3;">${data.nama_barang}</div>
+          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Nama Barang</div>
+          <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">${escapeHtmlSafe(data.nama_barang)}</div>
         </div>
       </div>
       
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; padding:20px; background:#F8FAFF; border-radius:12px; border:1px solid var(--border);">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; padding:16px 18px; background:#F8FAFF; border-radius:12px; border:1px solid var(--border);">
         <div>
-          <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Tanggal Masuk</div>
-          <div style="font-weight:600; font-size:14px;">${new Date(data.tanggal_masuk).toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric'})}</div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Tanggal Masuk Terakhir</div>
+          <div style="font-weight:700; font-size:13.5px;">${data.tanggal_masuk ? new Date(data.tanggal_masuk).toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric'}) : '-'}</div>
         </div>
         <div>
-          <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Jumlah Stok</div>
-          <div style="font-weight:700; font-size:20px; color:var(--success);">${parseInt(data.jumlah).toLocaleString('id-ID')}</div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Total Sisa Stok</div>
+          <div style="font-weight:800; font-size:19px; color:var(--success);">${parseInt(data.jumlah || 0).toLocaleString('id-ID')} <span style="font-size:12.5px; font-weight:600; color:var(--muted); text-transform:capitalize;">${satuanLabel}</span></div>
         </div>
         <div>
-          <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Satuan</div>
-          <div style="font-weight:600; font-size:14px; color:var(--text); text-transform:capitalize;">${data.satuan || '-'}</div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Harga Terbaru</div>
+          <div style="font-weight:700; font-size:14px; color:var(--text);">Rp ${formattedHargaSatuan}</div>
         </div>
         <div>
-          <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Harga Satuan</div>
-          <div style="font-weight:600; font-size:15px; color:var(--text);">Rp ${formattedHargaSatuan}</div>
-        </div>
-        <div>
-          <div style="font-size:12px; color:var(--muted); margin-bottom:4px;">Harga Total</div>
-          <div style="font-weight:700; font-size:18px; color:var(--blue); background:linear-gradient(135deg,#EEF2FF,#E0E7FF); padding:8px 12px; border-radius:8px; display:inline-block;">
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Total Nilai Persediaan</div>
+          <div style="font-weight:800; font-size:16px; color:var(--blue); background:linear-gradient(135deg,#EEF2FF,#E0E7FF); padding:6px 10px; border-radius:8px; display:inline-block;">
             Rp ${formattedHargaTotal}
           </div>
+        </div>
+      </div>
+
+      <div style="border:1.5px solid var(--border); border-radius:14px; overflow:hidden; background:#FFFFFF;">
+        <div style="padding:12px 16px; background:linear-gradient(135deg,#EEF2FF,#F8FAFF); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:13px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:6px;">
+            🏷️ Daftar List Harga & Sisa Stok per Batch Masuk
+          </div>
+          <span style="font-size:11px; font-weight:700; color:#4338CA; background:#E0E7FF; padding:3px 10px; border-radius:999px;">
+            ${batches.length} Batch Tercatat • Metode FIFO
+          </span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#F8FAFC; border-bottom:1.5px solid #E2E8F0;">
+                <th style="padding:10px 12px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Batch</th>
+                <th style="padding:10px 12px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Tgl Masuk</th>
+                <th style="padding:10px 12px; text-align:right; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Harga Satuan</th>
+                <th style="padding:10px 12px; text-align:center; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Masuk Awal</th>
+                <th style="padding:10px 12px; text-align:center; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Sisa Stok</th>
+                <th style="padding:10px 12px; text-align:right; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Subtotal Sisa</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${batchRowsHtml}
+            </tbody>
+            <tfoot>
+              <tr style="background:#F8FAFF; border-top:2px solid #CBD5E1;">
+                <td colspan="4" style="padding:11px 12px; font-size:12.5px; font-weight:800; color:var(--text); text-align:right;">
+                  TOTAL AKUMULASI AKTIF
+                </td>
+                <td style="padding:11px 12px; font-size:13px; font-weight:800; color:var(--success); text-align:center; white-space:nowrap;">
+                  ${parseInt(data.jumlah || 0).toLocaleString('id-ID')} ${satuanLabel}
+                </td>
+                <td style="padding:11px 12px; font-size:14px; font-weight:800; color:var(--blue); text-align:right; font-family:monospace; white-space:nowrap;">
+                  Rp ${formattedHargaTotal}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div style="padding:10px 16px; background:#FAFBFF; border-top:1px solid #E2E8F0; font-size:11.5px; color:var(--muted); line-height:1.5;">
+          💡 <strong>Catatan FIFO:</strong> Saat barang keluar (melalui Transaksi Keluar maupun Permintaan Persediaan), stok otomatis dipotong dari batch yang masuk lebih awal hingga habis sebelum beralih ke harga berikutnya.
         </div>
       </div>
     </div>
@@ -913,6 +1066,13 @@ function populateDetailModal(data) {
 function openDetail(id) {
   const row = document.querySelector(`tr[data-id="${id}"]`);
   if (!row) return alert('Data tidak ditemukan!');
+
+  let parsedBatches = [];
+  try {
+    parsedBatches = JSON.parse(row.dataset.batches || '[]');
+  } catch (e) {
+    parsedBatches = [];
+  }
   
   const persediaan = {
     id: row.dataset.id,
@@ -925,7 +1085,8 @@ function openDetail(id) {
     harga_total: row.dataset.hargaTotal || row.dataset.harga_total || '0',
     jumlah: row.dataset.jumlah || '0',
     satuan: row.dataset.satuan || '',
-    tanggal_masuk: row.dataset.tanggalMasuk || row.dataset.tanggal_masuk || ''
+    tanggal_masuk: row.dataset.tanggalMasuk || row.dataset.tanggal_masuk || '',
+    batches: parsedBatches
   };
   
   populateDetailModal(persediaan);
@@ -948,7 +1109,8 @@ function openEdit(id) {
     harga_satuan: row.dataset.hargaSatuan || row.dataset.harga_satuan || '0',
     jumlah: row.dataset.jumlah || '0',
     satuan: row.dataset.satuan || '',
-    harga_total: row.dataset.hargaTotal || row.dataset.harga_total || '0'
+    harga_total: row.dataset.hargaTotal || row.dataset.harga_total || '0',
+    multi_batch: row.dataset.multiBatch === '1'
   };
 
   const form = document.getElementById('editForm');
@@ -989,7 +1151,13 @@ function populateEditModal(data) {
   document.getElementById('editSatuan').value = data.satuan;
   document.getElementById('editHargaTotal').value = formatCurrency(parseDatasetNumber(data.harga_total));
   document.getElementById('editTitle').textContent = `Kode Unik: ${data.kode_unik_barang}`;
-  calculateTotalEdit(); 
+  const noticeEl = document.getElementById('editMultiBatchNotice');
+  if (noticeEl) {
+    noticeEl.style.display = data.multi_batch ? 'block' : 'none';
+  }
+  if (!data.multi_batch) {
+    calculateTotalEdit();
+  }
 }
 
 // 🔥 MULTI-ITEM PERSEDIAAN FUNCTIONS
@@ -1113,7 +1281,7 @@ function updatePersediaanItemNumbers() {
 
 // 🔥 INIT
 document.addEventListener('DOMContentLoaded', function() {
-  calculateTotal();
+  if (typeof calculateTotal === 'function') calculateTotal();
 });
 </script>
 
