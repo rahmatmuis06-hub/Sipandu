@@ -153,13 +153,17 @@ class Gedung extends Model
         $list = collect();
 
         try {
-            $fotoRecords = $this->relationLoaded('fotos') ? $this->fotos : $this->fotos()->get();
-            foreach ($fotoRecords as $f) {
-                $list->push([
-                    'id' => $f->id,
-                    'url' => $f->foto_url,
-                    'raw_path' => $f->foto_path,
-                ]);
+            if (\Illuminate\Support\Facades\Schema::hasTable('foto_gedung')) {
+                $fotoRecords = $this->relationLoaded('fotos') ? $this->fotos : $this->fotos()->get();
+                if ($fotoRecords && $fotoRecords->count() > 0) {
+                    foreach ($fotoRecords as $f) {
+                        $list->push([
+                            'id' => $f->id,
+                            'url' => $f->foto_url,
+                            'raw_path' => $f->foto_path,
+                        ]);
+                    }
+                }
             }
         } catch (\Throwable $e) {
             // Fallback jika tabel foto_gedung belum siap

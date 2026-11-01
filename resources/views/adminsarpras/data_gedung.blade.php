@@ -1249,8 +1249,17 @@ function openDetailAjax(id) {
   fetch(`/adminsarpras/gedung/${id}`, {
     headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
   })
-  .then(r=>r.json())
-  .then(data=>{
+  .then(function(r) {
+    if (!r.ok) {
+      return r.json().then(function(err){
+        throw new Error(err.message || ('HTTP ' + r.status));
+      }).catch(function(){
+        throw new Error('HTTP ' + r.status + ' ' + r.statusText);
+      });
+    }
+    return r.json();
+  })
+  .then(function(data){
     document.getElementById('det-title').textContent = data.nama_gedung || 'Detail Gedung';
     
     // Gallery Handler
@@ -1299,9 +1308,9 @@ function openDetailAjax(id) {
     `;
     openModal('detail');
   })
-  .catch(e=>{
-    console.error('Error:',e);
-    showToast('Gagal memuat detail gedung: '+e.message,'red');
+  .catch(function(e){
+    console.error('Error detail:', e);
+    showToast('Gagal memuat detail gedung: ' + (e.message || ''), 'red');
   });
 }
 
@@ -1328,8 +1337,13 @@ function deleteExistingFoto(fotoId, fotoUrl) {
       'X-Requested-With': 'XMLHttpRequest'
     }
   })
-  .then(r => r.json())
-  .then(res => {
+  .then(function(r){
+    if (!r.ok) {
+      return r.json().then(function(err){ throw new Error(err.message || 'HTTP ' + r.status); });
+    }
+    return r.json();
+  })
+  .then(function(res){
     if (res.success) {
       const card = document.getElementById('foto-card-' + fotoId);
       if (card) {
@@ -1342,9 +1356,9 @@ function deleteExistingFoto(fotoId, fotoUrl) {
       showToast(res.message || 'Gagal menghapus foto.', 'red');
     }
   })
-  .catch(err => {
+  .catch(function(err){
     console.error(err);
-    showToast('Terjadi kesalahan saat menghapus foto.', 'red');
+    showToast('Gagal menghapus foto: ' + (err.message || ''), 'red');
   });
 }
 
@@ -1353,10 +1367,22 @@ function openEditAjax(id){
   fetch('/adminsarpras/gedung/'+id, {
     headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
   })
-  .then(function(r){return r.json();})
+  .then(function(r){
+    if (!r.ok) {
+      return r.json().then(function(err){
+        throw new Error(err.message || ('HTTP ' + r.status));
+      }).catch(function(){
+        throw new Error('HTTP ' + r.status + ' ' + r.statusText);
+      });
+    }
+    return r.json();
+  })
   .then(function(data){
+    if (!data || !data.id) {
+      throw new Error('Data gedung tidak ditemukan.');
+    }
     document.getElementById('e-id').value=data.id;
-    document.getElementById('e-nama').value=data.nama_gedung;
+    document.getElementById('e-nama').value=data.nama_gedung || '';
     if (document.getElementById('e-kategori')) {
       const select = document.getElementById('e-kategori');
       let found = false;
@@ -1381,42 +1407,47 @@ function openEditAjax(id){
       }
       toggleKategoriCustom('e');
     }
-    document.getElementById('e-lokasi').value=data.lokasi;
-    document.getElementById('e-luas').value=data.luas_bangunan;
-    document.getElementById('e-kap').value=data.kapasitas;
-    document.getElementById('e-tarif').value=data.tarif_sewa;
-    document.getElementById('e-status').value=data.ketersediaan;
+    document.getElementById('e-lokasi').value=data.lokasi || '';
+    document.getElementById('e-luas').value=data.luas_bangunan || '';
+    document.getElementById('e-kap').value=data.kapasitas || 0;
+    document.getElementById('e-tarif').value=data.tarif_sewa || 0;
+    document.getElementById('e-status').value=data.ketersediaan || 'Tersedia';
     document.getElementById('e-fasilitas').value=data.fasilitas||'';
     document.getElementById('formEdit').action='/adminsarpras/gedung/'+data.id;
 
     // Render existing photos
     const existingWrap = document.getElementById('e-existing-fotos');
-    const fotos = (data.fotos && data.fotos.length > 0) ? data.fotos : (data.foto_url ? [{ id: null, url: data.foto_url }] : []);
-    
-    // Reset file input baru & preview
-    editFiles = [];
-    if (document.getElementById('e-fotos')) document.getElementById('e-fotos').value = '';
-    if (document.getElementById('e-fotos-preview')) document.getElementById('e-fotos-preview').innerHTML = '';
+    if (existingWrap) {
+      const fotos = (data.fotos && data.fotos.length > 0) ? data.fotos : (data.foto_url ? [{ id: null, url: data.foto_url }] : []);
+      
+      // Reset file input baru & preview
+      editFiles = [];
+      if (document.getElementById('e-fotos')) document.getElementById('e-fotos').value = '';
+      if (document.getElementById('e-fotos-preview')) document.getElementById('e-fotos-preview').innerHTML = '';
 
-    if (fotos.length > 0) {
-      existingWrap.innerHTML = fotos.map((f, idx) => `
-        <div class="existing-photo-item" id="foto-card-${f.id || 'legacy'}">
-          <img src="${f.url}" alt="Foto ${idx+1}">
-          ${idx === 0 ? '<span class="main-badge">Utama</span>' : ''}
-          ${f.id ? `
-            <button type="button" class="btn-del-existing" title="Hapus foto ini" onclick="deleteExistingFoto(${f.id}, '${f.url}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          ` : ''}
-        </div>
-      `).join('');
-    } else {
-      existingWrap.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px 12px; grid-column: 1 / -1;">Belum ada foto untuk gedung ini.</div>';
+      if (fotos.length > 0) {
+        existingWrap.innerHTML = fotos.map((f, idx) => `
+          <div class="existing-photo-item" id="foto-card-${f.id || 'legacy'}">
+            <img src="${f.url}" alt="Foto ${idx+1}">
+            ${idx === 0 ? '<span class="main-badge">Utama</span>' : ''}
+            ${f.id ? `
+              <button type="button" class="btn-del-existing" title="Hapus foto ini" onclick="deleteExistingFoto(${f.id}, '${f.url}')">
+                <i class="fas fa-trash"></i>
+              </button>
+            ` : ''}
+          </div>
+        `).join('');
+      } else {
+        existingWrap.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px 12px; grid-column: 1 / -1;">Belum ada foto untuk gedung ini.</div>';
+      }
     }
 
     openModal('edit');
   })
-  .catch(function(){showToast('Gagal memuat data gedung.','red');});
+  .catch(function(err){
+    console.error('Error openEditAjax:', err);
+    showToast('Gagal memuat data gedung: ' + (err.message || 'Terjadi kesalahan.'), 'red');
+  });
 }
 
 function openHapus(id, nama) {

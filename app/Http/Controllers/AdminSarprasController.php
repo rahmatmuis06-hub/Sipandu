@@ -158,7 +158,12 @@ class AdminSarprasController extends Controller
             $this->performSyncFromFasilitas();
         }
 
-        $query = Gedung::with('fotos');
+        $query = Gedung::query();
+        try {
+            if (Schema::hasTable('foto_gedung')) {
+                $query->with('fotos');
+            }
+        } catch (\Throwable $e) {}
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -307,14 +312,15 @@ class AdminSarprasController extends Controller
             if (!Schema::hasTable('foto_gedung')) {
                 Schema::create('foto_gedung', function (Blueprint $table) {
                     $table->id();
-                    $table->unsignedBigInteger('gedung_id');
+                    $table->unsignedBigInteger('gedung_id')->index();
                     $table->string('foto_path');
                     $table->integer('urutan')->default(0);
                     $table->timestamps();
-                    $table->foreign('gedung_id')->references('id')->on('gedung')->onDelete('cascade');
                 });
             }
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            \Log::warning('ensureFotoGedungTableExists notice: ' . $e->getMessage());
+        }
     }
 
     // Tambah gedung (mendukung upload banyak foto)
@@ -525,24 +531,53 @@ class AdminSarprasController extends Controller
         return redirect()->back()->with('success', 'Gedung dan seluruh fotonya berhasil dihapus!');
     }
 
-    // API untuk detail JSON
-    public function showGedungJson(Gedung $gedung)
+    // API untuk detail JSON (mendukung route model binding maupun passing ID langsung)
+    public function showGedungJson($gedung)
     {
-        $this->ensureFotoGedungTableExists();
+        try {
+            $gedungModel = ($gedung instanceof Gedung) ? $gedung : Gedung::find($gedung);
+            if (!$gedungModel) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data gedung tidak ditemukan'
+                ], 404);
+            }
 
-        return response()->json([
-            'id' => $gedung->id,
-            'nama_gedung' => $gedung->nama_gedung,
-            'foto_url' => $gedung->foto_path,
-            'fotos' => $gedung->all_fotos,
-            'lokasi' => $gedung->lokasi,
-            'luas_bangunan' => $gedung->luas_bangunan,
-            'tarif_sewa' => $gedung->tarif_sewa,
-            'kapasitas' => $gedung->kapasitas,
-            'ketersediaan' => $gedung->ketersediaan,
-            'kategori' => $gedung->kategori,
-            'fasilitas' => $gedung->fasilitas,
-        ]);
+            $this->ensureFotoGedungTableExists();
+
+            $fotos = [];
+            try {
+                $fotos = $gedungModel->all_fotos;
+            } catch (\Throwable $e) {
+                if ($gedungModel->foto_url) {
+                    $fotos = [[
+                        'id' => null,
+                        'url' => $gedungModel->foto_path,
+                        'raw_path' => $gedungModel->foto_url,
+                    ]];
+                }
+            }
+
+            return response()->json([
+                'id' => $gedungModel->id,
+                'nama_gedung' => $gedungModel->nama_gedung,
+                'foto_url' => $gedungModel->foto_path,
+                'fotos' => $fotos,
+                'lokasi' => $gedungModel->lokasi,
+                'luas_bangunan' => $gedungModel->luas_bangunan,
+                'tarif_sewa' => $gedungModel->tarif_sewa,
+                'kapasitas' => $gedungModel->kapasitas,
+                'ketersediaan' => $gedungModel->ketersediaan,
+                'kategori' => $gedungModel->kategori,
+                'fasilitas' => $gedungModel->fasilitas,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Gagal showGedungJson: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data gedung: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 

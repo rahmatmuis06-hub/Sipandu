@@ -269,10 +269,10 @@ Route::middleware('auth')->group(function () {
             Route::put('/fasilitas-beranda/{fasilitas}', [\App\Http\Controllers\FasilitasBerandaController::class, 'update'])->name('fasilitas-beranda.update');
             Route::post('/data-gedung', [AdminSarprasController::class, 'storeGedung'])->name('data-gedung.store');
             Route::post('/data-gedung/sync-fasilitas', [AdminSarprasController::class, 'syncGedungFromFasilitas'])->name('data-gedung.sync-fasilitas');
+            Route::delete('/gedung/foto/{id}', [AdminSarprasController::class, 'destroyFotoGedung'])->name('gedung.foto.destroy');
             Route::get('/gedung/{gedung}', [AdminSarprasController::class, 'showGedungJson'])->name('gedung.show');
             Route::put('/gedung/{gedung}', [AdminSarprasController::class, 'updateGedung'])->name('gedung.update');
             Route::delete('/gedung/{gedung}', [AdminSarprasController::class, 'destroyGedung'])->name('gedung.destroy');
-            Route::delete('/gedung/foto/{id}', [AdminSarprasController::class, 'destroyFotoGedung'])->name('gedung.foto.destroy');
             Route::get('data-gedung/{gedung}', [AdminSarprasController::class, 'showGedungJson'])->name('data-gedung.show');
 
 

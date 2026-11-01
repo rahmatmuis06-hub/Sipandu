@@ -14,7 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('foto_gedung')) {
             Schema::create('foto_gedung', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('gedung_id')->constrained('gedung')->onDelete('cascade');
+                $table->unsignedBigInteger('gedung_id')->index();
                 $table->string('foto_path');
                 $table->integer('urutan')->default(0);
                 $table->timestamps();
