@@ -20,6 +20,7 @@ use App\Models\PeminjamanBarangLainnya;
 use App\Models\User;
 use App\Services\FonnteService;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Log;
 
 class PegawaiController extends Controller
@@ -47,15 +48,35 @@ class PegawaiController extends Controller
         $kendaraanSetuju = PeminjamanKendaraan::where('user_id', $userId)->where('status', 'disetujui')->count();
 
         $statGedung = 0; $gedungPending = 0; $gedungSetuju = 0;
-        $statPersediaan = \App\Models\PermintaanPersediaan::where('user_id', $userId)->count();
-        $persediaanPending = \App\Models\PermintaanPersediaan::where('user_id', $userId)->whereIn('status', ['pending', 'dalam_review'])->count();
-        $persediaanSetuju = \App\Models\PermintaanPersediaan::where('user_id', $userId)->whereIn('status', ['disetujui', 'disetujui_kasubag'])->count();
+        $statPersediaan = 0; $persediaanPending = 0; $persediaanSetuju = 0;
+        if (Schema::hasTable('permintaan_persediaan')) {
+            $statPersediaan = PermintaanPersediaan::where('user_id', $userId)->count();
+            $persediaanPending = PermintaanPersediaan::where('user_id', $userId)->whereIn('status', ['pending', 'dalam_review'])->count();
+            $persediaanSetuju = PermintaanPersediaan::where('user_id', $userId)->whereIn('status', ['disetujui', 'disetujui_kasubag'])->count();
+        }
 
         // ⚡ Peminjaman Barang Lainnya (Kabel Roll, Stopkontak, Steker, Colokan, dll)
         $this->ensureBarangLainnyaTable();
-        $statBarangLainnya = PeminjamanBarangLainnya::where('user_id', $userId)->count();
-        $barangLainnyaPending = PeminjamanBarangLainnya::where('user_id', $userId)->where('status', 'pending')->count();
-        $barangLainnyaSetuju = PeminjamanBarangLainnya::where('user_id', $userId)->where('status', 'disetujui')->count();
+        $statBarangLainnya = 0;
+        $barangLainnyaPending = 0;
+        $barangLainnyaSetuju = 0;
+        $riwayatLainnya = collect([]);
+
+        if (Schema::hasTable('peminjaman_barang_lainnya')) {
+            $statBarangLainnya = PeminjamanBarangLainnya::where('user_id', $userId)->count();
+            $barangLainnyaPending = PeminjamanBarangLainnya::where('user_id', $userId)->where('status', 'pending')->count();
+            $barangLainnyaSetuju = PeminjamanBarangLainnya::where('user_id', $userId)->where('status', 'disetujui')->count();
+
+            $riwayatLainnya = PeminjamanBarangLainnya::where('user_id', $userId)
+                ->latest()->take(5)->get()->map(function ($item) {
+                    return [
+                        'tipe' => 'Barang Lainnya',
+                        'nama_item' => $item->nama_barang,
+                        'status' => $item->status,
+                        'tanggal' => $item->created_at
+                    ];
+                });
+        }
 
         $riwayatBarang = PeminjamanBarang::where('user_id', $userId)
             ->latest()->take(5)->get()->map(function ($item) {
@@ -72,16 +93,6 @@ class PegawaiController extends Controller
                 return [
                     'tipe' => 'Kendaraan',
                     'nama_item' => $item->merek ?? $item->nama_barang ?? 'Kendaraan Dinas',
-                    'status' => $item->status,
-                    'tanggal' => $item->created_at
-                ];
-            });
-
-        $riwayatLainnya = PeminjamanBarangLainnya::where('user_id', $userId)
-            ->latest()->take(5)->get()->map(function ($item) {
-                return [
-                    'tipe' => 'Barang Lainnya',
-                    'nama_item' => $item->nama_barang,
                     'status' => $item->status,
                     'tanggal' => $item->created_at
                 ];
@@ -1158,39 +1169,47 @@ class PegawaiController extends Controller
      */
     private function ensureBarangLainnyaTable(): void
     {
-        if (!Schema::hasTable('barang_lainnya')) {
-            Schema::create('barang_lainnya', function (Blueprint $table) {
-                $table->id();
-                $table->string('kode_barang', 50)->nullable();
-                $table->string('nama_barang', 200);
-                $table->string('kategori', 100)->default('Barang Lainnya');
-                $table->string('satuan', 50)->default('buah');
-                $table->integer('jumlah')->default(0);
-                $table->decimal('harga_satuan', 15, 2)->default(0);
-                $table->decimal('harga_total', 15, 2)->default(0);
-                $table->date('tanggal_masuk')->nullable();
-                $table->text('keterangan')->nullable();
-                $table->timestamps();
-            });
-        }
+        try {
+            if (!Schema::hasTable('barang_lainnya')) {
+                Schema::create('barang_lainnya', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('kode_barang', 50)->nullable();
+                    $table->string('nama_barang', 200);
+                    $table->string('kategori', 100)->default('Barang Lainnya');
+                    $table->string('satuan', 50)->default('buah');
+                    $table->integer('jumlah')->default(0);
+                    $table->decimal('harga_satuan', 15, 2)->default(0);
+                    $table->decimal('harga_total', 15, 2)->default(0);
+                    $table->date('tanggal_masuk')->nullable();
+                    $table->text('keterangan')->nullable();
+                    $table->timestamps();
+                });
+            }
 
-        if (!Schema::hasTable('peminjaman_barang_lainnya')) {
-            Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-                $table->foreignId('barang_lainnya_id')->nullable()->constrained('barang_lainnya')->nullOnDelete();
-                $table->string('nama_barang', 200);
-                $table->string('kode_barang', 50)->nullable();
-                $table->integer('jumlah')->default(1);
-                $table->string('satuan', 50)->default('buah');
-                $table->date('tanggal_pinjam');
-                $table->date('tanggal_kembali')->nullable();
-                $table->text('keperluan')->nullable();
-                $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
-                $table->text('catatan_admin')->nullable();
-                $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
-                $table->timestamps();
-            });
+            if (!Schema::hasTable('peminjaman_barang_lainnya')) {
+                Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('user_id');
+                    $table->unsignedBigInteger('barang_lainnya_id')->nullable();
+                    $table->string('nama_barang', 200);
+                    $table->string('kode_barang', 50)->nullable();
+                    $table->integer('jumlah')->default(1);
+                    $table->string('satuan', 50)->default('buah');
+                    $table->date('tanggal_pinjam');
+                    $table->date('tanggal_kembali')->nullable();
+                    $table->text('keperluan')->nullable();
+                    $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
+                    $table->text('catatan_admin')->nullable();
+                    $table->unsignedBigInteger('approved_by')->nullable();
+                    $table->timestamps();
+
+                    $table->index('user_id');
+                    $table->index('barang_lainnya_id');
+                    $table->index('status');
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('ensureBarangLainnyaTable: ' . $e->getMessage());
         }
     }
 }

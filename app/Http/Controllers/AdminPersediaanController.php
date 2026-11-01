@@ -52,8 +52,14 @@ class AdminPersediaanController extends Controller
 
         // 4. Data Barang Lainnya (Khusus Kelola Admin Persediaan)
         $this->ensureBarangLainnyaTable();
-        $totalBarangLainnya = \App\Models\BarangLainnya::count();
-        $peminjamanLainnyaPending = \App\Models\PeminjamanBarangLainnya::where('status', 'pending')->count();
+        $totalBarangLainnya = 0;
+        $peminjamanLainnyaPending = 0;
+        if (Schema::hasTable('barang_lainnya')) {
+            $totalBarangLainnya = \App\Models\BarangLainnya::count();
+        }
+        if (Schema::hasTable('peminjaman_barang_lainnya')) {
+            $peminjamanLainnyaPending = \App\Models\PeminjamanBarangLainnya::where('status', 'pending')->count();
+        }
 
         // 5. Data Grafik: Tren Transaksi Keluar Bulanan (Tahun ini)
         $chartData = [];
@@ -309,39 +315,47 @@ class AdminPersediaanController extends Controller
      */
     private function ensureBarangLainnyaTable(): void
     {
-        if (!Schema::hasTable('barang_lainnya')) {
-            Schema::create('barang_lainnya', function (Blueprint $table) {
-                $table->id();
-                $table->string('kode_barang', 50)->nullable();
-                $table->string('nama_barang', 200);
-                $table->string('kategori', 100)->default('Barang Lainnya');
-                $table->string('satuan', 50)->default('buah');
-                $table->integer('jumlah')->default(0);
-                $table->decimal('harga_satuan', 15, 2)->default(0);
-                $table->decimal('harga_total', 15, 2)->default(0);
-                $table->date('tanggal_masuk')->nullable();
-                $table->text('keterangan')->nullable();
-                $table->timestamps();
-            });
-        }
+        try {
+            if (!Schema::hasTable('barang_lainnya')) {
+                Schema::create('barang_lainnya', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('kode_barang', 50)->nullable();
+                    $table->string('nama_barang', 200);
+                    $table->string('kategori', 100)->default('Barang Lainnya');
+                    $table->string('satuan', 50)->default('buah');
+                    $table->integer('jumlah')->default(0);
+                    $table->decimal('harga_satuan', 15, 2)->default(0);
+                    $table->decimal('harga_total', 15, 2)->default(0);
+                    $table->date('tanggal_masuk')->nullable();
+                    $table->text('keterangan')->nullable();
+                    $table->timestamps();
+                });
+            }
 
-        if (!Schema::hasTable('peminjaman_barang_lainnya')) {
-            Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-                $table->foreignId('barang_lainnya_id')->nullable()->constrained('barang_lainnya')->nullOnDelete();
-                $table->string('nama_barang', 200);
-                $table->string('kode_barang', 50)->nullable();
-                $table->integer('jumlah')->default(1);
-                $table->string('satuan', 50)->default('buah');
-                $table->date('tanggal_pinjam');
-                $table->date('tanggal_kembali')->nullable();
-                $table->text('keperluan')->nullable();
-                $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
-                $table->text('catatan_admin')->nullable();
-                $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
-                $table->timestamps();
-            });
+            if (!Schema::hasTable('peminjaman_barang_lainnya')) {
+                Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('user_id');
+                    $table->unsignedBigInteger('barang_lainnya_id')->nullable();
+                    $table->string('nama_barang', 200);
+                    $table->string('kode_barang', 50)->nullable();
+                    $table->integer('jumlah')->default(1);
+                    $table->string('satuan', 50)->default('buah');
+                    $table->date('tanggal_pinjam');
+                    $table->date('tanggal_kembali')->nullable();
+                    $table->text('keperluan')->nullable();
+                    $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
+                    $table->text('catatan_admin')->nullable();
+                    $table->unsignedBigInteger('approved_by')->nullable();
+                    $table->timestamps();
+
+                    $table->index('user_id');
+                    $table->index('barang_lainnya_id');
+                    $table->index('status');
+                });
+            }
+        } catch (\Throwable $e) {
+            Log::warning('ensureBarangLainnyaTable: ' . $e->getMessage());
         }
     }
 

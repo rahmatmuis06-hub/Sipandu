@@ -14,8 +14,8 @@ return new class extends Migration
 
         Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('barang_lainnya_id')->nullable()->constrained('barang_lainnya')->nullOnDelete();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('barang_lainnya_id')->nullable();
             $table->string('nama_barang', 200);
             $table->string('kode_barang', 50)->nullable();
             $table->integer('jumlah')->default(1);
@@ -25,8 +25,12 @@ return new class extends Migration
             $table->text('keperluan')->nullable();
             $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
             $table->text('catatan_admin')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->unsignedBigInteger('approved_by')->nullable();
             $table->timestamps();
+
+            $table->index('user_id');
+            $table->index('barang_lainnya_id');
+            $table->index('status');
         });
     }
 

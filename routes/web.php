@@ -488,4 +488,23 @@ Route::middleware('auth')->group(function () {
         Route::get('/tracking-layanan/{kode_tiket}', [\App\Http\Controllers\Api\UltIntegrationController::class, 'trackingLayanan']);
         Route::get('/ringkasan-layanan', [\App\Http\Controllers\Api\UltIntegrationController::class, 'ringkasanLayanan']);
     });
+
+    // ──────────────────────────────────────────────────────────────────
+    // UTILITY PEMELIHARAAN HOSTING (CLEAR CACHE & RUN MIGRATIONS)
+    // ──────────────────────────────────────────────────────────────────
+    Route::get('/clear-cache', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            \Illuminate\Support\Facades\Artisan::call('view:clear');
+            \Illuminate\Support\Facades\Artisan::call('route:clear');
+            \Illuminate\Support\Facades\Artisan::call('config:clear');
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+
+            return response('<h3>Sukses! Cache hosting berhasil dibersihkan dan migrasi database telah dijalankan.</h3><p><a href="/login">Kembali ke Login</a></p>', 200)
+                ->header('Content-Type', 'text/html');
+        } catch (\Throwable $e) {
+            return response('<h3>Error: ' . htmlspecialchars($e->getMessage()) . '</h3>', 500)
+                ->header('Content-Type', 'text/html');
+        }
+    });
 });
