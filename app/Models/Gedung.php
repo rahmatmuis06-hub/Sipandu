@@ -211,4 +211,171 @@ class Gedung extends Model
         return $query->where('kategori', $kategori);
     }
 
+    /**
+     * Mengambil daftar fasilitas lengkap untuk carousel dan modal di Beranda
+     * Memprioritaskan data riil dari tabel Gedung & FotoGedung,
+     * serta memperkaya deskripsi / spesifikasi dari FasilitasBeranda jika tersedia.
+     */
+    public static function getBerandaFacilities(): array
+    {
+        $facilities = [];
+        $handledNames = [];
+
+        // Peta normalisasi kategori agar cocok dengan tombol filter di beranda
+        $categoryMap = [
+            'ruang_sidang' => 'ruang',
+            'aula' => 'ruang',
+            'mess' => 'penginapan',
+            'asrama' => 'penginapan',
+            'ruang_kelas' => 'kelas',
+        ];
+
+        // Ambil peta metadata dari FasilitasBeranda (jika ada) untuk melengkapi deskripsi / kontak / operasional
+        $fbMeta = [];
+        try {
+            if (class_exists(FasilitasBeranda::class) && \Illuminate\Support\Facades\Schema::hasTable('fasilitas_beranda')) {
+                $fbList = FasilitasBeranda::where('tampil', true)->orderBy('urutan')->orderBy('id')->get();
+                foreach ($fbList as $fb) {
+                    $k = $fb->konten;
+                    if (!empty($k['name'])) {
+                        $key = strtolower(trim($k['name']));
+                        $fbMeta[$key] = $k;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+
+        // Ambil data gedung dari database
+        try {
+            $query = self::query();
+            if (\Illuminate\Support\Facades\Schema::hasTable('foto_gedung')) {
+                $query->with('fotos');
+            }
+            $gedungList = $query->where('ketersediaan', '!=', 'Perlu Perbaikan')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($gedungList as $g) {
+                $key = strtolower(trim($g->nama_gedung));
+                $handledNames[$key] = true;
+                $match = $fbMeta[$key] ?? [];
+
+                // Kategori
+                $cat = $g->kategori ?: ($match['category'] ?? 'ruang');
+                $normCat = $categoryMap[$cat] ?? $cat;
+
+                // Kapasitas
+                $capacityStr = $g->kapasitas ? ($g->kapasitas . ' Orang') : ($match['capacity'] ?? '50 Orang');
+
+                // Luas
+                $luasStr = $g->luas_bangunan ? (str_contains($g->luas_bangunan, 'm') ? $g->luas_bangunan : $g->luas_bangunan . ' m²') : ($match['luas'] ?? '-');
+
+                // Fasilitas / Fitur
+                $features = [];
+                if (!empty($g->fasilitas)) {
+                    $features = array_values(array_filter(array_map('trim', preg_split('/[,;\r\n]+/', $g->fasilitas))));
+                }
+                if (empty($features) && !empty($match['features']) && is_array($match['features'])) {
+                    $features = $match['features'];
+                }
+                if (empty($features)) {
+                    $features = ['Pendingin Ruangan (AC)', 'Sound System', 'Koneksi Internet (Wi-Fi)'];
+                }
+
+                // Gambar: ambil seluruh foto yang diupload
+                $images = [];
+                $allFotos = $g->all_fotos;
+                if ($allFotos && $allFotos->isNotEmpty()) {
+                    foreach ($allFotos as $af) {
+                        if (!empty($af['url'])) {
+                            $images[] = $af['url'];
+                        }
+                    }
+                }
+                if (empty($images) && $g->foto_path) {
+                    $images[] = $g->foto_path;
+                }
+                if (empty($images) && !empty($match['images']) && is_array($match['images'])) {
+                    foreach ($match['images'] as $img) {
+                        $images[] = str_starts_with($img, 'http') ? $img : asset(ltrim($img, '/'));
+                    }
+                }
+                if (empty($images)) {
+                    $images[] = asset('storage/fasilitas/gedung_aula.jpeg');
+                }
+
+                $images = array_values(array_unique($images));
+
+                // Deskripsi
+                $desc = !empty($match['description'])
+                    ? $match['description']
+                    : "Fasilitas {$g->nama_gedung} BPMP Provinsi Gorontalo dengan kapasitas {$capacityStr}, siap digunakan untuk berbagai kegiatan kedinasan maupun acara umum.";
+
+                // Operasional & Kontak
+                $operasional = !empty($match['operasional']) ? $match['operasional'] : 'Senin–Jumat 07.30–16.00 WITA';
+                $kontak = !empty($match['kontak']) ? $match['kontak'] : '(0435) 821-555';
+
+                // Aturan
+                $rules = (!empty($match['rules']) && is_array($match['rules']))
+                    ? $match['rules']
+                    : [
+                        'Tamu wajib melapor ke petugas keamanan / resepsionis',
+                        'Berpakaian rapi, sopan, dan menjaga etika',
+                        'Dilarang merokok di dalam seluruh area gedung',
+                        'Menjaga ketertiban, kebersihan, dan keutuhan sarana prasarana',
+                        'Konfirmasi jadwal penggunaan kepada pengelola'
+                    ];
+
+                // Harga
+                $price = $g->tarif_sewa > 0
+                    ? ('Rp ' . number_format($g->tarif_sewa, 0, ',', '.') . ' / hari')
+                    : ($match['price'] ?? 'Khusus Kedinasan / Hubungi Pengelola');
+
+                $facilities[] = [
+                    'id' => $g->id,
+                    'name' => $g->nama_gedung,
+                    'category' => $normCat,
+                    'location' => $g->lokasi ?: ($match['location'] ?? 'BPMP Provinsi Gorontalo'),
+                    'capacity' => $capacityStr,
+                    'luas' => $luasStr,
+                    'operasional' => $operasional,
+                    'kontak' => $kontak,
+                    'description' => $desc,
+                    'features' => $features,
+                    'rules' => $rules,
+                    'priceOld' => $match['priceOld'] ?? '',
+                    'price' => $price,
+                    'images' => $images,
+                ];
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Error loading Gedung for Beranda: ' . $e->getMessage());
+        }
+
+        // Sertakan sisa item FasilitasBeranda yang belum ada di Gedung (jika ada)
+        if (!empty($fbMeta)) {
+            foreach ($fbMeta as $key => $fbItem) {
+                if (!isset($handledNames[$key])) {
+                    if (!empty($fbItem['images']) && is_array($fbItem['images'])) {
+                        $fbItem['images'] = array_map(function($img) {
+                            return str_starts_with($img, 'http') ? $img : asset(ltrim($img, '/'));
+                        }, $fbItem['images']);
+                    }
+                    $facilities[] = $fbItem;
+                }
+            }
+        }
+
+        // Fallback mutlak jika keduanya kosong
+        if (empty($facilities) && class_exists(FasilitasBeranda::class)) {
+            try {
+                $raw = FasilitasBeranda::where('tampil', true)->orderBy('urutan')->orderBy('id')->get()->pluck('konten')->all();
+                if (!empty($raw)) {
+                    return $raw;
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        return $facilities;
+    }
 }

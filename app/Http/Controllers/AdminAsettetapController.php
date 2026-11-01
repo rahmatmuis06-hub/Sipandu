@@ -1822,6 +1822,9 @@ class AdminAsettetapController extends Controller
         $asetBaik = \App\Models\AssetTetap::where('kondisi', 'Baik')->count();
         $persentaseKondisiBaik = $totalAset > 0 ? round(($asetBaik / $totalAset) * 100, 1) : 0;
 
+        // 5. Fasilitas Beranda (Dinamis dari Master Gedung & Foto)
+        $facilities = \App\Models\Gedung::getBerandaFacilities();
+
         return view('welcome', compact(
             'totalAset',
             'totalPersediaan',
@@ -1830,7 +1833,8 @@ class AdminAsettetapController extends Controller
             'totalTransaksiBulanIni',
             'persentaseKondisiBaik',
             'totalPegawai',
-            'totalFasilitas'
+            'totalFasilitas',
+            'facilities'
         ));
     }
 }

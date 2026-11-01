@@ -395,6 +395,9 @@ class AdminSarprasController extends Controller
             $gedung->update(['foto_url' => $firstFotoPath]);
         }
 
+        // Sinkronkan ke Fasilitas Beranda agar otomatis tampil di Beranda
+        $this->syncGedungToFasilitasBeranda($gedung);
+
         return redirect()->route('adminsarpras.data-gedung')
             ->with('success', 'Gedung dan foto berhasil ditambahkan!');
     }
@@ -468,6 +471,9 @@ class AdminSarprasController extends Controller
 
         $gedung->update($data);
 
+        // Sinkronkan ke Fasilitas Beranda agar otomatis tampil di Beranda
+        $this->syncGedungToFasilitasBeranda($gedung->fresh());
+
         return redirect()->route('adminsarpras.data-gedung')->with('success', 'Gedung dan foto berhasil diperbarui!');
     }
 
@@ -492,6 +498,8 @@ class AdminSarprasController extends Controller
             $gedung = Gedung::find($gedungId);
             if ($gedung) {
                 $gedung->update(['foto_url' => $nextFoto ? $nextFoto->foto_path : null]);
+                // Sinkronkan ke Fasilitas Beranda
+                $this->syncGedungToFasilitasBeranda($gedung->fresh());
             }
 
             return response()->json([
@@ -511,6 +519,9 @@ class AdminSarprasController extends Controller
     public function destroyGedung(Gedung $gedung)
     {
         $this->ensureFotoGedungTableExists();
+
+        // Hapus dari FasilitasBeranda
+        $this->removeGedungFromFasilitasBeranda($gedung);
 
         // Hapus semua file foto dari storage
         try {
@@ -577,6 +588,134 @@ class AdminSarprasController extends Controller
                 'success' => false,
                 'message' => 'Gagal memuat data gedung: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Sinkronisasi data Gedung ke FasilitasBeranda
+     */
+    private function syncGedungToFasilitasBeranda(Gedung $gedung)
+    {
+        try {
+            if (!class_exists(FasilitasBeranda::class) || !Schema::hasTable('fasilitas_beranda')) {
+                return;
+            }
+
+            // Cari item fasilitas_beranda yang memiliki name sama
+            $fbItem = null;
+            $items = FasilitasBeranda::all();
+            foreach ($items as $item) {
+                $konten = $item->konten;
+                if (!empty($konten['name']) && strcasecmp(trim($konten['name']), trim($gedung->nama_gedung)) === 0) {
+                    $fbItem = $item;
+                    break;
+                }
+            }
+
+            $konten = $fbItem ? $fbItem->konten : [];
+
+            // Peta normalisasi kategori agar cocok dengan filter chips
+            $categoryMap = [
+                'ruang_sidang' => 'ruang',
+                'aula' => 'ruang',
+                'mess' => 'penginapan',
+                'asrama' => 'penginapan',
+                'ruang_kelas' => 'kelas',
+            ];
+
+            $cat = $gedung->kategori ?: ($konten['category'] ?? 'ruang');
+            $normCat = $categoryMap[$cat] ?? $cat;
+
+            $konten['name'] = $gedung->nama_gedung;
+            $konten['category'] = $normCat;
+            $konten['location'] = $gedung->lokasi ?: ($konten['location'] ?? 'BPMP Provinsi Gorontalo');
+            $konten['capacity'] = $gedung->kapasitas ? ($gedung->kapasitas . ' Orang') : ($konten['capacity'] ?? '50 Orang');
+            $konten['luas'] = $gedung->luas_bangunan ? (str_contains($gedung->luas_bangunan, 'm') ? $gedung->luas_bangunan : $gedung->luas_bangunan . ' m²') : ($konten['luas'] ?? '100 m²');
+            $konten['operasional'] = $konten['operasional'] ?? 'Senin–Jumat 07.30–16.00 WITA';
+            $konten['kontak'] = $konten['kontak'] ?? '(0435) 821-555';
+            $konten['description'] = !empty($konten['description'])
+                ? $konten['description']
+                : ("Fasilitas " . $gedung->nama_gedung . " BPMP Gorontalo siap digunakan untuk berbagai kegiatan kedinasan maupun acara umum.");
+
+            // Fitur / Fasilitas
+            if (!empty($gedung->fasilitas)) {
+                $features = array_values(array_filter(array_map('trim', preg_split('/[,;\r\n]+/', $gedung->fasilitas))));
+                if (!empty($features)) {
+                    $konten['features'] = $features;
+                }
+            }
+            if (empty($konten['features'])) {
+                $konten['features'] = ['Standar Fasilitas Gedung', 'AC', 'Penerangan Memadai'];
+            }
+
+            if (empty($konten['rules'])) {
+                $konten['rules'] = [
+                    'Tamu wajib melapor ke petugas keamanan',
+                    'Berpakaian rapi dan sopan',
+                    'Dilarang merokok di area gedung',
+                    'Menjaga ketertiban selama penggunaan fasilitas'
+                ];
+            }
+
+            $konten['price'] = $gedung->tarif_sewa > 0 ? ('Rp ' . number_format($gedung->tarif_sewa, 0, ',', '.') . ' / hari') : 'Khusus Kedinasan / Gratis';
+
+            // Susun Gambar: ambil seluruh foto dari all_fotos
+            $images = [];
+            $allFotos = $gedung->all_fotos;
+            if ($allFotos && $allFotos->isNotEmpty()) {
+                foreach ($allFotos as $af) {
+                    if (!empty($af['raw_path'])) {
+                        $clean = ltrim(preg_replace('#^/?storage/#', '', $af['raw_path']), '/');
+                        $images[] = '/storage/' . $clean;
+                    } elseif (!empty($af['url'])) {
+                        $images[] = $af['url'];
+                    }
+                }
+            }
+            if (empty($images) && !empty($konten['images'])) {
+                $images = $konten['images'];
+            }
+            if (empty($images)) {
+                $images = ['/storage/fasilitas/gedung_aula.jpeg'];
+            }
+
+            $konten['images'] = array_values(array_unique($images));
+
+            if ($fbItem) {
+                $fbItem->update([
+                    'konten' => $konten,
+                    'tampil' => $gedung->ketersediaan !== 'Perlu Perbaikan',
+                ]);
+            } else {
+                FasilitasBeranda::create([
+                    'konten' => $konten,
+                    'urutan' => (FasilitasBeranda::max('urutan') ?? 0) + 1,
+                    'tampil' => $gedung->ketersediaan !== 'Perlu Perbaikan',
+                ]);
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('syncGedungToFasilitasBeranda notice: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus gedung dari FasilitasBeranda
+     */
+    private function removeGedungFromFasilitasBeranda(Gedung $gedung)
+    {
+        try {
+            if (class_exists(FasilitasBeranda::class) && Schema::hasTable('fasilitas_beranda')) {
+                $items = FasilitasBeranda::all();
+                foreach ($items as $item) {
+                    $konten = $item->konten;
+                    if (!empty($konten['name']) && strcasecmp(trim($konten['name']), trim($gedung->nama_gedung)) === 0) {
+                        $item->delete();
+                        break;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('removeGedungFromFasilitasBeranda notice: ' . $e->getMessage());
         }
     }
 

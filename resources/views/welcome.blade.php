@@ -330,19 +330,36 @@
                 <div class="carousel-container">
                   <div class="carousel-modern" id="carousel1">
                       <div class="carousel-modern-inner">
-                          <div class="carousel-modern-slide active">
-                            <img src="{{ asset('storage/fasilitas/kantor_utama.jpeg') }}" class="w-full h-full object-cover">
-                          </div>
-                          <div class="carousel-modern-slide">
-                              <img src="{{ asset('storage/fasilitas/kantor_ponuwa.jpeg') }}" class="w-full h-full object-cover">
-                          </div>
-                          <div class="carousel-modern-slide">
-                              <img src="{{ asset('storage/fasilitas/gedung_aula.jpeg') }}" class="w-full h-full object-cover">
-                          </div>
-                          <div class="carousel-modern-slide">
-                              <img src="{{ asset('storage/fasilitas/tinelo_1.jpeg') }}" class="w-full h-full object-cover">
-                          </div>
-                          </div>
+                          @php
+                              $heroPhotos = collect();
+                              $facSource = $facilities ?? \App\Models\Gedung::getBerandaFacilities();
+                              if (!empty($facSource)) {
+                                  foreach ($facSource as $facItem) {
+                                      if (!empty($facItem['images']) && is_array($facItem['images'])) {
+                                          foreach ($facItem['images'] as $imgUrl) {
+                                              if (!empty($imgUrl)) {
+                                                  $heroPhotos->push($imgUrl);
+                                                  if ($heroPhotos->count() >= 6) break 2;
+                                              }
+                                          }
+                                      }
+                                  }
+                              }
+                              if ($heroPhotos->isEmpty()) {
+                                  $heroPhotos = collect([
+                                      asset('storage/fasilitas/kantor_utama.jpeg'),
+                                      asset('storage/fasilitas/kantor_ponuwa.jpeg'),
+                                      asset('storage/fasilitas/gedung_aula.jpeg'),
+                                      asset('storage/fasilitas/tinelo_1.jpeg')
+                                  ]);
+                              }
+                          @endphp
+                          @foreach($heroPhotos as $hIdx => $hPhoto)
+                              <div class="carousel-modern-slide {{ $hIdx === 0 ? 'active' : '' }}">
+                                  <img src="{{ $hPhoto }}" class="w-full h-full object-cover" alt="Fasilitas BPMP">
+                              </div>
+                          @endforeach
+                      </div>
                           <button class="carousel-modern-arrow prev" onclick="carouselPrev(this)">‹</button>
                           <button class="carousel-modern-arrow next" onclick="carouselNext(this)">›</button>
                           <div class="carousel-modern-nav" id="nav1"></div>
@@ -1392,9 +1409,9 @@
 
 <script>
 
-const FACILITIES = {{ Illuminate\Support\Js::from(\App\Models\FasilitasBeranda::where('tampil', true)->orderBy('urutan')->orderBy('id')->get()->pluck('konten')->all()) }};
+const FACILITIES = {{ Illuminate\Support\Js::from($facilities ?? \App\Models\Gedung::getBerandaFacilities()) }};
 
-const FACILITY_CHIPS = [
+const BASE_FACILITY_CHIPS = [
   { id:'semua', label:'Semua' },
   { id:'kantor',   label:'Kantor' },
   { id:'ruang', label:'Ruang Pertemuan' },
@@ -1403,11 +1420,22 @@ const FACILITY_CHIPS = [
   { id:'ruang_makan', label:'Ruang Makan' },
   { id:'gedung',   label:'Gedung Arsip' },
   { id:'outdoor',   label:'Fasilitas Olahraga' },
-  
   { id:'lapangan_Upacara',   label:'Lapangan Upacara' },
   { id:'sarana_ibadah',   label:'Sarana Ibadah' },
   { id:'kesehatan',   label:'Kesehatan' },
 ];
+
+// Deteksi kategori dinamis jika ada penambahan kategori baru dari Admin Sarpras
+const knownChipIds = new Set(BASE_FACILITY_CHIPS.map(c => c.id));
+const dynamicChips = [];
+(FACILITIES || []).forEach(f => {
+  if (f && f.category && !knownChipIds.has(f.category)) {
+    knownChipIds.add(f.category);
+    const label = f.category.replace(/[_-]+/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    dynamicChips.push({ id: f.category, label });
+  }
+});
+const FACILITY_CHIPS = [...BASE_FACILITY_CHIPS, ...dynamicChips];
 
 @if(config('demo.enabled'))
 const DEMO_ACCOUNTS = [
@@ -1463,13 +1491,14 @@ function buildCarousel() {
   if (!list.length) { scrollEl.innerHTML = '<p class="text-slate-500 text-sm py-8 px-4">Tidak ada fasilitas pada kategori ini.</p>'; return; }
   scrollEl.innerHTML = list.map(f => {
     const globalIdx = FACILITIES.indexOf(f);
-    // const rs = String(f.rating).replace('.', ',');
-    // const op = f.priceOld ? `<div class="text-slate-400 text-xs line-through mb-0.5">${f.priceOld}<span class="text-slate-300">/hari</span></div>` : '';
+    const imgs = (f.images && Array.isArray(f.images) && f.images.length > 0) ? f.images : ['{{ asset("storage/fasilitas/gedung_aula.jpeg") }}'];
+    const featList = (f.features && Array.isArray(f.features)) ? f.features : [];
+    const opText = (f.operasional || '08.00 WITA').split(' ')[0];
     return `<article class="facility-card flex-shrink-0 w-[260px] sm:w-[280px] snap-start rounded-2xl bg-white shadow-md border border-slate-100/80 overflow-hidden card-hover flex flex-col" onclick="openModal(${globalIdx})" title="Klik untuk lihat detail">
       <div class="relative overflow-hidden" style="aspect-ratio:4/3;">
-        <img src="${f.images[0]}" alt="${escapeFacility(f.name)}" class="card-img w-full h-full object-cover" loading="lazy">
+        <img src="${imgs[0]}" alt="${escapeFacility(f.name)}" class="card-img w-full h-full object-cover" loading="lazy">
         <div class="card-overlay absolute inset-0 flex flex-col justify-end p-3"><div class="view-detail-btn inline-flex items-center gap-1.5 bg-white/90 backdrop-blur text-navy-800 text-xs font-bold px-3 py-1.5 rounded-full self-start shadow"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>Lihat Detail</div></div>
-        ${f.images.length > 1 ? `<div class="absolute top-2 right-2 flex gap-0.5">${f.images.map((_,i)=>`<div class="w-1.5 h-1.5 rounded-full ${i===0?'bg-white':'bg-white/50'}"></div>`).join('')}</div>` : ''}
+        ${imgs.length > 1 ? `<div class="absolute top-2 right-2 flex gap-0.5">${imgs.map((_,i)=>`<div class="w-1.5 h-1.5 rounded-full ${i===0?'bg-white':'bg-white/50'}"></div>`).join('')}</div>` : ''}
       </div>
       <div class="p-3.5 flex flex-col flex-1 space-y-1.5">
       <h3 class="font-bold text-navy-900 text-sm leading-snug line-clamp-2">${escapeFacility(f.name)}</h3>
@@ -1481,15 +1510,14 @@ function buildCarousel() {
       <div class="space-y-1 mb-3">
         <p class="text-xs font-medium text-slate-700 mb-1">Fasilitas:</p>
         <div class="flex flex-wrap gap-1">
-          ${f.features.slice(0,4).map(feat => `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">${escapeFacility(feat)}</span>`).join('')}
-        
+          ${featList.slice(0,4).map(feat => `<span class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">${escapeFacility(feat)}</span>`).join('')}
         </div>
       </div>
       
       <div class="flex items-center justify-between gap-2 text-xs text-slate-500">
         <span>📏 ${escapeFacility(f.luas)}</span>
         <span>👥 ${escapeFacility(f.capacity)}</span>
-        <span>🕒 ${escapeFacility(f.operasional.split(' ')[0])}</span>
+        <span>🕒 ${escapeFacility(opText)}</span>
       </div>
       <p class="text-emerald-600 text-xs font-medium flex items-center gap-1 pt-1 border-t border-slate-200/50 mt-auto">
         📞 ${escapeFacility(f.kontak)}
@@ -1506,29 +1534,27 @@ function facilitiesScrollPrev() { const el = document.getElementById('facilities
 function openModal(idx) {
   const f = FACILITIES[idx]; if (!f) return;
   activeModalFacility = f;
+  const imgs = (f.images && Array.isArray(f.images) && f.images.length > 0) ? f.images : ['{{ asset("storage/fasilitas/gedung_aula.jpeg") }}'];
   const mainImg = document.getElementById('modalMainImg');
-  mainImg.src = f.images[0]; mainImg.alt = f.name;
+  mainImg.src = imgs[0]; mainImg.alt = f.name || 'Fasilitas';
   mainImg.className = 'modal-img w-full h-full object-cover';
-  // // const badge = document.getElementById('modalAvailBadge');
-  // // badge.textContent = f.availability; badge.className = `text-xs font-bold px-3 py-1.5 rounded-full ${f.availClass}`;
-  // document.getElementById('modalRatingScore').textContent = String(f.rating).replace('.', ',');
-  // document.getElementById('modalStars').innerHTML = starRow(f.rating, '12px');
-  // document.getElementById('modalReviewCount').textContent = `(${f.reviews} ulasan)`;
-  document.getElementById('modalThumbs').innerHTML = f.images.map((img, i) => `<div class="thumb flex-shrink-0 ${i===0?'active':''}" onclick="switchModalImg(${i})" style="width:72px;height:52px;"><img src="${img}" alt="foto ${i+1}" class="w-full h-full object-cover"></div>`).join('');
-  document.getElementById('modalName').textContent = f.name;
-  document.getElementById('modalLocation').textContent = f.location;
+  document.getElementById('modalThumbs').innerHTML = imgs.map((img, i) => `<div class="thumb flex-shrink-0 ${i===0?'active':''}" onclick="switchModalImg(${i})" style="width:72px;height:52px;"><img src="${img}" alt="foto ${i+1}" class="w-full h-full object-cover"></div>`).join('');
+  document.getElementById('modalName').textContent = f.name || '';
+  document.getElementById('modalLocation').textContent = f.location || '';
   const specs = [
-    { icon:'users', label:'Kapasitas', value:f.capacity },
-    { icon:'maximize-2', label:'Luas', value:f.luas },
-    { icon:'clock', label:'Operasional', value:f.operasional },
-    { icon:'phone', label:'Kontak TU', value:f.kontak },
+    { icon:'users', label:'Kapasitas', value:f.capacity || '-' },
+    { icon:'maximize-2', label:'Luas', value:f.luas || '-' },
+    { icon:'clock', label:'Operasional', value:f.operasional || '08.00 - 16.00 WITA' },
+    { icon:'phone', label:'Kontak TU', value:f.kontak || '(0435) 821-555' },
   ];
   document.getElementById('modalSpecs').innerHTML = specs.map(s => `<div class="flex items-start gap-2.5 bg-slate-50 rounded-xl p-3"><div class="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="${s.icon}" class="w-3.5 h-3.5 text-navy-600"></i></div><div><div class="text-slate-400 text-[10px] font-semibold uppercase tracking-wide">${s.label}</div><div class="text-navy-900 text-xs font-semibold mt-0.5 leading-snug">${escapeFacility(s.value)}</div></div></div>`).join('');
-  document.getElementById('modalDesc').textContent = f.description;
-  document.getElementById('modalFeatures').innerHTML = f.features.map(feat => `<span class="inline-flex items-center gap-1 bg-blue-50 text-navy-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-100"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" stroke="#1a2f9b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>${escapeFacility(feat)}</span>`).join('');
-  document.getElementById('modalRules').innerHTML = f.rules.map(rule => `<li class="flex items-start gap-2 text-slate-600 text-xs leading-relaxed"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="#3355ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><polyline points="9 18 15 12 9 6"/></svg>${escapeFacility(rule)}</li>`).join('');
+  document.getElementById('modalDesc').textContent = f.description || '';
+  const featList = (f.features && Array.isArray(f.features)) ? f.features : [];
+  document.getElementById('modalFeatures').innerHTML = featList.map(feat => `<span class="inline-flex items-center gap-1 bg-blue-50 text-navy-700 text-xs font-medium px-2.5 py-1 rounded-full border border-blue-100"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" stroke="#1a2f9b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>${escapeFacility(feat)}</span>`).join('');
+  const ruleList = (f.rules && Array.isArray(f.rules)) ? f.rules : [];
+  document.getElementById('modalRules').innerHTML = ruleList.map(rule => `<li class="flex items-start gap-2 text-slate-600 text-xs leading-relaxed"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="#3355ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 mt-0.5"><polyline points="9 18 15 12 9 6"/></svg>${escapeFacility(rule)}</li>`).join('');
   document.getElementById('modalPriceOld').textContent = f.priceOld ? f.priceOld + '/hari' : '';
-  document.getElementById('modalPrice').textContent = f.price;
+  document.getElementById('modalPrice').textContent = f.price || 'Gratis / Khusus Internal';
   document.getElementById('facilityModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
   setTimeout(() => lucide.createIcons(), 30);
@@ -1536,10 +1562,13 @@ function openModal(idx) {
 
 function switchModalImg(idx) {
   if (!activeModalFacility) return;
+  const imgs = (activeModalFacility.images && Array.isArray(activeModalFacility.images) && activeModalFacility.images.length > 0)
+    ? activeModalFacility.images
+    : ['{{ asset("storage/fasilitas/gedung_aula.jpeg") }}'];
   const mainImg = document.getElementById('modalMainImg');
   mainImg.style.animation = 'none'; mainImg.offsetHeight;
   mainImg.style.animation = ''; mainImg.className = 'modal-img w-full h-full object-cover';
-  mainImg.src = activeModalFacility.images[idx];
+  mainImg.src = imgs[idx] || imgs[0];
   document.querySelectorAll('#modalThumbs .thumb').forEach((th, i) => th.classList.toggle('active', i === idx));
 }
 
