@@ -59,6 +59,12 @@
                     'route' => 'pegawai.peminjaman-kendaraan',
                 ],
                 [
+                    'href' => route('pegawai.peminjaman-barang-lainnya'),
+                    'label' => 'Peminjaman Barang Lainnya',
+                    'icon' => 'fas fa-plug',
+                    'route' => 'pegawai.peminjaman-barang-lainnya',
+                ],
+                [
                     'href' => route('pegawai.permintaan-persediaan'),
                     'label' => 'Permintaan Persediaan',
                     'icon' => 'fas fa-boxes',

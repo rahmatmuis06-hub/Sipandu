@@ -15,6 +15,8 @@ use App\Models\AssetTetap;
 use App\Models\PermintaanPersediaan;
 use App\Models\DetailPermintaanPersediaan;
 use App\Models\Persediaan;
+use App\Models\BarangLainnya;
+use App\Models\PeminjamanBarangLainnya;
 use App\Models\User;
 use App\Services\FonnteService;
 use Illuminate\Support\Facades\Schema;
@@ -508,6 +510,8 @@ class PegawaiController extends Controller
     public function permintaanPersediaan(Request $request)
     {
         $persediaan = Persediaan::select('id', 'kode_barang', 'nama_barang', 'jumlah', 'satuan', 'kategori')
+            ->where('kode_kategori', '!=', 'BLN')
+            ->where('kategori', '!=', 'Barang Lainnya')
             ->where('jumlah', '>', 0)
             ->orderBy('nama_barang')
             ->get();
@@ -1049,5 +1053,124 @@ class PegawaiController extends Controller
             ->paginate(10);
 
         return view('pegawai.info_mutasibarang', compact('mutasiBarang'));
+    }
+
+    /**
+     * ⚡ Peminjaman Barang Lainnya (Khusus Colokan, Steker, Kabel Roll, Adaptor, dll)
+     */
+    public function peminjamanBarangLainnya(Request $request)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $barangLainnya = BarangLainnya::where('jumlah', '>', 0)
+            ->orderBy('nama_barang', 'asc')
+            ->get();
+
+        $riwayat = PeminjamanBarangLainnya::where('user_id', Auth::id())
+            ->with('barangLainnya')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('pegawai.peminjaman_barang_lainnya', compact('barangLainnya', 'riwayat'));
+    }
+
+    public function storePeminjamanBarangLainnya(Request $request)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $validated = $request->validate([
+            'barang_lainnya_id'   => 'required|exists:barang_lainnya,id',
+            'jumlah'              => 'required|integer|min:1',
+            'tanggal_pinjam'      => 'required|date|after_or_equal:today',
+            'tanggal_kembali'     => 'nullable|date|after_or_equal:tanggal_pinjam',
+            'keperluan'           => 'required|string|max:1000',
+        ], [
+            'barang_lainnya_id.required'    => 'Silakan pilih barang yang ingin dipinjam.',
+            'barang_lainnya_id.exists'      => 'Barang yang dipilih tidak valid atau sudah dihapus.',
+            'jumlah.required'               => 'Jumlah barang wajib diisi.',
+            'jumlah.min'                    => 'Jumlah barang minimal 1 unit.',
+            'tanggal_pinjam.required'       => 'Tanggal peminjaman wajib diisi.',
+            'tanggal_pinjam.after_or_equal' => 'Tanggal peminjaman minimal hari ini.',
+            'tanggal_kembali.after_or_equal' => 'Tanggal pengembalian harus sama atau setelah tanggal pinjam.',
+            'keperluan.required'            => 'Tujuan penggunaan / keperluan wajib diisi.',
+        ]);
+
+        $barang = BarangLainnya::findOrFail($validated['barang_lainnya_id']);
+
+        if ($barang->jumlah < $validated['jumlah']) {
+            return back()->withErrors(['jumlah' => "Stok barang '{$barang->nama_barang}' tidak mencukupi (Tersisa: {$barang->jumlah} {$barang->satuan})."])->withInput();
+        }
+
+        PeminjamanBarangLainnya::create([
+            'user_id'           => Auth::id(),
+            'barang_lainnya_id' => $barang->id,
+            'nama_barang'       => $barang->nama_barang,
+            'kode_barang'       => $barang->kode_barang,
+            'jumlah'            => $validated['jumlah'],
+            'satuan'            => $barang->satuan,
+            'tanggal_pinjam'    => $validated['tanggal_pinjam'],
+            'tanggal_kembali'   => $validated['tanggal_kembali'] ?? null,
+            'keperluan'         => $validated['keperluan'],
+            'status'            => 'pending',
+        ]);
+
+        return redirect()->route('pegawai.peminjaman-barang-lainnya')
+            ->with('success', "Pengajuan peminjaman '{$barang->nama_barang}' berhasil dikirim dan menunggu persetujuan admin persediaan!");
+    }
+
+    public function cancelPeminjamanBarangLainnya($id)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $pinjam = PeminjamanBarangLainnya::where('user_id', Auth::id())->findOrFail($id);
+
+        if ($pinjam->status !== 'pending') {
+            return back()->with('error', 'Peminjaman yang sudah diproses tidak dapat dibatalkan.');
+        }
+
+        $pinjam->update(['status' => 'dibatalkan']);
+
+        return back()->with('success', 'Pengajuan peminjaman barang berhasil dibatalkan.');
+    }
+
+    /**
+     * Pastikan tabel barang_lainnya dan peminjaman_barang_lainnya ada
+     */
+    private function ensureBarangLainnyaTable(): void
+    {
+        if (!Schema::hasTable('barang_lainnya')) {
+            Schema::create('barang_lainnya', function (Blueprint $table) {
+                $table->id();
+                $table->string('kode_barang', 50)->nullable();
+                $table->string('nama_barang', 200);
+                $table->string('kategori', 100)->default('Barang Lainnya');
+                $table->string('satuan', 50)->default('buah');
+                $table->integer('jumlah')->default(0);
+                $table->decimal('harga_satuan', 15, 2)->default(0);
+                $table->decimal('harga_total', 15, 2)->default(0);
+                $table->date('tanggal_masuk')->nullable();
+                $table->text('keterangan')->nullable();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('peminjaman_barang_lainnya')) {
+            Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+                $table->foreignId('barang_lainnya_id')->nullable()->constrained('barang_lainnya')->nullOnDelete();
+                $table->string('nama_barang', 200);
+                $table->string('kode_barang', 50)->nullable();
+                $table->integer('jumlah')->default(1);
+                $table->string('satuan', 50)->default('buah');
+                $table->date('tanggal_pinjam');
+                $table->date('tanggal_kembali')->nullable();
+                $table->text('keperluan')->nullable();
+                $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
+                $table->text('catatan_admin')->nullable();
+                $table->foreignId('approved_by')->nullable()->constrained('users')->nullOnDelete();
+                $table->timestamps();
+            });
+        }
     }
 }

@@ -174,6 +174,9 @@ Route::middleware('auth')->group(function () {
             Route::post('/barang-lainnya', [AdminPersediaanController::class, 'storeBarangLainnya'])->name('barang-lainnya.store');
             Route::put('/barang-lainnya/{id}', [AdminPersediaanController::class, 'updateBarangLainnya'])->name('barang-lainnya.update');
             Route::delete('/barang-lainnya/{id}', [AdminPersediaanController::class, 'destroyBarangLainnya'])->name('barang-lainnya.destroy');
+            Route::post('/barang-lainnya/peminjaman/{id}/approve', [AdminPersediaanController::class, 'approvePeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.approve');
+            Route::post('/barang-lainnya/peminjaman/{id}/reject', [AdminPersediaanController::class, 'rejectPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.reject');
+            Route::post('/barang-lainnya/peminjaman/{id}/return', [AdminPersediaanController::class, 'returnPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.return');
             Route::get('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'show'])->name('data-persediaan.show');
             Route::get('/data-persediaan/{persediaan}/edit', [AdminPersediaanController::class, 'edit'])->name('data-persediaan.edit');
             Route::put('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'update'])->name('data-persediaan.update');
@@ -454,6 +457,11 @@ Route::middleware('auth')->group(function () {
             Route::delete('/pengembalian-kendaraan/{id}', [PegawaiController::class, 'cancelPengembalianKendaraan'])->name('pengembalian-kendaraan.cancel');
             Route::get('/pengembalian-kendaraan/{id}/json', [PegawaiController::class, 'showPengembalianKendaraanJson']);
             Route::get('/peminjaman-kendaraan/{id}/json', [PegawaiController::class, 'getPeminjamanKendaraanJson']);
+
+            //PEMINJAMAN BARANG LAINNYA
+            Route::get('/peminjaman-barang-lainnya', [PegawaiController::class, 'peminjamanBarangLainnya'])->name('peminjaman-barang-lainnya');
+            Route::post('/peminjaman-barang-lainnya', [PegawaiController::class, 'storePeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.store');
+            Route::post('/peminjaman-barang-lainnya/{id}/cancel', [PegawaiController::class, 'cancelPeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.cancel');
 
             //PERMINTAAN PERSEDIAAN
             Route::get('/permintaan-persediaan', [PegawaiController::class, 'permintaanPersediaan'])->name('permintaan-persediaan');
