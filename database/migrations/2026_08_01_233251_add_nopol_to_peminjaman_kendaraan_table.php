@@ -8,12 +8,23 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (!Schema::hasTable('peminjaman_kendaraan')) {
+            return;
+        }
+
         Schema::table('peminjaman_kendaraan', function (Blueprint $table) {
-            // Hapus fungsi ->after() agar kolom otomatis ditaruh di paling akhir
-            $table->string('nomor_polisi_saat_pinjam')->nullable();
-            $table->string('no_bpkb_saat_pinjam')->nullable();
-            $table->string('nomor_rangka_saat_pinjam')->nullable();
-            $table->string('nomor_mesin_saat_pinjam')->nullable();
+            if (!Schema::hasColumn('peminjaman_kendaraan', 'nomor_polisi_saat_pinjam')) {
+                $table->string('nomor_polisi_saat_pinjam')->nullable();
+            }
+            if (!Schema::hasColumn('peminjaman_kendaraan', 'no_bpkb_saat_pinjam')) {
+                $table->string('no_bpkb_saat_pinjam')->nullable();
+            }
+            if (!Schema::hasColumn('peminjaman_kendaraan', 'nomor_rangka_saat_pinjam')) {
+                $table->string('nomor_rangka_saat_pinjam')->nullable();
+            }
+            if (!Schema::hasColumn('peminjaman_kendaraan', 'nomor_mesin_saat_pinjam')) {
+                $table->string('nomor_mesin_saat_pinjam')->nullable();
+            }
         });
     }
 

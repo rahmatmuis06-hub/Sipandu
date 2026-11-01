@@ -6,10 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-        // Langsung buat tabel, tidak perlu if (Schema::hasTable) karena RefreshDatabase sudah menangani semuanya
-        public function up(): void
+    public function up(): void
     {
-        // Cukup gunakan Schema::create saja
+        if (Schema::hasTable('ajuan_mutasi')) {
+            return;
+        }
+
         Schema::create('ajuan_mutasi', function (Blueprint $table) {
             $table->id();
             $table->foreignId('aset_tetap_id')->constrained('aset_tetap')->onDelete('cascade');

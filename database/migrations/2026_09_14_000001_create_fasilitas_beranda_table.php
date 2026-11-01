@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void {
+        if (Schema::hasTable('fasilitas_beranda')) {
+            return;
+        }
+
         Schema::create('fasilitas_beranda', function (Blueprint $table) {
             $table->id();
             $table->json('konten');

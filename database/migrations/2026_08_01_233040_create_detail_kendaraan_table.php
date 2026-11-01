@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('detail_kendaraan')) {
+            return;
+        }
+
         Schema::create('detail_kendaraan', function (Blueprint $table) {
             $table->id();
             // Relasi ke tabel aset_tetap

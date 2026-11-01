@@ -6,6 +6,10 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration {
     public function up(): void {
+        if (Schema::hasTable('riwayat_kerusakan')) {
+            return;
+        }
+
         Schema::create('riwayat_kerusakan', function (Blueprint $table) {
             $table->id();
             $table->foreignId('kerusakan_id')->constrained('kerusakan')->restrictOnDelete();

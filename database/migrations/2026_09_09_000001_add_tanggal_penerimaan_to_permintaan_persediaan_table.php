@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('permintaan_persediaan', 'tanggal_penerimaan')) {
+            return;
+        }
+
         Schema::table('permintaan_persediaan', function (Blueprint $table) {
             $table->date('tanggal_penerimaan')->nullable()->after('tanggal_permintaan');
         });

@@ -495,18 +495,42 @@ Route::middleware('auth')->group(function () {
     // UTILITY PEMELIHARAAN HOSTING (CLEAR CACHE & RUN MIGRATIONS)
     // ──────────────────────────────────────────────────────────────────
     Route::get('/clear-cache', function () {
+        $messages = [];
         try {
             \Illuminate\Support\Facades\Artisan::call('optimize:clear');
             \Illuminate\Support\Facades\Artisan::call('view:clear');
             \Illuminate\Support\Facades\Artisan::call('route:clear');
             \Illuminate\Support\Facades\Artisan::call('config:clear');
-            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-
-            return response('<h3>Sukses! Cache hosting berhasil dibersihkan dan migrasi database telah dijalankan.</h3><p><a href="/login">Kembali ke Login</a></p>', 200)
-                ->header('Content-Type', 'text/html');
+            $messages[] = 'Cache optimize, view, route, dan konfigurasi hosting berhasil dibersihkan.';
         } catch (\Throwable $e) {
-            return response('<h3>Error: ' . htmlspecialchars($e->getMessage()) . '</h3>', 500)
-                ->header('Content-Type', 'text/html');
+            $messages[] = 'Info pembersihan cache: ' . $e->getMessage();
         }
+
+        try {
+            \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+            $messages[] = 'Struktur migrasi database berhasil diperbarui.';
+        } catch (\Throwable $e) {
+            $messages[] = 'Info migrasi database: ' . $e->getMessage();
+        }
+
+        $html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>SIPANDU - Pembersihan Sistem</title>'
+            . '<style>body{font-family:system-ui,-apple-system,sans-serif;background:#f8fafc;padding:40px 20px;color:#0f172a;}'
+            . '.card{max-width:580px;margin:0 auto;background:#fff;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #e2e8f0;padding:28px;}'
+            . 'h2{margin-top:0;color:#1e3a8a;font-size:20px;display:flex;align-items:center;gap:8px;}'
+            . 'ul{padding-left:20px;line-height:1.8;color:#334155;font-size:14px;}'
+            . '.btn{display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;text-decoration:none;border-radius:10px;font-weight:700;font-size:14px;margin-top:16px;}'
+            . '</style></head><body>'
+            . '<div class="card">'
+            . '<h2>⚡ SIPANDU System Maintenance</h2>'
+            . '<ul>';
+        foreach ($messages as $msg) {
+            $html .= '<li>' . htmlspecialchars($msg) . '</li>';
+        }
+        $html .= '</ul>'
+            . '<p style="color:#64748b;font-size:13px;margin-top:16px;">Sistem telah siap digunakan kembali.</p>'
+            . '<a href="/login" class="btn">Kembali ke Halaman Login</a>'
+            . '</div></body></html>';
+
+        return response($html, 200)->header('Content-Type', 'text/html');
     });
 });
