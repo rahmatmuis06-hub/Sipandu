@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LaporanAsetTetapExport;
+use Illuminate\Support\Facades\DB;
 
 // Models - Admin Persediaan
 use App\Models\Persediaan;
@@ -320,11 +321,11 @@ class KepalaBPMPController extends Controller
         // 1. Rekapitulasi kategori master aset (ringkas, cepat & akurat untuk seluruh 5.800+ aset)
         $kategoriSummary = AssetTetap::select(
                 'kategori',
-                \DB::raw('COUNT(*) as total_unit'),
-                \DB::raw('SUM(nilai_perolehan) as total_nilai')
+                DB::raw('COUNT(*) as total_unit'),
+                DB::raw('SUM(nilai_perolehan) as total_nilai')
             )
             ->groupBy('kategori')
-            ->orderByDesc('total_nilai')
+            ->orderByRaw('SUM(nilai_perolehan) DESC')
             ->get();
 
         // 2. Data aset tetap yang ditambahkan/didaftarkan pada periode ini
@@ -363,8 +364,13 @@ class KepalaBPMPController extends Controller
             ],
         ];
 
-        $pdf = Pdf::loadView('kepalabpmp.exports.laporan_asettetap', $data)->setPaper('a4', 'landscape');
-        return $pdf->download('Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.pdf');
+        try {
+            $pdf = Pdf::loadView('kepalabpmp.exports.laporan_asettetap', $data)->setPaper('a4', 'landscape');
+            return $pdf->download('Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.pdf');
+        } catch (\Throwable $e) {
+            \Log::error('Gagal generate PDF Aset Tetap: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return back()->with('error', 'Gagal memproses Laporan Aset Tetap: ' . $e->getMessage());
+        }
     }
 
     /**
