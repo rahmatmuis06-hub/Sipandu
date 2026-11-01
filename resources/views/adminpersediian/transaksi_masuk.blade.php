@@ -485,16 +485,22 @@
             <label class="form-label">Satuan *</label>
             <select name="satuan" id="create_satuan" class="form-select" required>
               <option value="">Pilih satuan</option>
-              <option value="lusin">Lusin</option>
-              <option value="rim">Rim</option>
               <option value="buah">Buah</option>
-              <option value="dos">Dos</option>
-              <option value="paket">Paket</option>
+              <option value="pcs">Pcs</option>
+              <option value="rim">Rim</option>
+              <option value="lusin">Lusin</option>
               <option value="pak">Pak</option>
+              <option value="paket">Paket</option>
+              <option value="dos">Dos</option>
+              <option value="box">Box</option>
+              <option value="karton">Karton</option>
               <option value="unit">Unit</option>
               <option value="set">Set</option>
-              <option value="karton">Karton</option>
-              <option value="box">Box</option>
+              <option value="lembar">Lembar</option>
+              <option value="buku">Buku</option>
+              <option value="botol">Botol</option>
+              <option value="roll">Roll</option>
+              <option value="kaleng">Kaleng</option>
             </select>
           </div>
         </div>
@@ -635,16 +641,22 @@
             <label class="form-label">Satuan *</label>
             <select name="satuan" id="edit_satuan" class="form-select" required>
               <option value="">Pilih satuan</option>
-              <option value="lusin">Lusin</option>
-              <option value="rim">Rim</option>
               <option value="buah">Buah</option>
-              <option value="dos">Dos</option>
-              <option value="paket">Paket</option>
+              <option value="pcs">Pcs</option>
+              <option value="rim">Rim</option>
+              <option value="lusin">Lusin</option>
               <option value="pak">Pak</option>
+              <option value="paket">Paket</option>
+              <option value="dos">Dos</option>
+              <option value="box">Box</option>
+              <option value="karton">Karton</option>
               <option value="unit">Unit</option>
               <option value="set">Set</option>
-              <option value="karton">Karton</option>
-              <option value="box">Box</option>
+              <option value="lembar">Lembar</option>
+              <option value="buku">Buku</option>
+              <option value="botol">Botol</option>
+              <option value="roll">Roll</option>
+              <option value="kaleng">Kaleng</option>
             </select>
           </div>
           <div class="form-group">
@@ -695,6 +707,31 @@
 <script>
   const daftarPersediaan = @json($daftarPersediaan->keyBy('id'));
 
+  function setSelectSatuan(selectId, rawSatuan) {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const val = String(rawSatuan || '').trim();
+    if (!val) {
+      select.value = '';
+      return;
+    }
+
+    const lowerVal = val.toLowerCase();
+    let matchedOption = Array.from(select.options).find(
+      opt => opt.value.toLowerCase() === lowerVal || opt.textContent.trim().toLowerCase() === lowerVal
+    );
+
+    if (!matchedOption) {
+      matchedOption = document.createElement('option');
+      matchedOption.value = lowerVal;
+      matchedOption.textContent = val.charAt(0).toUpperCase() + val.slice(1);
+      select.appendChild(matchedOption);
+    }
+
+    select.value = matchedOption.value;
+  }
+
   function aturInputBarangBisaDiubah(bisaDiubah) {
     ['create_kategori', 'create_nama_barang']
       .forEach(id => {
@@ -707,9 +744,11 @@
     const kodeUnik = document.getElementById('create_kode_unik_barang');
     kodeUnik.required = bisaDiubah;
 
+    // Pastikan dropdown satuan selalu dapat diklik dan dipilih
     const satuan = document.getElementById('create_satuan');
-    satuan.style.pointerEvents = bisaDiubah ? '' : 'none';
-    satuan.style.background = bisaDiubah ? '' : '#F1F5F9';
+    satuan.disabled = false;
+    satuan.style.pointerEvents = 'auto';
+    satuan.style.background = '';
   }
 
   function sinkronkanKodeUnikBarang() {
@@ -750,7 +789,7 @@
     document.getElementById('create_kategori').value = barang.kategori || '';
     document.getElementById('create_kode_barang').value = barang.kode_barang || '';
     document.getElementById('create_nama_barang').value = barang.nama_barang || '';
-    document.getElementById('create_satuan').value = barang.satuan || '';
+    setSelectSatuan('create_satuan', barang.satuan || '');
     document.getElementById('create_harga_satuan').value = formatRupiah(parseFloat(barang.harga_satuan) || 0);
     document.getElementById('create_jumlah_masuk').value = '';
     aturInputBarangBisaDiubah(false);
@@ -884,7 +923,7 @@
     
     // 🔥 FIX UTAMA DI JS: Membaca dataset berupa nilai numerik mentah database asli (75000), lalu diubah visualnya jadi format rupiah "75.000" di input form edit
     document.getElementById('edit_harga_satuan').value   = formatRupiah(parseFloat(row.dataset.hargaSatuan) || 0);
-    document.getElementById('edit_satuan').value         = row.dataset.satuan || '';
+    setSelectSatuan('edit_satuan', row.dataset.satuan || '');
     document.getElementById('editSubtitle').textContent  = `Kode Barang: ${row.dataset.kodeBarang}`;
 
     refreshCsrfToken();

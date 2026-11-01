@@ -1243,7 +1243,22 @@ function populateEditModal(data) {
   document.getElementById('editTanggalMasuk').value = data.tanggal_masuk;
   document.getElementById('editHargaSatuan').value = formatCurrency(parseDatasetNumber(data.harga_satuan));
   document.getElementById('editJumlah').value = data.jumlah;
-  document.getElementById('editSatuan').value = data.satuan;
+
+  const editSatuanEl = document.getElementById('editSatuan');
+  if (editSatuanEl) {
+    const rawSat = String(data.satuan || '').trim();
+    const lowerSat = rawSat.toLowerCase();
+    let matchedOpt = Array.from(editSatuanEl.options).find(
+      o => o.value.toLowerCase() === lowerSat || o.textContent.trim().toLowerCase() === lowerSat
+    );
+    if (!matchedOpt && rawSat) {
+      matchedOpt = document.createElement('option');
+      matchedOpt.value = lowerSat;
+      matchedOpt.textContent = rawSat.charAt(0).toUpperCase() + rawSat.slice(1);
+      editSatuanEl.appendChild(matchedOpt);
+    }
+    editSatuanEl.value = matchedOpt ? matchedOpt.value : '';
+  }
   document.getElementById('editHargaTotal').value = formatCurrency(parseDatasetNumber(data.harga_total));
   document.getElementById('editTitle').textContent = `Kode Unik: ${data.kode_unik_barang}`;
   const noticeEl = document.getElementById('editMultiBatchNotice');
