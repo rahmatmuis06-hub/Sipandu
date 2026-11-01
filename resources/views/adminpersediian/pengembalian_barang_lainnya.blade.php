@@ -139,7 +139,14 @@
                         <td><strong>{{ $pengembalianList->firstItem() + $index }}</strong></td>
                         <td>
                             <div style="font-weight:700; color:#b45309;">{{ $item->peminjamanBarangLainnya->nama_barang ?? 'Barang Dihapus' }}</div>
-                            <div style="font-size:11px; color:var(--muted);">Kode: {{ $item->peminjamanBarangLainnya->kode_barang ?? '-' }}</div>
+                            <div style="font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px;">
+                                <span>Kode: {{ $item->peminjamanBarangLainnya->kode_barang ?? '-' }}</span>
+                                @if(!empty($item->peminjamanBarangLainnya->kode_unit))
+                                    <span style="background:#FEF3C7; color:#B45309; border:1px solid #FDE68A; padding:1px 7px; border-radius:6px; font-weight:800;">
+                                        🏷️ Kode Unit: {{ $item->peminjamanBarangLainnya->kode_unit }}
+                                    </span>
+                                @endif
+                            </div>
                         </td>
                         <td>
                             <div style="font-weight:700; font-size:13px;">{{ $item->jumlah_dikembalikan }} {{ $item->peminjamanBarangLainnya->satuan ?? 'Unit' }}</div>
@@ -329,7 +336,9 @@
                 if(res.success) {
                     const data = res.data;
                     document.getElementById('detNama').innerText = data.peminjaman_barang_lainnya ? data.peminjaman_barang_lainnya.nama_barang : '-';
-                    document.getElementById('detKode').innerText = data.peminjaman_barang_lainnya ? (data.peminjaman_barang_lainnya.kode_barang || '-') : '-';
+                    const detKodeBrg = data.peminjaman_barang_lainnya ? (data.peminjaman_barang_lainnya.kode_barang || '-') : '-';
+                    const detKodeUnt = data.peminjaman_barang_lainnya?.kode_unit ? ` • Kode Unit: ${data.peminjaman_barang_lainnya.kode_unit}` : '';
+                    document.getElementById('detKode').innerText = detKodeBrg + detKodeUnt;
                     document.getElementById('detPeminjam').innerText = data.user ? data.user.name : '-';
                     
                     let kondisiText = (data.status_pengembalian || '').replace('_', ' ').toUpperCase();

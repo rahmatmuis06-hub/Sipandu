@@ -18,6 +18,8 @@ class PeminjamanBarangLainnya extends Model
         'nama_barang',
         'kode_barang',
         'jumlah',
+        'unit_ids',
+        'kode_unit',
         'satuan',
         'tanggal_pinjam',
         'tanggal_kembali',
@@ -31,6 +33,7 @@ class PeminjamanBarangLainnya extends Model
         'tanggal_pinjam'  => 'date',
         'tanggal_kembali' => 'date',
         'jumlah'          => 'integer',
+        'unit_ids'        => 'array',
     ];
 
     public function user(): BelongsTo

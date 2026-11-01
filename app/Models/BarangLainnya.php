@@ -29,4 +29,9 @@ class BarangLainnya extends Model
         'harga_total'   => 'decimal:2',
         'jumlah'        => 'integer',
     ];
+
+    public function units()
+    {
+        return $this->hasMany(BarangLainnyaUnit::class, 'barang_lainnya_id')->orderBy('id', 'asc');
+    }
 }

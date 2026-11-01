@@ -197,6 +197,13 @@
             <td class="td-titikdua">:</td>
             <td><b>{{ $pengembalian->peminjamanBarangLainnya->nama_barang ?? '-' }}</b></td>
         </tr>
+        @if(!empty($pengembalian->peminjamanBarangLainnya->kode_unit))
+        <tr>
+            <td>Kode Unit Fisik</td>
+            <td class="td-titikdua">:</td>
+            <td><b>Kode {{ $pengembalian->peminjamanBarangLainnya->kode_unit }}</b></td>
+        </tr>
+        @endif
         <tr>
             <td>Jumlah Dikembalikan</td>
             <td class="td-titikdua">:</td>

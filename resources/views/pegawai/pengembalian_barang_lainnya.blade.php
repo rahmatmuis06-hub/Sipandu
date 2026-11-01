@@ -147,9 +147,10 @@
                 <option value="{{ $pinjam->id }}" 
                         data-name="{{ $pinjam->nama_barang }}" 
                         data-code="{{ $pinjam->kode_barang }}" 
+                        data-unit="{{ $pinjam->kode_unit }}"
                         data-jumlah="{{ $pinjam->jumlah }}"
                         data-satuan="{{ $pinjam->satuan }}">
-                  {{ $pinjam->nama_barang }} (Pinjam: {{ $pinjam->jumlah }} {{ $pinjam->satuan }})
+                  {{ $pinjam->nama_barang }}{{ $pinjam->kode_unit ? ' — Kode Unit: ' . $pinjam->kode_unit : '' }} ({{ $pinjam->jumlah }} {{ $pinjam->satuan }})
                 </option>
               @endforeach
             </select>
@@ -160,6 +161,7 @@
                 <div class="bp-name" id="bpName">-</div>
                 <div class="bp-details">
                   <span class="bp-tag" id="bpCode">-</span>
+                  <span class="bp-tag" id="bpUnit" style="display:none; background:#fef3c7; color:#b45309; font-weight:800;">-</span>
                   <span class="bp-tag" id="bpSatuan">-</span>
                 </div>
               </div>
@@ -236,7 +238,14 @@
                   <div class="req-card-icon"><i class="fas fa-plug"></i></div>
                   <div>
                     <div class="req-card-name">{{ $item->peminjamanBarangLainnya->nama_barang ?? 'Barang Dihapus' }}</div>
-                    <div class="req-card-code">{{ $item->peminjamanBarangLainnya->kode_barang ?? '-' }}</div>
+                    <div class="req-card-code" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:2px;">
+                      <span>{{ $item->peminjamanBarangLainnya->kode_barang ?? '-' }}</span>
+                      @if(!empty($item->peminjamanBarangLainnya->kode_unit))
+                        <span style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:1px 7px; border-radius:5px; font-weight:800; font-size:10.5px;">
+                          🏷️ Kode Unit: {{ $item->peminjamanBarangLainnya->kode_unit }}
+                        </span>
+                      @endif
+                    </div>
                   </div>
                 </div>
                 
@@ -364,6 +373,13 @@ function onPeminjamanChange() {
     document.getElementById('bpName').textContent = option.dataset.name;
     document.getElementById('bpCode').textContent = option.dataset.code || '-';
     document.getElementById('bpSatuan').textContent = (option.dataset.satuan || 'unit').toUpperCase();
+    const bpUnit = document.getElementById('bpUnit');
+    if (option.dataset.unit) {
+      bpUnit.textContent = '🏷️ Kode Unit: ' + option.dataset.unit;
+      bpUnit.style.display = 'inline-block';
+    } else {
+      bpUnit.style.display = 'none';
+    }
     
     const maxJumlah = option.dataset.jumlah;
     document.getElementById('jumlahPinjam').value = maxJumlah;
@@ -408,7 +424,9 @@ function showDetailModal(id) {
       if(res.success) {
         const data = res.data;
         document.getElementById('modNama').textContent = data.peminjaman_barang_lainnya ? data.peminjaman_barang_lainnya.nama_barang : '-';
-        document.getElementById('modKode').textContent = data.peminjaman_barang_lainnya ? (data.peminjaman_barang_lainnya.kode_barang || '-') : '-';
+        const kodeBrg = data.peminjaman_barang_lainnya ? (data.peminjaman_barang_lainnya.kode_barang || '-') : '-';
+        const kodeUnt = data.peminjaman_barang_lainnya?.kode_unit ? ` • Kode Unit: ${data.peminjaman_barang_lainnya.kode_unit}` : '';
+        document.getElementById('modKode').textContent = kodeBrg + kodeUnt;
         document.getElementById('modTgl').textContent = data.tanggal_pengembalian_aktual ? data.tanggal_pengembalian_aktual.split('T')[0] : '-';
         document.getElementById('modJml').textContent = data.jumlah_dikembalikan + ' ' + (data.peminjaman_barang_lainnya?.satuan || 'Unit');
         

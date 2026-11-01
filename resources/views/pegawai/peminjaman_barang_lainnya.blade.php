@@ -333,6 +333,81 @@
     }
     .alert-success { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
     .alert-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+
+    /* KODE UNIT SELECTOR */
+    .unit-picker-box {
+      display: none;
+      margin-bottom: 16px;
+      padding: 14px;
+      border-radius: 12px;
+      background: #fffbeb;
+      border: 1.5px solid #fde68a;
+    }
+    .unit-picker-box.show { display: block; }
+    .unit-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .unit-chip {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 8px;
+      border-radius: 10px;
+      border: 1.5px solid #cbd5e1;
+      background: #fff;
+      cursor: pointer;
+      transition: all .18s ease;
+      text-align: center;
+      user-select: none;
+    }
+    .unit-chip input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .unit-chip:hover:not(.disabled) {
+      border-color: var(--primary);
+      background: #fffdf5;
+      transform: translateY(-1px);
+    }
+    .unit-chip.selected {
+      border-color: #059669;
+      background: #ecfdf5;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.18);
+    }
+    .unit-chip.disabled {
+      background: #f1f5f9;
+      border-color: #e2e8f0;
+      color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.78;
+    }
+    .unit-chip-code {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .unit-chip.selected .unit-chip-code { color: #047857; }
+    .unit-chip.disabled .unit-chip-code { color: #94a3b8; }
+    .unit-chip-status {
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 3px;
+      padding: 1px 6px;
+      border-radius: 99px;
+    }
+    .ucs-tersedia { background: #dcfce7; color: #15803d; }
+    .ucs-pending { background: #fef3c7; color: #b45309; }
+    .ucs-dipinjam { background: #fee2e2; color: #b91c1c; }
+    .ucs-rusak { background: #e2e8f0; color: #475569; }
   </style>
 </head>
 
@@ -383,7 +458,7 @@
           <div class="form-header-sub">Peralatan listrik, kabel roll, steker, adaptor, dll.</div>
         </div>
 
-        <form method="POST" action="{{ route('pegawai.peminjaman-barang-lainnya.store') }}" class="form-body">
+        <form method="POST" action="{{ route('pegawai.peminjaman-barang-lainnya.store') }}" class="form-body" onsubmit="return validateUnitSelection()">
           @csrf
 
           <div class="form-group">
@@ -395,8 +470,9 @@
                         data-nama="{{ $b->nama_barang }}"
                         data-kode="{{ $b->kode_barang }}"
                         data-satuan="{{ $b->satuan }}"
-                        data-stok="{{ $b->jumlah }}">
-                  ⚡ {{ $b->nama_barang }} (Stok: {{ $b->jumlah }} {{ $b->satuan }})
+                        data-stok="{{ $b->jumlah }}"
+                        {{ old('barang_lainnya_id') == $b->id ? 'selected' : '' }}>
+                  ⚡ {{ $b->nama_barang }} (Stok Tersedia: {{ $b->jumlah }} {{ $b->satuan }})
                 </option>
               @empty
                 <option value="" disabled>Belum ada stok barang lainnya yang tersedia</option>
@@ -407,7 +483,7 @@
               <div class="fp-icon"><i class="fas fa-plug"></i></div>
               <div>
                 <div style="font-size:13px; font-weight:700;" id="prevNama">-</div>
-                <div style="display:flex; gap:8px; margin-top:3px;">
+                <div style="display:flex; gap:8px; margin-top:3px; flex-wrap:wrap;">
                   <span style="font-size:11px; background:#fef3c7; color:#b45309; padding:2px 8px; border-radius:5px; font-weight:600;" id="prevKode">-</span>
                   <span style="font-size:11px; background:#ecfdf5; color:#059669; padding:2px 8px; border-radius:5px; font-weight:600;" id="prevStok">-</span>
                 </div>
@@ -415,10 +491,26 @@
             </div>
           </div>
 
+          <!-- PILIH KODE UNIT BARANG -->
+          <div class="unit-picker-box" id="unitPickerBox">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+              <label class="form-label" style="margin-bottom:0; color:#92400e;">
+                <i class="fas fa-tag"></i> Pilih Kode Unit Barang <span style="color:var(--danger);">*</span>
+              </label>
+              <span id="selectedUnitSummary" style="font-size:11.5px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 9px; border-radius:99px;">
+                Belum ada unit dipilih
+              </span>
+            </div>
+            <div style="font-size:11.5px; color:#78350f; margin-top:4px;">
+              Klik kode unit fisik yang ingin Anda pinjam (bisa pilih lebih dari 1 kode unit). Admin akan memverifikasi kode unit saat penyerahan.
+            </div>
+            <div class="unit-chips-grid" id="unitChipsContainer"></div>
+          </div>
+
           <div class="input-row">
             <div class="form-group">
               <label class="form-label"><i class="fas fa-cubes"></i> Jumlah Pinjam</label>
-              <input type="number" name="jumlah" id="inputJumlah" class="form-input" min="1" value="1" required>
+              <input type="number" name="jumlah" id="inputJumlah" class="form-input" min="1" value="1" readonly style="background:#f8fafc; font-weight:700; color:#0f172a;" title="Otomatis mengikuti jumlah Kode Unit yang dipilih">
             </div>
             <div class="form-group">
               <label class="form-label"><i class="fas fa-tag"></i> Satuan</label>
@@ -471,9 +563,14 @@
                   <div class="req-card-icon">⚡</div>
                   <div>
                     <div style="font-size:14px; font-weight:700;">{{ $item->nama_barang }}</div>
-                    <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">
-                      Kode: <strong>{{ $item->kode_barang ?? '-' }}</strong> • 
-                      Diajukan: {{ $item->created_at?->format('d/m/Y H:i') ?? '-' }}
+                    <div style="font-size:11px; color:var(--text-secondary); margin-top:3px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                      <span>Kode: <strong>{{ $item->kode_barang ?? '-' }}</strong></span>
+                      @if(!empty($item->kode_unit))
+                        <span style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:1px 8px; border-radius:6px; font-weight:800;">
+                          🏷️ Kode Unit: {{ $item->kode_unit }}
+                        </span>
+                      @endif
+                      <span>• Diajukan: {{ $item->created_at?->format('d/m/Y H:i') ?? '-' }}</span>
                     </div>
                   </div>
                 </div>
@@ -483,6 +580,8 @@
                     <span class="status-badge pending"><i class="fas fa-clock"></i> Menunggu Persetujuan</span>
                   @elseif($item->status === 'disetujui')
                     <span class="status-badge disetujui"><i class="fas fa-check-circle"></i> Sedang Dipinjam</span>
+                  @elseif($item->status === 'proses_pengembalian')
+                    <span class="status-badge pending"><i class="fas fa-hourglass-half"></i> Verifikasi Kembali</span>
                   @elseif($item->status === 'dikembalikan')
                     <span class="status-badge dikembalikan"><i class="fas fa-undo"></i> Selesai / Dikembalikan</span>
                   @elseif($item->status === 'ditolak')
@@ -495,8 +594,13 @@
 
               <div class="req-card-meta">
                 <div>
-                  <div class="meta-label">Jumlah Pinjam</div>
-                  <div class="meta-value">{{ $item->jumlah }} {{ $item->satuan }}</div>
+                  <div class="meta-label">Jumlah & Kode Unit</div>
+                  <div class="meta-value">
+                    {{ $item->jumlah }} {{ $item->satuan }}
+                    @if(!empty($item->kode_unit))
+                      <span style="color:#b45309; font-weight:800;">(Unit {{ $item->kode_unit }})</span>
+                    @endif
+                  </div>
                 </div>
                 <div>
                   <div class="meta-label">Tgl Pinjam</div>
@@ -536,12 +640,28 @@
   </div>
 
   <script>
-    function updatePreview(select) {
+    const UNITS_BY_BARANG = @json($unitsByBarangId ?? []);
+    const OLD_UNIT_IDS = (@json(old('unit_ids', [])) || []).map(Number);
+
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[s]));
+    }
+
+    function updatePreview(select, preserveOld = false) {
       const opt = select.options[select.selectedIndex];
       const preview = document.getElementById('previewBox');
+      const pickerBox = document.getElementById('unitPickerBox');
+      const chipsContainer = document.getElementById('unitChipsContainer');
+
       if (!opt || !opt.value) {
         preview.classList.remove('show');
+        pickerBox.classList.remove('show');
+        chipsContainer.innerHTML = '';
         document.getElementById('displaySatuan').value = 'unit';
+        document.getElementById('inputJumlah').value = 1;
+        updateSelectedUnitsSummary();
         return;
       }
 
@@ -549,8 +669,105 @@
       document.getElementById('prevKode').textContent = 'Kode: ' + (opt.dataset.kode || '-');
       document.getElementById('prevStok').textContent = 'Tersedia: ' + (opt.dataset.stok || 0) + ' ' + (opt.dataset.satuan || 'unit');
       document.getElementById('displaySatuan').value = opt.dataset.satuan || 'unit';
-      document.getElementById('inputJumlah').max = opt.dataset.stok || 999;
       preview.classList.add('show');
+
+      renderUnitChips(opt.value, preserveOld);
+      pickerBox.classList.add('show');
+    }
+
+    function renderUnitChips(barangId, preserveOld = false) {
+      const container = document.getElementById('unitChipsContainer');
+      const units = UNITS_BY_BARANG[barangId] || [];
+
+      if (!units.length) {
+        container.innerHTML = '<div style="grid-column:1/-1; font-size:12px; color:#dc2626; padding:8px;">Belum ada kode unit terdaftar untuk barang ini.</div>';
+        updateSelectedUnitsSummary();
+        return;
+      }
+
+      container.innerHTML = units.map(u => {
+        const isAvailable = u.status === 'tersedia';
+        const isPrechecked = isAvailable && preserveOld && OLD_UNIT_IDS.includes(Number(u.id));
+        let statusText = 'Tersedia';
+        let statusClass = 'ucs-tersedia';
+
+        if (!isAvailable) {
+          if (u.status === 'dipinjam') {
+            statusText = 'Dipinjam';
+            statusClass = 'ucs-dipinjam';
+          } else {
+            statusText = u.status === 'hilang' ? 'Hilang' : 'Rusak';
+            statusClass = 'ucs-rusak';
+          }
+        } else if (u.pending_count > 0) {
+          statusText = 'Ada Pengajuan';
+          statusClass = 'ucs-pending';
+        }
+
+        return `
+          <label class="unit-chip ${isAvailable ? '' : 'disabled'} ${isPrechecked ? 'selected' : ''}"
+                 title="${isAvailable ? (u.pending_count > 0 ? 'Tersedia, namun sedang ada pengajuan pending dari pegawai lain' : 'Klik untuk memilih Kode ' + escapeHtml(u.kode_unit)) : 'Unit tidak dapat dipilih (' + statusText + ')'}">
+            <input type="checkbox"
+                   name="unit_ids[]"
+                   value="${u.id}"
+                   data-kode="${escapeHtml(u.kode_unit)}"
+                   ${isAvailable ? '' : 'disabled'}
+                   ${isPrechecked ? 'checked' : ''}
+                   onchange="onUnitChipToggle(this)">
+            <div class="unit-chip-code">
+              <i class="fas ${isPrechecked ? 'fa-check-circle' : (isAvailable ? 'fa-tag' : 'fa-lock')}" style="font-size:11px;"></i>
+              <span>Kode ${escapeHtml(u.kode_unit)}</span>
+            </div>
+            <span class="unit-chip-status ${statusClass}">${statusText}</span>
+          </label>
+        `;
+      }).join('');
+
+      updateSelectedUnitsSummary();
+    }
+
+    function onUnitChipToggle(checkbox) {
+      const label = checkbox.closest('.unit-chip');
+      const icon = label ? label.querySelector('.unit-chip-code i') : null;
+      if (checkbox.checked) {
+        label.classList.add('selected');
+        if (icon) icon.className = 'fas fa-check-circle';
+      } else {
+        label.classList.remove('selected');
+        if (icon) icon.className = 'fas fa-tag';
+      }
+      updateSelectedUnitsSummary();
+    }
+
+    function updateSelectedUnitsSummary() {
+      const checked = Array.from(document.querySelectorAll('#unitChipsContainer input[type="checkbox"]:checked'));
+      const summaryEl = document.getElementById('selectedUnitSummary');
+      const inputJumlah = document.getElementById('inputJumlah');
+
+      if (!checked.length) {
+        summaryEl.textContent = 'Belum ada unit dipilih';
+        summaryEl.style.background = '#fef2f2';
+        summaryEl.style.color = '#dc2626';
+        summaryEl.style.borderColor = '#fecaca';
+        inputJumlah.value = 0;
+        return;
+      }
+
+      const codes = checked.map(c => c.dataset.kode);
+      summaryEl.textContent = `Dipilih (${codes.length}): Kode ${codes.join(', ')}`;
+      summaryEl.style.background = '#ecfdf5';
+      summaryEl.style.color = '#059669';
+      summaryEl.style.borderColor = '#a7f3d0';
+      inputJumlah.value = codes.length;
+    }
+
+    function validateUnitSelection() {
+      const checked = document.querySelectorAll('#unitChipsContainer input[type="checkbox"]:checked');
+      if (!checked.length) {
+        alert('Silakan pilih minimal 1 Kode Unit barang terlebih dahulu (misalnya Kode A atau Kode B)!');
+        return false;
+      }
+      return true;
     }
 
     function filterStatus(status, btn) {
@@ -558,13 +775,20 @@
       btn.classList.add('active');
 
       document.querySelectorAll('.req-card').forEach(card => {
-        if (status === 'all' || card.dataset.status === status) {
+        if (status === 'all' || card.dataset.status === status || (status === 'disetujui' && card.dataset.status === 'proses_pengembalian')) {
           card.style.display = 'block';
         } else {
           card.style.display = 'none';
         }
       });
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const select = document.getElementById('barangLainnyaSelect');
+      if (select && select.value) {
+        updatePreview(select, true);
+      }
+    });
   </script>
 </body>
 </html>

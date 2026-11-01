@@ -21,9 +21,11 @@ use App\Models\{
     TransaksiKeluarPersediaan,
     TransaksiMasukPersediaan,
     BarangLainnya,
+    BarangLainnyaUnit,
     PeminjamanBarangLainnya,
     PengembalianBarangLainnya,
 };
+use App\Services\BarangLainnyaUnitService;
 use App\Services\FonnteService;
 use App\Services\PersediaanBatchService;
 use Maatwebsite\Excel\Facades\Excel;
@@ -117,8 +119,9 @@ class AdminPersediaanController extends Controller
     public function barangLainnya(Request $request)
     {
         $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
 
-        $query = BarangLainnya::query();
+        $query = BarangLainnya::with(['units.peminjamanAktif.user']);
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -132,12 +135,52 @@ class AdminPersediaanController extends Controller
 
         $peminjamanList = collect([]);
         $pendingPeminjamanCount = 0;
+        $pendingByUnitId = [];
+
         if (Schema::hasTable('peminjaman_barang_lainnya')) {
             $peminjamanList = PeminjamanBarangLainnya::with('user')->latest()->paginate(10, ['*'], 'peminjaman_page');
             $pendingPeminjamanCount = PeminjamanBarangLainnya::where('status', 'pending')->count();
+
+            $pendingRequests = PeminjamanBarangLainnya::with('user')
+                ->where('status', 'pending')
+                ->get();
+
+            foreach ($pendingRequests as $req) {
+                if (is_array($req->unit_ids)) {
+                    foreach ($req->unit_ids as $uid) {
+                        $pendingByUnitId[(int) $uid][] = [
+                            'peminjaman_id' => $req->id,
+                            'nama'          => $req->user?->name ?? 'Pegawai',
+                        ];
+                    }
+                }
+            }
         }
 
-        return view('adminpersediian.barang_lainnya', compact('barangLainnya', 'peminjamanList', 'pendingPeminjamanCount'));
+        $unitsByBarangId = [];
+        if (Schema::hasTable('barang_lainnya_units')) {
+            $allUnits = BarangLainnyaUnit::with('peminjamanAktif.user')
+                ->orderBy('id', 'asc')
+                ->get();
+
+            foreach ($allUnits as $u) {
+                $unitsByBarangId[$u->barang_lainnya_id][] = [
+                    'id'            => $u->id,
+                    'kode_unit'     => $u->kode_unit,
+                    'status'        => $u->status,
+                    'keterangan'    => $u->keterangan,
+                    'peminjam_nama' => $u->peminjamanAktif?->user?->name,
+                    'pending_list'  => $pendingByUnitId[$u->id] ?? [],
+                ];
+            }
+        }
+
+        return view('adminpersediian.barang_lainnya', compact(
+            'barangLainnya',
+            'peminjamanList',
+            'pendingPeminjamanCount',
+            'unitsByBarangId'
+        ));
     }
 
     /**
@@ -165,7 +208,7 @@ class AdminPersediaanController extends Controller
             $kodeBarang = 'BLN-' . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
         }
 
-        BarangLainnya::create([
+        $item = BarangLainnya::create([
             'kode_barang'   => $kodeBarang,
             'nama_barang'   => strtoupper($validated['nama_barang']),
             'satuan'        => strtolower($validated['satuan']),
@@ -175,8 +218,10 @@ class AdminPersediaanController extends Controller
             'tanggal_masuk' => $validated['tanggal_masuk'],
         ]);
 
+        BarangLainnyaUnitService::createInitialUnits($item, (int) $validated['jumlah']);
+
         return redirect()->route('adminpersediaan.barang-lainnya')
-            ->with('success', "Barang '{$validated['nama_barang']}' berhasil ditambahkan ke menu Barang Lainnya!");
+            ->with('success', "Barang '{$validated['nama_barang']}' beserta {$validated['jumlah']} kode unit otomatis (A, B, ...) berhasil ditambahkan!");
     }
 
     /**
@@ -206,8 +251,10 @@ class AdminPersediaanController extends Controller
             'tanggal_masuk' => $validated['tanggal_masuk'],
         ]);
 
+        BarangLainnyaUnitService::syncUnitsFromAdminEdit($item, (int) $validated['jumlah']);
+
         return redirect()->route('adminpersediaan.barang-lainnya')
-            ->with('success', "Barang '{$validated['nama_barang']}' berhasil diperbarui!");
+            ->with('success', "Barang '{$validated['nama_barang']}' dan kode unitnya berhasil diperbarui!");
     }
 
     /**
@@ -218,6 +265,18 @@ class AdminPersediaanController extends Controller
         $this->ensureBarangLainnyaTable();
 
         $item = BarangLainnya::findOrFail($id);
+
+        if (Schema::hasTable('barang_lainnya_units')) {
+            $borrowedCount = BarangLainnyaUnit::where('barang_lainnya_id', $item->id)
+                ->where('status', 'dipinjam')
+                ->count();
+            if ($borrowedCount > 0) {
+                return redirect()->route('adminpersediaan.barang-lainnya')
+                    ->with('error', "Barang '{$item->nama_barang}' tidak dapat dihapus karena masih ada {$borrowedCount} kode unit yang sedang dipinjam.");
+            }
+            BarangLainnyaUnit::where('barang_lainnya_id', $item->id)->delete();
+        }
+
         $item->delete();
 
         return redirect()->route('adminpersediaan.barang-lainnya')
@@ -225,11 +284,84 @@ class AdminPersediaanController extends Controller
     }
 
     /**
-     * ⚡ SETUJUI PEMINJAMAN BARANG LAINNYA
+     * ⚡ TAMBAH 1 KODE UNIT MANUAL PADA BARANG LAINNYA
      */
-    public function approvePeminjamanBarangLainnya($id)
+    public function storeUnitBarangLainnya(Request $request, $id)
     {
         $this->ensureBarangLainnyaTable();
+
+        $validated = $request->validate([
+            'kode_unit'  => 'nullable|string|max:50',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        $barang = BarangLainnya::findOrFail($id);
+
+        try {
+            $unit = BarangLainnyaUnitService::addSingleUnit(
+                $barang,
+                $validated['kode_unit'] ?? null,
+                $validated['keterangan'] ?? null
+            );
+            return back()->with('success', "Kode Unit '{$unit->kode_unit}' berhasil ditambahkan ke '{$barang->nama_barang}'.");
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * ⚡ EDIT MANUAL KODE UNIT / STATUS UNIT BARANG LAINNYA
+     */
+    public function updateUnitBarangLainnya(Request $request, $unitId)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $validated = $request->validate([
+            'kode_unit'  => 'required|string|max:50',
+            'status'     => 'nullable|in:tersedia,rusak,hilang',
+            'keterangan' => 'nullable|string|max:255',
+        ]);
+
+        $unit = BarangLainnyaUnit::findOrFail($unitId);
+
+        try {
+            $updated = BarangLainnyaUnitService::updateSingleUnit(
+                $unit,
+                $validated['kode_unit'],
+                $validated['status'] ?? null,
+                $validated['keterangan'] ?? null
+            );
+            return back()->with('success', "Kode Unit berhasil diperbarui menjadi '{$updated->kode_unit}'.");
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * ⚡ HAPUS 1 KODE UNIT BARANG LAINNYA
+     */
+    public function destroyUnitBarangLainnya($unitId)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $unit = BarangLainnyaUnit::findOrFail($unitId);
+
+        try {
+            $kode = $unit->kode_unit;
+            BarangLainnyaUnitService::deleteSingleUnit($unit);
+            return back()->with('success', "Kode Unit '{$kode}' berhasil dihapus.");
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * ⚡ SETUJUI PEMINJAMAN BARANG LAINNYA (OPSI 3: KONFIRMASI / PENYESUAIAN KODE UNIT OLEH ADMIN)
+     */
+    public function approvePeminjamanBarangLainnya(Request $request, $id)
+    {
+        $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
 
         $pinjam = PeminjamanBarangLainnya::findOrFail($id);
 
@@ -237,25 +369,21 @@ class AdminPersediaanController extends Controller
             return back()->with('error', 'Status peminjaman sudah tidak dapat diubah.');
         }
 
-        // Cek stok barang
-        if ($pinjam->barang_lainnya_id) {
-            $barang = BarangLainnya::find($pinjam->barang_lainnya_id);
-            if ($barang) {
-                if ($barang->jumlah < $pinjam->jumlah) {
-                    return back()->with('error', "Stok barang '{$barang->nama_barang}' tidak mencukupi (Tersisa: {$barang->jumlah} {$barang->satuan}).");
-                }
-                $barang->decrement('jumlah', $pinjam->jumlah);
-                $barang->harga_total = $barang->jumlah * $barang->harga_satuan;
-                $barang->save();
-            }
+        try {
+            $requestedUnitIds = (array) $request->input('unit_ids', []);
+            BarangLainnyaUnitService::assignUnitsOnApproval(
+                $pinjam,
+                $requestedUnitIds,
+                Auth::id(),
+                $request->input('catatan_admin')
+            );
+            $pinjam->refresh();
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
         }
 
-        $pinjam->update([
-            'status'      => 'disetujui',
-            'approved_by' => Auth::id(),
-        ]);
-
-        return back()->with('success', "Peminjaman barang '{$pinjam->nama_barang}' oleh {$pinjam->user?->name} berhasil disetujui!");
+        $unitInfo = $pinjam->kode_unit ? " (Kode Unit: {$pinjam->kode_unit})" : '';
+        return back()->with('success', "Peminjaman barang '{$pinjam->nama_barang}'{$unitInfo} oleh {$pinjam->user?->name} berhasil disetujui!");
     }
 
     /**
@@ -281,24 +409,19 @@ class AdminPersediaanController extends Controller
     public function returnPeminjamanBarangLainnya($id)
     {
         $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
 
         $pinjam = PeminjamanBarangLainnya::findOrFail($id);
 
         if ($pinjam->status === 'disetujui' || $pinjam->status === 'proses_pengembalian') {
-            if ($pinjam->barang_lainnya_id) {
-                $barang = BarangLainnya::find($pinjam->barang_lainnya_id);
-                if ($barang) {
-                    $barang->increment('jumlah', $pinjam->jumlah);
-                    $barang->harga_total = $barang->jumlah * $barang->harga_satuan;
-                    $barang->save();
-                }
-            }
+            BarangLainnyaUnitService::releaseUnitsOnReturn($pinjam, 'lengkap');
 
             $pinjam->update([
                 'status' => 'dikembalikan',
             ]);
 
-            return back()->with('success', "Barang '{$pinjam->nama_barang}' telah dikembalikan dan stok diperbarui!");
+            $unitInfo = $pinjam->kode_unit ? " (Kode Unit: {$pinjam->kode_unit})" : '';
+            return back()->with('success', "Barang '{$pinjam->nama_barang}'{$unitInfo} telah dikembalikan dan status unit diperbarui!");
         }
 
         return back()->with('error', 'Status peminjaman belum disetujui atau sudah selesai.');
@@ -310,6 +433,7 @@ class AdminPersediaanController extends Controller
     public function pengembalianBarangLainnya(Request $request)
     {
         $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
 
         $query = PengembalianBarangLainnya::with([
             'peminjamanBarangLainnya',
@@ -329,6 +453,7 @@ class AdminPersediaanController extends Controller
     public function verifikasiPengembalianBarangLainnya(Request $request, $id)
     {
         $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
 
         $pengembalian = PengembalianBarangLainnya::findOrFail($id);
 
@@ -345,32 +470,33 @@ class AdminPersediaanController extends Controller
         ]);
 
         if ($request->status_verifikasi === 'diterima') {
-            $pengembalian->peminjamanBarangLainnya->update(['status' => 'dikembalikan']);
-
-            // Kembalikan stok fisik BarangLainnya
-            if ($pengembalian->peminjamanBarangLainnya->barang_lainnya_id) {
-                $barang = BarangLainnya::find($pengembalian->peminjamanBarangLainnya->barang_lainnya_id);
-                if ($barang) {
-                    $barang->increment('jumlah', $pengembalian->jumlah_dikembalikan);
-                    $barang->harga_total = $barang->jumlah * $barang->harga_satuan;
-                    $barang->save();
-                }
+            $pinjam = $pengembalian->peminjamanBarangLainnya;
+            if ($pinjam) {
+                $pinjam->update(['status' => 'dikembalikan']);
+                BarangLainnyaUnitService::releaseUnitsOnReturn(
+                    $pinjam,
+                    $pengembalian->status_pengembalian ?? 'lengkap'
+                );
             }
         } else {
             // Jika ditolak, kembalikan status ke disetujui agar pegawai bisa merevisi
-            $pengembalian->peminjamanBarangLainnya->update(['status' => 'disetujui']);
+            $pengembalian->peminjamanBarangLainnya?->update(['status' => 'disetujui']);
         }
 
         // WhatsApp Notification ke Pegawai
         $pegawai = $pengembalian->user;
         if ($pegawai && $pegawai->nomor_telepon) {
             $namaBarang = $pengembalian->peminjamanBarangLainnya->nama_barang ?? 'Barang Lainnya';
+            $kodeUnitPinjam = $pengembalian->peminjamanBarangLainnya->kode_unit ?? null;
 
             if ($request->status_verifikasi === 'diterima') {
                 $pesanWa = "*Pengembalian Barang Lainnya DITERIMA*\n\n";
                 $pesanWa .= "Halo {$pegawai->name},\n";
                 $pesanWa .= "Terima kasih, laporan pengembalian barang lainnya Anda telah diverifikasi dan *Diterima* oleh Admin Persediaan.\n\n";
                 $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
+                if ($kodeUnitPinjam) {
+                    $pesanWa .= "🏷️ *Kode Unit:* {$kodeUnitPinjam}\n";
+                }
                 $pesanWa .= "🔢 *Jumlah:* {$pengembalian->jumlah_dikembalikan}\n";
                 $pesanWa .= "📅 *Tgl Kembali:* " . \Carbon\Carbon::parse($pengembalian->tanggal_pengembalian_aktual)->format('d/m/Y') . "\n";
                 $pesanWa .= "🔍 *Kondisi:* " . ucfirst($pengembalian->kondisi_barang) . "\n\n";
@@ -380,6 +506,9 @@ class AdminPersediaanController extends Controller
                 $pesanWa .= "Halo {$pegawai->name},\n";
                 $pesanWa .= "Laporan pengembalian barang lainnya Anda *Ditolak* oleh Admin Persediaan.\n\n";
                 $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
+                if ($kodeUnitPinjam) {
+                    $pesanWa .= "🏷️ *Kode Unit:* {$kodeUnitPinjam}\n";
+                }
                 $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar_admin ?? '-') . "\n\n";
                 $pesanWa .= "Silakan login ke sistem untuk memperbaiki data laporan pengembalian Anda.";
             }
@@ -494,6 +623,8 @@ class AdminPersediaanController extends Controller
                     $table->index('status_pengembalian', 'idx_pbl_status');
                 });
             }
+
+            BarangLainnyaUnitService::ensureSchema();
         } catch (\Throwable $e) {
             Log::warning('ensureBarangLainnyaTable: ' . $e->getMessage());
         }

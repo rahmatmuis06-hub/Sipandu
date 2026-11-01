@@ -226,6 +226,7 @@ class SuperadminController extends Controller
             ],
             'barang_lainnya' => [
                 'barang_lainnya',
+                'barang_lainnya_units',
                 'peminjaman_barang_lainnya',
                 'pengembalian_barang_lainnya',
             ],
@@ -357,13 +358,16 @@ class SuperadminController extends Controller
                     $countLainnya = DB::table('barang_lainnya')->count();
                     DB::table('barang_lainnya')->truncate();
                 }
+                if (Schema::hasTable('barang_lainnya_units')) {
+                    DB::table('barang_lainnya_units')->truncate();
+                }
                 if (Schema::hasTable('peminjaman_barang_lainnya')) {
                     DB::table('peminjaman_barang_lainnya')->truncate();
                 }
                 if (Schema::hasTable('pengembalian_barang_lainnya')) {
                     DB::table('pengembalian_barang_lainnya')->truncate();
                 }
-                $summary[] = "Data Barang Lainnya ({$countLainnya} item) beserta permohonan peminjaman & pengembalian";
+                $summary[] = "Data Barang Lainnya ({$countLainnya} item) beserta kode unit, permohonan peminjaman & pengembalian";
             }
 
             DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
