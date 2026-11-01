@@ -283,6 +283,221 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
   font-size:13px;color:var(--muted);border:0.5px solid var(--border);line-height:1.6;
 }
 
+/* ─── MULTIPLE PHOTO UPLOADER & GALLERY ─── */
+.foto-count-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 99px;
+  border: 1.5px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.photo-dropzone {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 18px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.photo-dropzone:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+.photo-dropzone i {
+  font-size: 24px;
+  color: #3b82f6;
+}
+.photo-dropzone .dropzone-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+.photo-dropzone small {
+  font-size: 11px;
+  color: #94a3b8;
+  margin: 0;
+}
+.photo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+.photo-preview-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+  background: #000;
+}
+.photo-preview-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .2s;
+}
+.photo-preview-card:hover img {
+  transform: scale(1.05);
+}
+.photo-preview-card .btn-remove-preview {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.95);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: background .15s;
+}
+.photo-preview-card .btn-remove-preview:hover {
+  background: #dc2626;
+}
+.existing-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+.existing-photo-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1.5px solid #cbd5e1;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.existing-photo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.existing-photo-item .btn-del-existing {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: rgba(225, 29, 72, 0.95);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  transition: all .15s;
+}
+.existing-photo-item .btn-del-existing:hover {
+  background: #be123c;
+  transform: scale(1.1);
+}
+.existing-photo-item .main-badge {
+  position: absolute;
+  bottom: 3px;
+  left: 3px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  font-size: 8.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+/* Detail Modal Gallery */
+.det-gallery-wrap {
+  margin-bottom: 16px;
+}
+.det-gallery-main {
+  width: 100%;
+  height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #0f172a;
+  position: relative;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.det-gallery-main img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.det-gallery-main svg {
+  width: 48px;
+  height: 48px;
+  color: #64748b;
+}
+.det-gallery-counter {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.65);
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+.det-gallery-thumbs {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.det-gallery-thumb-item {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  opacity: 0.65;
+  transition: all .15s;
+}
+.det-gallery-thumb-item.active, .det-gallery-thumb-item:hover {
+  opacity: 1;
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+.det-gallery-thumb-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* ─── DELETE CONFIRM ─── */
 .del-icon{width:60px;height:60px;background:var(--rose-soft);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
 .del-icon svg{width:28px;height:28px;color:var(--rose)}
@@ -464,11 +679,17 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
                 {{ str_pad($gedung->firstItem() + $index, 2, '0', STR_PAD_LEFT) }}
               </td>
               <td>
-                <div class="foto-thumb">
+                <div class="foto-thumb" style="position:relative;">
                   @if($item->foto_path)
                     <img src="{{ $item->foto_path }}" alt="{{ $item->nama_gedung }}">
                   @else
                     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+                  @endif
+                  @php
+                    $fotoCount = $item->relationLoaded('fotos') ? $item->fotos->count() : 0;
+                  @endphp
+                  @if($fotoCount > 1)
+                    <span class="foto-count-badge" title="{{ $fotoCount }} Foto Gedung">+{{ $fotoCount }}</span>
                   @endif
                 </div>
               </td>
@@ -634,9 +855,14 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
           </div>
         </div>
         <div class="fg">
-          <label>Foto Gedung</label>
-          <input type="file" name="foto_url" accept="image/*">
-          <small>Format JPG/PNG, maks. 2MB</small>
+          <label>Foto Gedung <span style="font-size:11px; font-weight:600; color:var(--primary); text-transform:none;">(Bisa upload banyak foto sekaligus)</span></label>
+          <div class="photo-dropzone" onclick="document.getElementById('t-fotos').click()">
+            <i class="fas fa-images"></i>
+            <span class="dropzone-text">Pilih atau Seret Foto Gedung ke Sini</span>
+            <small>Bisa pilih sekaligus banyak foto (JPG, PNG, WEBP maks 3MB/foto)</small>
+          </div>
+          <input type="file" id="t-fotos" name="fotos[]" multiple accept="image/*" style="display:none" onchange="handleTambahFotos(this)">
+          <div id="t-fotos-preview" class="photo-preview-grid"></div>
         </div>
         <div class="fg">
           <label>Fasilitas</label>
@@ -721,9 +947,20 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
           </div>
         </div>
         <div class="fg">
-          <label>Foto Gedung (kosongkan jika tidak diubah)</label>
-          <input type="file" name="foto_url" accept="image/*">
-          <small>Format JPG/PNG, maks. 2MB</small>
+          <label>Galeri Foto Saat Ini <span style="font-size:11px; font-weight:500; color:var(--muted); text-transform:none;">(Klik ikon tempat sampah untuk menghapus foto tertentu)</span></label>
+          <div id="e-existing-fotos" class="existing-photos-grid">
+            <!-- Diisi otomatis oleh JavaScript -->
+          </div>
+        </div>
+        <div class="fg">
+          <label>Tambah Foto Baru <span style="font-size:11px; font-weight:600; color:var(--primary); text-transform:none;">(Bisa upload banyak foto tambahan)</span></label>
+          <div class="photo-dropzone" onclick="document.getElementById('e-fotos').click()">
+            <i class="fas fa-cloud-arrow-up"></i>
+            <span class="dropzone-text">Pilih atau Seret Foto Tambahan ke Sini</span>
+            <small>Bisa pilih 1 atau lebih foto baru (JPG, PNG, WEBP maks 3MB/foto)</small>
+          </div>
+          <input type="file" id="e-fotos" name="fotos[]" multiple accept="image/*" style="display:none" onchange="handleEditFotos(this)">
+          <div id="e-fotos-preview" class="photo-preview-grid"></div>
         </div>
         <div class="fg">
           <label>Fasilitas</label>
@@ -740,7 +977,7 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
 
 <!-- ── DETAIL ── -->
 <div class="overlay" id="ov-detail">
-  <div class="modal" style="width:480px">
+  <div class="modal" style="width:540px">
     <div class="modal-head">
       <div class="modal-head-left">
         <div class="modal-head-icon mhi-teal">
@@ -831,6 +1068,20 @@ function openModal(type){
 function closeModal(type){
   const el=document.getElementById('ov-'+type);
   if(el){el.classList.remove('open');document.body.style.overflow='';}
+  if(type==='tambah'){
+    tambahFiles = [];
+    const tInput = document.getElementById('t-fotos');
+    if (tInput) tInput.value = '';
+    const tPrev = document.getElementById('t-fotos-preview');
+    if (tPrev) tPrev.innerHTML = '';
+  }
+  if(type==='edit'){
+    editFiles = [];
+    const eInput = document.getElementById('e-fotos');
+    if (eInput) eInput.value = '';
+    const ePrev = document.getElementById('e-fotos-preview');
+    if (ePrev) ePrev.innerHTML = '';
+  }
 }
 
 function toggleKategoriCustom(prefix) {
@@ -913,18 +1164,128 @@ function statusBadge(s){
   return '<span class="badge '+pair[0]+'">'+pair[1]+'</span>';
 }
 
+/* ── MULTI-PHOTO UPLOAD HANDLERS ── */
+let tambahFiles = [];
+let editFiles = [];
+
+function handleTambahFotos(input) {
+  const container = document.getElementById('t-fotos-preview');
+  for (let i = 0; i < input.files.length; i++) {
+    tambahFiles.push(input.files[i]);
+  }
+  updateInputFiles(input, tambahFiles);
+  renderPreviewGrid(tambahFiles, container, function(removeIdx) {
+    tambahFiles.splice(removeIdx, 1);
+    updateInputFiles(input, tambahFiles);
+    handleTambahFotosRerender(input);
+  });
+}
+
+function handleTambahFotosRerender(input) {
+  const container = document.getElementById('t-fotos-preview');
+  renderPreviewGrid(tambahFiles, container, function(removeIdx) {
+    tambahFiles.splice(removeIdx, 1);
+    updateInputFiles(input, tambahFiles);
+    handleTambahFotosRerender(input);
+  });
+}
+
+function handleEditFotos(input) {
+  const container = document.getElementById('e-fotos-preview');
+  for (let i = 0; i < input.files.length; i++) {
+    editFiles.push(input.files[i]);
+  }
+  updateInputFiles(input, editFiles);
+  renderPreviewGrid(editFiles, container, function(removeIdx) {
+    editFiles.splice(removeIdx, 1);
+    updateInputFiles(input, editFiles);
+    handleEditFotosRerender(input);
+  });
+}
+
+function handleEditFotosRerender(input) {
+  const container = document.getElementById('e-fotos-preview');
+  renderPreviewGrid(editFiles, container, function(removeIdx) {
+    editFiles.splice(removeIdx, 1);
+    updateInputFiles(input, editFiles);
+    handleEditFotosRerender(input);
+  });
+}
+
+function updateInputFiles(input, filesArr) {
+  try {
+    const dt = new DataTransfer();
+    filesArr.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+  } catch(e) {
+    console.warn('DataTransfer not supported:', e);
+  }
+}
+
+function renderPreviewGrid(filesArr, container, onRemove) {
+  container.innerHTML = '';
+  filesArr.forEach((file, index) => {
+    const card = document.createElement('div');
+    card.className = 'photo-preview-card';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn-remove-preview';
+    btn.innerHTML = '&times;';
+    btn.title = 'Hapus foto ini';
+    btn.onclick = function(e) {
+      e.stopPropagation();
+      onRemove(index);
+    };
+    card.appendChild(img);
+    card.appendChild(btn);
+    container.appendChild(card);
+  });
+}
+
 /* ── DETAIL AJAX ── */
 function openDetailAjax(id) {
-  console.log('Loading gedung ID:', id);
   fetch(`/adminsarpras/gedung/${id}`, {
     headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}
   })
   .then(r=>r.json())
   .then(data=>{
-    console.log('Data:',data);
-    document.getElementById('det-title').textContent=data.nama_gedung||'Data tidak ditemukan';
-    document.getElementById('detailBody').innerHTML=`
-      <div class="det-photo">${data.foto_url?`<img src="${data.foto_url}" alt="${data.nama_gedung}" style="width:100%;height:100%;object-fit:cover;">`:`<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-9-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm1-9h-2v2h2V5z"/></svg>`}</div>
+    document.getElementById('det-title').textContent = data.nama_gedung || 'Detail Gedung';
+    
+    // Gallery Handler
+    const fotos = (data.fotos && data.fotos.length > 0) ? data.fotos : (data.foto_url ? [{ url: data.foto_url }] : []);
+    let galleryHtml = '';
+    if (fotos.length > 0) {
+      galleryHtml = `
+        <div class="det-gallery-wrap">
+          <div class="det-gallery-main">
+            <img src="${fotos[0].url}" alt="${data.nama_gedung}" id="detMainImg">
+            ${fotos.length > 1 ? `<span class="det-gallery-counter" id="detCounter">Foto 1 / ${fotos.length}</span>` : ''}
+          </div>
+          ${fotos.length > 1 ? `
+            <div class="det-gallery-thumbs">
+              ${fotos.map((f, idx) => `
+                <div class="det-gallery-thumb-item ${idx === 0 ? 'active' : ''}" onclick="switchDetailPhoto('${f.url}', ${idx + 1}, ${fotos.length}, this)">
+                  <img src="${f.url}" alt="Foto ${idx+1}">
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    } else {
+      galleryHtml = `
+        <div class="det-gallery-wrap">
+          <div class="det-gallery-main" style="background:#f1f5f9;">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 15v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zm-9-1a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm1-9h-2v2h2V5z"/></svg>
+          </div>
+        </div>
+      `;
+    }
+
+    document.getElementById('detailBody').innerHTML = `
+      ${galleryHtml}
       <div class="det-grid">
         <div class="det-item"><label>LOKASI</label><strong>${data.lokasi||'-'}</strong></div>
         <div class="det-item"><label>KATEGORI</label><strong>${data.kategori||'-'}</strong></div>
@@ -933,12 +1294,57 @@ function openDetailAjax(id) {
         <div class="det-item"><label>LUAS</label><strong>${data.luas_bangunan||'-'} m²</strong></div>
         <div class="det-item"><label>STATUS</label><strong>${data.ketersediaan||'-'}</strong></div>
         <div class="det-item"><label>DITAMBAHKAN</label><strong>${data.created_at?new Date(data.created_at).toLocaleDateString('id-ID'):'-'}</strong></div>
-      </div>${data.fasilitas?`<div><div class="section-lbl">FASILITAS</div><div class="det-fac">${data.fasilitas}</div></div>`:''}`;
+      </div>
+      ${data.fasilitas?`<div><div class="section-lbl">FASILITAS</div><div class="det-fac">${data.fasilitas}</div></div>`:''}
+    `;
     openModal('detail');
   })
   .catch(e=>{
     console.error('Error:',e);
-    showToast('Gagal load detail: '+e.message,'red');
+    showToast('Gagal memuat detail gedung: '+e.message,'red');
+  });
+}
+
+function switchDetailPhoto(url, current, total, el) {
+  const img = document.getElementById('detMainImg');
+  if (img) img.src = url;
+  const counter = document.getElementById('detCounter');
+  if (counter) counter.textContent = `Foto ${current} / ${total}`;
+  document.querySelectorAll('.det-gallery-thumb-item').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+}
+
+/* ── HAPUS FOTO TERTENTU VIA AJAX ── */
+function deleteExistingFoto(fotoId, fotoUrl) {
+  if (!confirm('Apakah Anda yakin ingin menghapus foto gedung ini?')) {
+    return;
+  }
+  const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+  fetch('/adminsarpras/gedung/foto/' + fotoId, {
+    method: 'DELETE',
+    headers: {
+      'X-CSRF-TOKEN': token,
+      'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (res.success) {
+      const card = document.getElementById('foto-card-' + fotoId);
+      if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'scale(0.8)';
+        setTimeout(() => card.remove(), 200);
+      }
+      showToast(res.message || 'Foto berhasil dihapus.', 'green');
+    } else {
+      showToast(res.message || 'Gagal menghapus foto.', 'red');
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    showToast('Terjadi kesalahan saat menghapus foto.', 'red');
   });
 }
 
@@ -982,6 +1388,32 @@ function openEditAjax(id){
     document.getElementById('e-status').value=data.ketersediaan;
     document.getElementById('e-fasilitas').value=data.fasilitas||'';
     document.getElementById('formEdit').action='/adminsarpras/gedung/'+data.id;
+
+    // Render existing photos
+    const existingWrap = document.getElementById('e-existing-fotos');
+    const fotos = (data.fotos && data.fotos.length > 0) ? data.fotos : (data.foto_url ? [{ id: null, url: data.foto_url }] : []);
+    
+    // Reset file input baru & preview
+    editFiles = [];
+    if (document.getElementById('e-fotos')) document.getElementById('e-fotos').value = '';
+    if (document.getElementById('e-fotos-preview')) document.getElementById('e-fotos-preview').innerHTML = '';
+
+    if (fotos.length > 0) {
+      existingWrap.innerHTML = fotos.map((f, idx) => `
+        <div class="existing-photo-item" id="foto-card-${f.id || 'legacy'}">
+          <img src="${f.url}" alt="Foto ${idx+1}">
+          ${idx === 0 ? '<span class="main-badge">Utama</span>' : ''}
+          ${f.id ? `
+            <button type="button" class="btn-del-existing" title="Hapus foto ini" onclick="deleteExistingFoto(${f.id}, '${f.url}')">
+              <i class="fas fa-trash"></i>
+            </button>
+          ` : ''}
+        </div>
+      `).join('');
+    } else {
+      existingWrap.innerHTML = '<div style="font-size:12px; color:#94a3b8; padding:8px 12px; grid-column: 1 / -1;">Belum ada foto untuk gedung ini.</div>';
+    }
+
     openModal('edit');
   })
   .catch(function(){showToast('Gagal memuat data gedung.','red');});

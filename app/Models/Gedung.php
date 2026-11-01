@@ -137,6 +137,46 @@ class Gedung extends Model
         return $this->hasMany(PeminjamanGedung::class, 'gedung_id');
     }
 
+    /**
+     * Relasi ke banyak foto gedung
+     */
+    public function fotos()
+    {
+        return $this->hasMany(FotoGedung::class, 'gedung_id')->orderBy('urutan', 'asc')->orderBy('id', 'asc');
+    }
+
+    /**
+     * Ambil seluruh foto gedung (baik dari relasi foto_gedung maupun foto_url)
+     */
+    public function getAllFotosAttribute()
+    {
+        $list = collect();
+
+        try {
+            $fotoRecords = $this->relationLoaded('fotos') ? $this->fotos : $this->fotos()->get();
+            foreach ($fotoRecords as $f) {
+                $list->push([
+                    'id' => $f->id,
+                    'url' => $f->foto_url,
+                    'raw_path' => $f->foto_path,
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Fallback jika tabel foto_gedung belum siap
+        }
+
+        // Jika relasi kosong namun ada foto_url lama
+        if ($list->isEmpty() && $this->foto_url) {
+            $list->push([
+                'id' => null,
+                'url' => $this->foto_path,
+                'raw_path' => $this->foto_url,
+            ]);
+        }
+
+        return $list;
+    }
+
 
     public function getTarifSewaFormatAttribute()
     {

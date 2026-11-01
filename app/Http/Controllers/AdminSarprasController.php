@@ -8,11 +8,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf; // Tambahkan ini di atas
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Validation\Rule;
 use App\Models\{
     AdminSarpras,
     AssetTetap,
     Gedung,
+    FotoGedung,
     FasilitasBeranda,
     PeminjamanGedung,
     Kerusakan,
@@ -148,12 +151,14 @@ class AdminSarprasController extends Controller
     // DATA GEDUNG
     public function dataGedung(Request $request)
     {
+        $this->ensureFotoGedungTableExists();
+
         // Auto-sinkronisasi awal jika tabel gedung masih kosong tetapi fasilitas beranda ada
         if (Gedung::count() === 0 && class_exists(FasilitasBeranda::class) && FasilitasBeranda::count() > 0) {
             $this->performSyncFromFasilitas();
         }
 
-        $query = Gedung::query();
+        $query = Gedung::with('fotos');
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
@@ -256,7 +261,7 @@ class AdminSarprasController extends Controller
                     'foto_url' => $fotoUrl ?? $gedung->foto_url,
                 ]);
             } else {
-                Gedung::create([
+                $gedung = Gedung::create([
                     'nama_gedung' => $k['name'],
                     'foto_url' => $fotoUrl,
                     'lokasi' => $k['location'] ?? 'BPMP Gorontalo',
@@ -268,15 +273,55 @@ class AdminSarprasController extends Controller
                     'kategori' => $kategori,
                 ]);
             }
+
+            // Sinkronisasi seluruh foto dari Fasilitas Beranda ke FotoGedung
+            if ($gedung && !empty($k['images']) && is_array($k['images'])) {
+                $this->ensureFotoGedungTableExists();
+                $urutan = 0;
+                foreach ($k['images'] as $img) {
+                    $cleanImg = ltrim(preg_replace('#^/?storage/#', '', $img), '/');
+                    if ($cleanImg) {
+                        try {
+                            FotoGedung::firstOrCreate([
+                                'gedung_id' => $gedung->id,
+                                'foto_path' => $cleanImg,
+                            ], [
+                                'urutan' => $urutan++,
+                            ]);
+                        } catch (\Throwable $e) {}
+                    }
+                }
+            }
             $count++;
         }
 
         return $count;
     }
 
-    // Tambah gedung
+    /**
+     * Memastikan tabel foto_gedung selalu ada (self-healing migration)
+     */
+    private function ensureFotoGedungTableExists()
+    {
+        try {
+            if (!Schema::hasTable('foto_gedung')) {
+                Schema::create('foto_gedung', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('gedung_id');
+                    $table->string('foto_path');
+                    $table->integer('urutan')->default(0);
+                    $table->timestamps();
+                    $table->foreign('gedung_id')->references('id')->on('gedung')->onDelete('cascade');
+                });
+            }
+        } catch (\Throwable $e) {}
+    }
+
+    // Tambah gedung (mendukung upload banyak foto)
     public function storeGedung(Request $request)
     {
+        $this->ensureFotoGedungTableExists();
+
         $validated = $request->validate([
             'nama_gedung' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
@@ -287,7 +332,9 @@ class AdminSarprasController extends Controller
             'kategori' => 'required|string|max:100',
             'kategori_custom' => 'nullable|string|max:100',
             'fasilitas' => 'nullable|string|max:1000',
-            'foto_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'foto_url' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'fotos' => 'nullable|array',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg,webp|max:3072'
         ]);
 
         $finalKategori = ($request->kategori === '__lainnya__' && $request->filled('kategori_custom'))
@@ -303,23 +350,54 @@ class AdminSarprasController extends Controller
             'ketersediaan' => $validated['ketersediaan'],
             'kategori' => $finalKategori,
             'fasilitas' => $validated['fasilitas'] ?? null,
+            'foto_url' => null,
         ];
 
-        //✅ UPLOAD FOTO TERpisah
-        if ($request->hasFile('foto_url')) {
-            $data['foto_url'] = $request->file('foto_url')->store('gedung_photos', 'public');
-        }
-
-        // ✅ SEKARANG AMAN
         $gedung = Gedung::create($data);
 
+        // Kumpulkan semua file foto (baik dari fotos[] maupun foto_url tunggal)
+        $uploadedFiles = [];
+        if ($request->hasFile('fotos')) {
+            foreach ($request->file('fotos') as $file) {
+                if ($file && $file->isValid()) {
+                    $uploadedFiles[] = $file;
+                }
+            }
+        }
+        if ($request->hasFile('foto_url') && empty($uploadedFiles)) {
+            $uploadedFiles[] = $request->file('foto_url');
+        }
+
+        $urutan = 0;
+        $firstFotoPath = null;
+        foreach ($uploadedFiles as $file) {
+            $path = $file->store('gedung_photos', 'public');
+            if (!$firstFotoPath) {
+                $firstFotoPath = $path;
+            }
+
+            try {
+                FotoGedung::create([
+                    'gedung_id' => $gedung->id,
+                    'foto_path' => $path,
+                    'urutan' => $urutan++,
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        if ($firstFotoPath) {
+            $gedung->update(['foto_url' => $firstFotoPath]);
+        }
+
         return redirect()->route('adminsarpras.data-gedung')
-            ->with('success', 'Gedung berhasil ditambahkan!');
+            ->with('success', 'Gedung dan foto berhasil ditambahkan!');
     }
 
-    // Edit gedung
+    // Edit gedung (mendukung upload foto tambahan)
     public function updateGedung(Request $request, Gedung $gedung)
     {
+        $this->ensureFotoGedungTableExists();
+
         $validated = $request->validate([
             'nama_gedung' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
@@ -330,51 +408,133 @@ class AdminSarprasController extends Controller
             'kategori' => 'nullable|string|max:100',
             'kategori_custom' => 'nullable|string|max:100',
             'fasilitas' => 'nullable|string',
-            'foto_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
+            'foto_url' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:3072',
+            'fotos' => 'nullable|array',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg,webp|max:3072'
         ]);
 
         $finalKategori = ($request->kategori === '__lainnya__' && $request->filled('kategori_custom'))
             ? trim($request->kategori_custom)
             : ($request->filled('kategori_custom') ? trim($request->kategori_custom) : trim($request->kategori ?? $gedung->kategori));
 
-        $data = $request->except(['kategori_custom']);
+        $data = $request->except(['kategori_custom', 'fotos', 'foto_url']);
         $data['kategori'] = $finalKategori;
 
-        // Update foto
-        if ($request->hasFile('foto_url')) {
-            // Hapus foto lama
-            if ($gedung->foto_url && Storage::disk('public')->exists($gedung->foto_url)) {
-                Storage::disk('public')->delete($gedung->foto_url);
+        // Kumpulkan file upload baru
+        $uploadedFiles = [];
+        if ($request->hasFile('fotos')) {
+            foreach ($request->file('fotos') as $file) {
+                if ($file && $file->isValid()) {
+                    $uploadedFiles[] = $file;
+                }
             }
-            $data['foto_url'] = $request->file('foto_url')->store('gedung_photos', 'public');
         }
+        if ($request->hasFile('foto_url')) {
+            $uploadedFiles[] = $request->file('foto_url');
+        }
+
+        if (!empty($uploadedFiles)) {
+            $maxUrutan = 0;
+            try {
+                $maxUrutan = FotoGedung::where('gedung_id', $gedung->id)->max('urutan') ?? 0;
+            } catch (\Throwable $e) {}
+
+            foreach ($uploadedFiles as $file) {
+                $maxUrutan++;
+                $path = $file->store('gedung_photos', 'public');
+                try {
+                    FotoGedung::create([
+                        'gedung_id' => $gedung->id,
+                        'foto_path' => $path,
+                        'urutan' => $maxUrutan,
+                    ]);
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        // Pastikan foto_url sinkron dengan foto pertama
+        try {
+            $firstFoto = FotoGedung::where('gedung_id', $gedung->id)->orderBy('urutan')->orderBy('id')->first();
+            if ($firstFoto) {
+                $data['foto_url'] = $firstFoto->foto_path;
+            }
+        } catch (\Throwable $e) {}
 
         $gedung->update($data);
 
-       return redirect()->route('adminsarpras.data-gedung')->with('success', 'Gedung berhasil diupdate!');
-
+        return redirect()->route('adminsarpras.data-gedung')->with('success', 'Gedung dan foto berhasil diperbarui!');
     }
 
-    // Hapus gedung
+    // Hapus satu foto gedung via AJAX
+    public function destroyFotoGedung($id)
+    {
+        $this->ensureFotoGedungTableExists();
+
+        try {
+            $foto = FotoGedung::findOrFail($id);
+            $gedungId = $foto->gedung_id;
+
+            // Hapus file fisik dari storage
+            if ($foto->foto_path && Storage::disk('public')->exists($foto->foto_path)) {
+                Storage::disk('public')->delete($foto->foto_path);
+            }
+
+            $foto->delete();
+
+            // Perbarui foto_url di gedung
+            $nextFoto = FotoGedung::where('gedung_id', $gedungId)->orderBy('urutan')->orderBy('id')->first();
+            $gedung = Gedung::find($gedungId);
+            if ($gedung) {
+                $gedung->update(['foto_url' => $nextFoto ? $nextFoto->foto_path : null]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Foto berhasil dihapus.',
+                'new_foto_url' => $nextFoto ? $nextFoto->foto_url : null
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus foto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // Hapus gedung beserta semua fotonya
     public function destroyGedung(Gedung $gedung)
     {
-        // Hapus foto
+        $this->ensureFotoGedungTableExists();
+
+        // Hapus semua file foto dari storage
+        try {
+            $fotos = FotoGedung::where('gedung_id', $gedung->id)->get();
+            foreach ($fotos as $f) {
+                if ($f->foto_path && Storage::disk('public')->exists($f->foto_path)) {
+                    Storage::disk('public')->delete($f->foto_path);
+                }
+            }
+        } catch (\Throwable $e) {}
+
         if ($gedung->foto_url && Storage::disk('public')->exists($gedung->foto_url)) {
             Storage::disk('public')->delete($gedung->foto_url);
         }
 
         $gedung->delete();
 
-        return redirect()->back()->with('success', 'Gedung berhasil dihapus!');
+        return redirect()->back()->with('success', 'Gedung dan seluruh fotonya berhasil dihapus!');
     }
 
     // API untuk detail JSON
     public function showGedungJson(Gedung $gedung)
     {
+        $this->ensureFotoGedungTableExists();
+
         return response()->json([
             'id' => $gedung->id,
             'nama_gedung' => $gedung->nama_gedung,
             'foto_url' => $gedung->foto_path,
+            'fotos' => $gedung->all_fotos,
             'lokasi' => $gedung->lokasi,
             'luas_bangunan' => $gedung->luas_bangunan,
             'tarif_sewa' => $gedung->tarif_sewa,

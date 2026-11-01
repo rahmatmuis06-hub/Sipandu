@@ -272,6 +272,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/gedung/{gedung}', [AdminSarprasController::class, 'showGedungJson'])->name('gedung.show');
             Route::put('/gedung/{gedung}', [AdminSarprasController::class, 'updateGedung'])->name('gedung.update');
             Route::delete('/gedung/{gedung}', [AdminSarprasController::class, 'destroyGedung'])->name('gedung.destroy');
+            Route::delete('/gedung/foto/{id}', [AdminSarprasController::class, 'destroyFotoGedung'])->name('gedung.foto.destroy');
             Route::get('data-gedung/{gedung}', [AdminSarprasController::class, 'showGedungJson'])->name('data-gedung.show');
 
 
