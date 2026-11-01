@@ -103,24 +103,24 @@
 
         {{-- ══════════ DOWNLOAD SECTION ══════════ --}}
         <div class="download-section">
-            <div class="section-title" style="margin-top:0"><i class="fas fa-download"></i> Download Laporan PDF</div>
+            <div class="section-title" style="margin-top:0"><i class="fas fa-download"></i> Download Laporan</div>
             <div class="download-grid">
                 <a href="{{ route('kepalabpmp.laporan.download-aset-tetap', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
-                    <div class="dl-icon" style="background:linear-gradient(135deg,#f97316,#ea580c)"><i class="fas fa-warehouse"></i></div>
-                    <div class="dl-info"><span class="dl-title">Laporan Aset Tetap</span><span class="dl-desc">Data aset,transaksi, mutasi, peminjaman & Pengembalian</span></div>
+                    <div class="dl-icon" style="background:linear-gradient(135deg,#f97316,#ea580c)"><i class="fas fa-file-pdf"></i></div>
+                    <div class="dl-info"><span class="dl-title">Laporan Aset Tetap (PDF)</span><span class="dl-desc">Rekapitulasi, perolehan, mutasi & peminjaman</span></div>
                 </a>
                 <a href="{{ route('kepalabpmp.laporan.download-persediaan', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
-                    <div class="dl-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a)"><i class="fas fa-boxes"></i></div>
-                    <div class="dl-info"><span class="dl-title">Laporan Persediaan</span><span class="dl-desc">Data persediaan, transaksi & Permintaan Persediaan</span></div>
+                    <div class="dl-icon" style="background:linear-gradient(135deg,#22c55e,#16a34a)"><i class="fas fa-file-pdf"></i></div>
+                    <div class="dl-info"><span class="dl-title">Laporan Persediaan (PDF)</span><span class="dl-desc">Data persediaan, transaksi & permintaan persediaan</span></div>
                 </a>
                 <a href="{{ route('kepalabpmp.laporan.download-sarpras', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
-                    <div class="dl-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"><i class="fas fa-building"></i></div>
-                    <div class="dl-info"><span class="dl-title">Laporan Sarpras</span><span class="dl-desc">Gedung, kerusakan & peminjaman</span></div>
+                    <div class="dl-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"><i class="fas fa-file-pdf"></i></div>
+                    <div class="dl-info"><span class="dl-title">Laporan Sarpras (PDF)</span><span class="dl-desc">Gedung, kerusakan & peminjaman gedung</span></div>
                 </a>
-                {{-- <a href="{{ route('kepalabpmp.laporan.download-lengkap', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
-                    <div class="dl-icon" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)"><i class="fas fa-file-pdf"></i></div>
-                    <div class="dl-info"><span class="dl-title">Laporan Lengkap</span><span class="dl-desc">Semua data dalam 1 dokumen</span></div>
-                </a> --}}
+                <a href="{{ route('kepalabpmp.laporan.download-aset-tetap-excel', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
+                    <div class="dl-icon" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="fas fa-file-excel"></i></div>
+                    <div class="dl-info"><span class="dl-title">Master Aset (Excel)</span><span class="dl-desc">Seluruh data master baris per baris inventaris</span></div>
+                </a>
             </div>
         </div>
 

@@ -311,28 +311,44 @@ class KepalaBPMPController extends Controller
      */
     public function downloadLaporanAsetTetap(Request $request)
     {
-        ini_set('max_execution_time', 600); // Waktu eksekusi diperpanjang jadi 10 menit
-        ini_set('memory_limit', '-1');      // Unlimited Memory Limit!
+        ini_set('max_execution_time', 300);
+        ini_set('memory_limit', '512M');
 
         $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
         $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
+
+        // 1. Rekapitulasi kategori master aset (ringkas, cepat & akurat untuk seluruh 5.800+ aset)
+        $kategoriSummary = AssetTetap::select(
+                'kategori',
+                \DB::raw('COUNT(*) as total_unit'),
+                \DB::raw('SUM(nilai_perolehan) as total_nilai')
+            )
+            ->groupBy('kategori')
+            ->orderByDesc('total_nilai')
+            ->get();
+
+        // 2. Data aset tetap yang ditambahkan/didaftarkan pada periode ini
+        $aset = AssetTetap::whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('kategori')
+            ->get();
 
         $data = [
             'title' => 'Laporan Data Aset Tetap',
             'periode' => $startDate->format('d/m/Y') . ' s/d ' . $endDate->format('d/m/Y'),
             'generated_at' => now(),
             'generated_by' => auth()->user()->name ?? 'Kepala BPMP',
-            'aset' => AssetTetap::orderBy('kategori')->get(),
+            'kategori_summary' => $kategoriSummary,
+            'aset' => $aset,
             'transaksi_masuk' => TransaksiMasukAssetTetap::whereBetween('tanggal_perolehan', [$startDate, $endDate])
                 ->orderBy('tanggal_perolehan', 'desc')->get(),
             'transaksi_keluar' => TransaksiKeluarAssetTetap::whereBetween('tanggal_input', [$startDate, $endDate])
                 ->orderBy('tanggal_input', 'desc')->get(),
             
-            // ✅ PERBAIKAN: Relasi MutasiBarang adalah asetTetap, bukan barang
+            // Relasi MutasiBarang adalah asetTetap, bukan barang
             'mutasi' => MutasiBarang::with(['user', 'asetTetap'])->whereBetween('tanggal_mutasi', [$startDate, $endDate])
                 ->orderBy('tanggal_mutasi', 'desc')->get(),
             
-            // ✅ PERBAIKAN: Eager Loading yang disesuaikan dengan Model
+            // Eager Loading yang disesuaikan dengan Model
             'peminjaman_barang' => PeminjamanBarang::with(['user'])->whereBetween('created_at', [$startDate, $endDate])->get(),
             'peminjaman_kendaraan' => PeminjamanKendaraan::with(['user'])->whereBetween('tanggal_peminjaman', [$startDate, $endDate])->get(),
             'pengembalian_barang' => PengembalianBarang::with(['peminjamanBarang.user'])->whereBetween('created_at', [$startDate, $endDate])->get(),
@@ -340,7 +356,7 @@ class KepalaBPMPController extends Controller
             
             'stats' => [
                 'total_aset' => AssetTetap::count(),
-                'total_nilai' => AssetTetap::sum('nilai_perolehan') ?? 0,
+                'total_nilai' => (float) (AssetTetap::sum('nilai_perolehan') ?? 0),
                 'total_masuk' => TransaksiMasukAssetTetap::whereBetween('tanggal_perolehan', [$startDate, $endDate])->count(),
                 'total_keluar' => TransaksiKeluarAssetTetap::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
                 'total_mutasi' => MutasiBarang::whereBetween('tanggal_mutasi', [$startDate, $endDate])->count(),
@@ -349,6 +365,42 @@ class KepalaBPMPController extends Controller
 
         $pdf = Pdf::loadView('kepalabpmp.exports.laporan_asettetap', $data)->setPaper('a4', 'landscape');
         return $pdf->download('Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.pdf');
+    }
+
+    /**
+     * 📥 DOWNLOAD RAW DATA ASET TETAP LENGKAP (EXCEL)
+     */
+    public function downloadLaporanAsetTetapExcel(Request $request)
+    {
+        $startDate = $request->start_date ? Carbon::parse($request->start_date) : Carbon::now()->startOfMonth();
+        $endDate = $request->end_date ? Carbon::parse($request->end_date) : Carbon::now()->endOfMonth();
+
+        $data = [
+            'title' => 'Laporan Data Aset Tetap Lengkap',
+            'periode' => $startDate->format('d/m/Y') . ' s/d ' . $endDate->format('d/m/Y'),
+            'generated_at' => now(),
+            'generated_by' => auth()->user()->name ?? 'Kepala BPMP',
+            'aset' => AssetTetap::orderBy('kategori')->get(),
+            'transaksi_masuk' => TransaksiMasukAssetTetap::whereBetween('tanggal_perolehan', [$startDate, $endDate])
+                ->orderBy('tanggal_perolehan', 'desc')->get(),
+            'transaksi_keluar' => TransaksiKeluarAssetTetap::whereBetween('tanggal_input', [$startDate, $endDate])
+                ->orderBy('tanggal_input', 'desc')->get(),
+            'mutasi' => MutasiBarang::with(['user', 'asetTetap'])->whereBetween('tanggal_mutasi', [$startDate, $endDate])
+                ->orderBy('tanggal_mutasi', 'desc')->get(),
+            'peminjaman_barang' => PeminjamanBarang::with(['user'])->whereBetween('created_at', [$startDate, $endDate])->get(),
+            'peminjaman_kendaraan' => PeminjamanKendaraan::with(['user'])->whereBetween('tanggal_peminjaman', [$startDate, $endDate])->get(),
+            'pengembalian_barang' => PengembalianBarang::with(['peminjamanBarang.user'])->whereBetween('created_at', [$startDate, $endDate])->get(),
+            'pengembalian_kendaraan' => PengembalianKendaraan::with(['peminjamanKendaraan.user'])->whereBetween('created_at', [$startDate, $endDate])->get(),
+            'stats' => [
+                'total_aset' => AssetTetap::count(),
+                'total_nilai' => (float) (AssetTetap::sum('nilai_perolehan') ?? 0),
+                'total_masuk' => TransaksiMasukAssetTetap::whereBetween('tanggal_perolehan', [$startDate, $endDate])->count(),
+                'total_keluar' => TransaksiKeluarAssetTetap::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
+                'total_mutasi' => MutasiBarang::whereBetween('tanggal_mutasi', [$startDate, $endDate])->count(),
+            ],
+        ];
+
+        return Excel::download(new \App\Exports\LaporanAsetTetapExport($data), 'Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.xlsx');
     }
 
     /**

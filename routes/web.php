@@ -95,9 +95,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/laporan', [KepalaBPMPController::class, 'laporan'])->name('laporan');
             Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
 
-            // 📥 DOWNLOAD LAPORAN PDF
+            // 📥 DOWNLOAD LAPORAN PDF & EXCEL
             Route::get('/laporan/download-persediaan', [KepalaBPMPController::class, 'downloadLaporanPersediaan'])->name('laporan.download-persediaan');
             Route::get('/laporan/download-aset-tetap', [KepalaBPMPController::class, 'downloadLaporanAsetTetap'])->name('laporan.download-aset-tetap');
+            Route::get('/laporan/download-aset-tetap-excel', [KepalaBPMPController::class, 'downloadLaporanAsetTetapExcel'])->name('laporan.download-aset-tetap-excel');
             Route::get('/laporan/download-sarpras', [KepalaBPMPController::class, 'downloadLaporanSarpras'])->name('laporan.download-sarpras');
             Route::get('/laporan/download-lengkap', [KepalaBPMPController::class, 'downloadLaporanLengkap'])->name('laporan.download-lengkap');
         });

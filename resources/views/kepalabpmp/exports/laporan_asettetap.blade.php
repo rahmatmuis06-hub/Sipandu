@@ -47,7 +47,7 @@
                 <td>{{ $stats['total_keluar'] ?? 0 }} Trx</td>
             </tr>
             <tr>
-                <td><strong>Total Mutasi Lokasi:</strong></td>
+                <td><strong>Total Mutasi Lokasi Periode Ini:</strong></td>
                 <td>{{ $stats['total_mutasi'] ?? 0 }} Mutasi</td>
                 <td></td>
                 <td></td>
@@ -55,9 +55,53 @@
         </table>
     </div>
 
-    {{-- 1. DATA MASTER ASET TETAP --}}
+    {{-- 1. REKAPITULASI KATEGORI MASTER ASET TETAP --}}
+    @if(isset($kategori_summary) && $kategori_summary->isNotEmpty())
     <div class="section">
-        <div class="section-title">1. Data Master Inventaris Aset Tetap</div>
+        <div class="section-title">1. Rekapitulasi Data Master Aset Tetap (Berdasarkan Kategori)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;" class="text-center">No</th>
+                    <th>Kategori Aset Tetap</th>
+                    <th style="width: 15%;" class="text-center">Jumlah Unit</th>
+                    <th style="width: 25%;" class="text-right">Total Nilai Perolehan</th>
+                    <th style="width: 15%;" class="text-center">Proporsi Nilai</th>
+                </tr>
+            </thead>
+            <tbody>
+            @php
+                $grandTotalNilai = $stats['total_nilai'] ?? $kategori_summary->sum('total_nilai');
+                $grandTotalUnit = $kategori_summary->sum('total_unit');
+            @endphp
+            @foreach($kategori_summary as $i => $row)
+                @php
+                    $persen = ($grandTotalNilai > 0) ? round((($row->total_nilai ?? 0) / $grandTotalNilai) * 100, 1) : 0;
+                @endphp
+                <tr>
+                    <td class="text-center">{{ $i + 1 }}</td>
+                    <td><strong>{{ strtoupper($row->kategori ?: 'LAIN-LAIN / BELUM TERKATEGORI') }}</strong></td>
+                    <td class="text-center">{{ number_format($row->total_unit ?? 0) }} Unit</td>
+                    <td class="text-right">Rp {{ number_format($row->total_nilai ?? 0, 0, ',', '.') }}</td>
+                    <td class="text-center">{{ $persen }}%</td>
+                </tr>
+            @endforeach
+            </tbody>
+            <tfoot>
+                <tr style="background:#f8fafc; font-weight:bold;">
+                    <td colspan="2" class="text-right"><strong>TOTAL KESELURUHAN MASTER:</strong></td>
+                    <td class="text-center"><strong>{{ number_format($grandTotalUnit) }} Unit</strong></td>
+                    <td class="text-right"><strong>Rp {{ number_format($grandTotalNilai, 0, ',', '.') }}</strong></td>
+                    <td class="text-center"><strong>100%</strong></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    @endif
+
+    {{-- 2. DATA ASET TETAP BARU / PENAMBAHAN PERIODE INI --}}
+    <div class="section">
+        <div class="section-title">2. Daftar Pendaftaran / Penambahan Aset Tetap Baru (Periode Ini)</div>
         <table>
             <thead>
                 <tr>
@@ -84,22 +128,24 @@
                     <td class="text-right">Rp {{ number_format($item->nilai_perolehan ?? 0, 0, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="text-center">Tidak ada data aset tetap</td></tr>
+                <tr><td colspan="8" class="text-center">Tidak ada pendaftaran aset tetap baru pada periode ini</td></tr>
             @endforelse
             </tbody>
+            @if($aset->isNotEmpty())
             <tfoot>
                 <tr style="background:#f8fafc; font-weight:bold;">
-                    <td colspan="6" class="text-right"><strong>TOTAL:</strong></td>
+                    <td colspan="6" class="text-right"><strong>SUBTOTAL PENAMBAHAN PERIODE:</strong></td>
                     <td class="text-center"><strong>{{ number_format($aset->sum('jumlah')) }}</strong></td>
-                    <td class="text-right"><strong>Rp {{ number_format($stats['total_nilai'] ?? $aset->sum('nilai_perolehan'), 0, ',', '.') }}</strong></td>
+                    <td class="text-right"><strong>Rp {{ number_format($aset->sum('nilai_perolehan'), 0, ',', '.') }}</strong></td>
                 </tr>
             </tfoot>
+            @endif
         </table>
     </div>
 
-    {{-- 2. TRANSAKSI MASUK ASET TETAP --}}
+    {{-- 3. TRANSAKSI MASUK ASET TETAP --}}
     <div class="section">
-        <div class="section-title">2. Log Transaksi Masuk Aset Tetap (Pengadaan / Perolehan)</div>
+        <div class="section-title">3. Log Transaksi Masuk Aset Tetap (Pengadaan / Perolehan Periode Ini)</div>
         <table>
             <thead>
                 <tr>
@@ -128,9 +174,9 @@
         </table>
     </div>
 
-    {{-- 3. TRANSAKSI KELUAR ASET TETAP --}}
+    {{-- 4. TRANSAKSI KELUAR ASET TETAP --}}
     <div class="section">
-        <div class="section-title">3. Log Transaksi Keluar Aset Tetap (Penghapusan / Pemindahtanganan)</div>
+        <div class="section-title">4. Log Transaksi Keluar Aset Tetap (Penghapusan / Pemindahtanganan Periode Ini)</div>
         <table>
             <thead>
                 <tr>
@@ -159,9 +205,9 @@
         </table>
     </div>
 
-    {{-- 4. MUTASI LOKASI ASET TETAP --}}
+    {{-- 5. MUTASI LOKASI ASET TETAP --}}
     <div class="section">
-        <div class="section-title">4. Log Mutasi Lokasi Aset Tetap</div>
+        <div class="section-title">5. Log Mutasi Lokasi Aset Tetap (Periode Ini)</div>
         <table>
             <thead>
                 <tr>
@@ -190,9 +236,9 @@
         </table>
     </div>
 
-    {{-- 5. PEMINJAMAN ASET TETAP --}}
+    {{-- 6. PEMINJAMAN ASET TETAP --}}
     <div class="section">
-        <div class="section-title">5. Log Peminjaman Aset Tetap (Barang & Kendaraan)</div>
+        <div class="section-title">6. Log Peminjaman Aset Tetap (Barang & Kendaraan Periode Ini)</div>
         <div class="sub-title">A. Peminjaman Barang Inventaris</div>
         <table>
             <thead>
@@ -250,9 +296,9 @@
         </table>
     </div>
 
-    {{-- 6. PENGEMBALIAN ASET TETAP --}}
+    {{-- 7. PENGEMBALIAN ASET TETAP --}}
     <div class="section">
-        <div class="section-title">6. Log Pengembalian Aset Tetap (Barang & Kendaraan)</div>
+        <div class="section-title">7. Log Pengembalian Aset Tetap (Barang & Kendaraan Periode Ini)</div>
         <div class="sub-title">A. Pengembalian Barang Inventaris</div>
         <table>
             <thead>
