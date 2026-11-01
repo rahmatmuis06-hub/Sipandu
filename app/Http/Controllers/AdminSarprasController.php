@@ -284,10 +284,15 @@ class AdminSarprasController extends Controller
             'tarif_sewa' => 'required|integer|min:0',
             'kapasitas' => 'required|integer|min:1',
             'ketersediaan' => 'required|in:Tersedia,Sedang Dipakai,Renovasi,Perlu Perbaikan',
-            'kategori' => ['required', Rule::in(array_keys(Gedung::kategoriOptions()))],
+            'kategori' => 'required|string|max:100',
+            'kategori_custom' => 'nullable|string|max:100',
             'fasilitas' => 'nullable|string|max:1000',
             'foto_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
+
+        $finalKategori = ($request->kategori === '__lainnya__' && $request->filled('kategori_custom'))
+            ? trim($request->kategori_custom)
+            : ($request->filled('kategori_custom') && $request->kategori === '__lainnya__' ? trim($request->kategori_custom) : trim($request->kategori));
 
         $data = [
             'nama_gedung' => $validated['nama_gedung'],
@@ -296,7 +301,7 @@ class AdminSarprasController extends Controller
             'tarif_sewa' => $validated['tarif_sewa'],
             'kapasitas' => $validated['kapasitas'],
             'ketersediaan' => $validated['ketersediaan'],
-            'kategori' => $validated['kategori'],
+            'kategori' => $finalKategori,
             'fasilitas' => $validated['fasilitas'] ?? null,
         ];
 
@@ -322,12 +327,18 @@ class AdminSarprasController extends Controller
             'tarif_sewa' => 'required|integer|min:0',
             'kapasitas' => 'required|integer|min:1',
             'ketersediaan' => 'required|in:Tersedia,Sedang Dipakai,Renovasi,Perlu Perbaikan',
-            'kategori' => ['nullable', Rule::in(array_keys(Gedung::kategoriOptions()))],
+            'kategori' => 'nullable|string|max:100',
+            'kategori_custom' => 'nullable|string|max:100',
             'fasilitas' => 'nullable|string',
             'foto_url' => 'nullable|image|mimes:jpeg,png,jpg|max:2048'
         ]);
 
-        $data = $request->all();
+        $finalKategori = ($request->kategori === '__lainnya__' && $request->filled('kategori_custom'))
+            ? trim($request->kategori_custom)
+            : ($request->filled('kategori_custom') ? trim($request->kategori_custom) : trim($request->kategori ?? $gedung->kategori));
+
+        $data = $request->except(['kategori_custom']);
+        $data['kategori'] = $finalKategori;
 
         // Update foto
         if ($request->hasFile('foto_url')) {

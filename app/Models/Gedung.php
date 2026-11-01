@@ -40,7 +40,7 @@ class Gedung extends Model
     // Helper untuk dropdown options
     public static function kategoriOptions()
     {
-        return [
+        $default = [
             'kantor' => 'Kantor',
             'ruang' => 'Ruang Pertemuan',
             'kelas' => 'Ruang Kelas',
@@ -58,6 +58,24 @@ class Gedung extends Model
             'aula' => 'Aula',
             'ruang_kelas' => 'Ruang Kelas',
         ];
+
+        try {
+            $existing = self::whereNotNull('kategori')
+                ->where('kategori', '!=', '')
+                ->distinct()
+                ->pluck('kategori')
+                ->all();
+
+            foreach ($existing as $cat) {
+                if (!isset($default[$cat])) {
+                    $default[$cat] = ucwords(str_replace(['_', '-'], ' ', $cat));
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika koneksi/tabel belum siap
+        }
+
+        return $default;
     }
     public static function ketersediaanOptions()
     {

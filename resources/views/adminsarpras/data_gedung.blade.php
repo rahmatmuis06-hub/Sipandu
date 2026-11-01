@@ -593,11 +593,16 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
           </div>
           <div class="fg">
             <label>Kategori <span class="req">*</span></label>
-            <select name="kategori" id="t-kategori" required>
+            <select name="kategori" id="t-kategori" onchange="toggleKategoriCustom('t')" required>
               @foreach(\App\Models\Gedung::kategoriOptions() as $value => $label)
                 <option value="{{ $value }}">{{ $label }}</option>
               @endforeach
+              <option value="__lainnya__" style="font-weight:700; color:#2563eb;">➕ + Kategori Lainnya (Isi Sendiri)...</option>
             </select>
+            <div id="t-kategori-custom-wrap" style="display:none; margin-top:8px;">
+              <input type="text" name="kategori_custom" id="t-kategori-custom" placeholder="Ketik nama kategori baru..." style="background:#f0fdf4; border:1.5px solid #86efac;">
+              <small style="color:#059669; font-size:11px; margin-top:4px; display:block;">Kategori ini akan disimpan dan tersedia otomatis.</small>
+            </div>
           </div>
           <div class="fg">
             <label>Lokasi<span class="req">*</span></label>
@@ -674,12 +679,17 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
             <input type="text" name="nama_gedung" id="e-nama" required>
           </div>
           <div class="fg">
-            <label>Kategori <span class="req">*</span>
-            <select name="kategori" id="e-kategori" required>
+            <label>Kategori <span class="req">*</span></label>
+            <select name="kategori" id="e-kategori" onchange="toggleKategoriCustom('e')" required>
               @foreach(\App\Models\Gedung::kategoriOptions() as $value => $label)
                 <option value="{{ $value }}">{{ $label }}</option>
               @endforeach
-            </select></label>
+              <option value="__lainnya__" style="font-weight:700; color:#2563eb;">➕ + Kategori Lainnya (Isi Sendiri)...</option>
+            </select>
+            <div id="e-kategori-custom-wrap" style="display:none; margin-top:8px;">
+              <input type="text" name="kategori_custom" id="e-kategori-custom" placeholder="Ketik nama kategori baru..." style="background:#f0fdf4; border:1.5px solid #86efac;">
+              <small style="color:#059669; font-size:11px; margin-top:4px; display:block;">Kategori ini akan diperbarui pada gedung ini.</small>
+            </div>
           </div>
           <div class="fg">
             <label>Lokasi<span class="req">*</span></label>
@@ -810,11 +820,36 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
 /* ── Modal helpers ── */
 function openModal(type){
   const el=document.getElementById('ov-'+type);
-  if(el){el.classList.add('open');document.body.style.overflow='hidden';}
+  if(el){
+    el.classList.add('open');
+    document.body.style.overflow='hidden';
+    if(type==='tambah'){
+      toggleKategoriCustom('t');
+    }
+  }
 }
 function closeModal(type){
   const el=document.getElementById('ov-'+type);
   if(el){el.classList.remove('open');document.body.style.overflow='';}
+}
+
+function toggleKategoriCustom(prefix) {
+  const select = document.getElementById(prefix + '-kategori');
+  const wrap = document.getElementById(prefix + '-kategori-custom-wrap');
+  const input = document.getElementById(prefix + '-kategori-custom');
+  if (select && select.value === '__lainnya__') {
+    if (wrap) wrap.style.display = 'block';
+    if (input) {
+      input.required = true;
+      setTimeout(function(){ input.focus(); }, 100);
+    }
+  } else {
+    if (wrap) wrap.style.display = 'none';
+    if (input) {
+      input.required = false;
+      input.value = '';
+    }
+  }
 }
 
 /* Close on overlay click */
@@ -917,7 +952,28 @@ function openEditAjax(id){
     document.getElementById('e-id').value=data.id;
     document.getElementById('e-nama').value=data.nama_gedung;
     if (document.getElementById('e-kategori')) {
-      document.getElementById('e-kategori').value=data.kategori||'';
+      const select = document.getElementById('e-kategori');
+      let found = false;
+      for (let i = 0; i < select.options.length; i++) {
+        if (select.options[i].value === data.kategori) {
+          select.selectedIndex = i;
+          found = true;
+          break;
+        }
+      }
+      if (!found && data.kategori) {
+        const newOpt = document.createElement('option');
+        newOpt.value = data.kategori;
+        newOpt.textContent = data.kategori;
+        newOpt.selected = true;
+        const optLainnya = select.querySelector('option[value="__lainnya__"]');
+        if (optLainnya) {
+          select.insertBefore(newOpt, optLainnya);
+        } else {
+          select.appendChild(newOpt);
+        }
+      }
+      toggleKategoriCustom('e');
     }
     document.getElementById('e-lokasi').value=data.lokasi;
     document.getElementById('e-luas').value=data.luas_bangunan;
