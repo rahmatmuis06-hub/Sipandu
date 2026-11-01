@@ -70,6 +70,12 @@
         $tahun_angka = \Carbon\Carbon::parse($tgl)->format('Y');
 
         $nomor_urut = str_pad($pengembalian->id, 3, '0', STR_PAD_LEFT);
+
+        $admin = $admin ?? $pengembalian->admin ?? \App\Models\User::where('role', 'adminasettetap')->first();
+        $kepala = $kepala ?? \App\Models\User::where('role', 'kepalabpmp')->first();
+        $ttdAdmin = $ttdAdmin ?? $admin?->signature_base64;
+        $ttdPeminjam = $ttdPeminjam ?? $pengembalian->user?->signature_base64;
+        $ttdKepala = $ttdKepala ?? $kepala?->signature_base64;
     @endphp
 
     <div class="kop-surat">

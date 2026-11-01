@@ -34,15 +34,25 @@
 
     @yield('content')
 
+    @php
+        $signer = auth()->user();
+        $ttdBase64 = $signer?->signature_base64;
+    @endphp
     <table class="footer">
         <tr>
             <td></td>
             <td>
                 Gorontalo, {{ \Carbon\Carbon::parse($generated_at ?? now())->locale('id')->translatedFormat('d F Y') }}<br>
                 Admin Aset Tetap / Pengelola BMN
-                <div class="ttd-space"></div>
-                <b><u>.......................................................</u></b><br>
-                NIP. 
+                @if($ttdBase64)
+                    <div style="height: 70px; margin: 4px 0;">
+                        <img src="{{ $ttdBase64 }}" alt="TTD Admin Aset Tetap" style="max-height: 66px; max-width: 180px;">
+                    </div>
+                @else
+                    <div class="ttd-space"></div>
+                @endif
+                <b><u>{{ $signer->name ?? '.......................................................' }}</u></b><br>
+                NIP. {{ !empty($signer?->nip) ? $signer->nip : '........................................' }}
             </td>
         </tr>
     </table>

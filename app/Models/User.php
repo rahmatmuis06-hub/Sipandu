@@ -175,4 +175,77 @@ class User extends Authenticatable
     {
         return $this->belongsTo(UnitKerja::class, 'unit_kerja_id');
     }
+
+    /**
+     * Ambil tanda tangan digital user dalam format Base64 Data URI agar selalu tampil di DomPDF.
+     */
+    public function getSignatureBase64Attribute(): ?string
+    {
+        if (empty($this->signature)) {
+            return null;
+        }
+
+        $raw = trim((string) $this->signature);
+        if ($raw === '') {
+            return null;
+        }
+
+        if (str_starts_with($raw, 'data:image/')) {
+            return $raw;
+        }
+
+        $normalized = ltrim(str_replace('\\', '/', $raw), '/');
+        if (str_starts_with($normalized, 'storage/')) {
+            $normalized = substr($normalized, strlen('storage/'));
+        }
+        if (str_starts_with($normalized, 'public/')) {
+            $normalized = substr($normalized, strlen('public/'));
+        }
+
+        $bytes = null;
+
+        try {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($normalized)) {
+                $bytes = \Illuminate\Support\Facades\Storage::disk('public')->get($normalized);
+            }
+        } catch (\Throwable $e) {
+            $bytes = null;
+        }
+
+        if ($bytes === null) {
+            $candidates = [
+                storage_path('app/public/' . $normalized),
+                public_path('storage/' . $normalized),
+                public_path($normalized),
+            ];
+            foreach ($candidates as $filePath) {
+                if (is_file($filePath) && is_readable($filePath)) {
+                    $content = @file_get_contents($filePath);
+                    if ($content !== false && $content !== '') {
+                        $bytes = $content;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (!$bytes) {
+            return null;
+        }
+
+        $mime = null;
+        if (function_exists('getimagesizefromstring')) {
+            $info = @getimagesizefromstring($bytes);
+            if (is_array($info) && !empty($info['mime'])) {
+                $mime = $info['mime'];
+            }
+        }
+
+        if (!$mime) {
+            $ext = strtolower(pathinfo($normalized, PATHINFO_EXTENSION));
+            $mime = in_array($ext, ['jpg', 'jpeg'], true) ? 'image/jpeg' : 'image/png';
+        }
+
+        return 'data:' . $mime . ';base64,' . base64_encode($bytes);
+    }
 }

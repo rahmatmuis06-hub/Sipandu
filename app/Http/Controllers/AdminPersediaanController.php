@@ -1548,21 +1548,11 @@ class AdminPersediaanController extends Controller
         $kasubag = User::where('role', 'kasubag')->first(); // Ambil akun kasubag
         $kepala = User::where('role', 'kepalabpmp')->first(); // Ambil akun kepala
 
-        // Fungsi bantuan untuk mengubah gambar lokal menjadi Base64
-        $getBase64 = function ($path) {
-            if ($path && Storage::disk('public')->exists($path)) {
-                $type = pathinfo(storage_path('app/public/' . $path), PATHINFO_EXTENSION);
-                $data = Storage::disk('public')->get($path);
-                return 'data:image/' . $type . ';base64,' . base64_encode($data);
-            }
-            return null;
-        };
-
-        // Siapkan TTD (Gunakan properti ->signature sesuai nama di db mu)
-        $ttdPeminjam = $peminjam ? $getBase64($peminjam->signature) : null;
-        $ttdAdmin = $getBase64($admin->signature);
-        $ttdKasubag = $kasubag ? $getBase64($kasubag->signature) : null;
-        $ttdKepala = $kepala ? $getBase64($kepala->signature) : null;
+        // Siapkan TTD Base64 dengan deteksi MIME yang aman untuk DomPDF
+        $ttdPeminjam = $peminjam?->signature_base64;
+        $ttdAdmin = $admin?->signature_base64;
+        $ttdKasubag = $kasubag?->signature_base64;
+        $ttdKepala = $kepala?->signature_base64;
 
         // Load View PDF
         $pdf = PDF::loadView('surat.permintaan_persediaan', compact(

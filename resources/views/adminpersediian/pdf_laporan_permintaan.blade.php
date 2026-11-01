@@ -133,6 +133,10 @@
         </tfoot>
     </table>
 
+    @php
+        $signer = auth()->user();
+        $ttdBase64 = $signer?->signature_base64;
+    @endphp
     <table class="footer-table">
         <tr>
             <td></td>
@@ -140,9 +144,15 @@
             <td>
                 Gorontalo, {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}<br>
                 Admin Persediaan
-                <div class="ttd-space"></div>
-                <b><u>{{ auth()->user()->name ?? 'Administrator' }}</u></b><br>
-                NIP. .....................................
+                @if($ttdBase64)
+                    <div style="height: 70px; margin: 4px 0;">
+                        <img src="{{ $ttdBase64 }}" alt="TTD Admin Persediaan" style="max-height: 66px; max-width: 180px;">
+                    </div>
+                @else
+                    <div class="ttd-space"></div>
+                @endif
+                <b><u>{{ $signer->name ?? 'Administrator' }}</u></b><br>
+                NIP. {{ !empty($signer?->nip) ? $signer->nip : '.....................................' }}
             </td>
         </tr>
     </table>

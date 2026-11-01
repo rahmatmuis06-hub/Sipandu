@@ -295,15 +295,25 @@
     @endif
 
     <!-- TANDA TANGAN -->
+    @php
+        $signerKasubag = $kasubagUser ?? auth()->user();
+        $ttdKasubagBase64 = $signerKasubag?->signature_base64;
+    @endphp
     <table class="ttd-table">
         <tr>
             <td style="width: 65%;"></td>
             <td style="width: 35%; text-align: center;">
                 Gorontalo, {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}<br>
                 Kasubag Tata Usaha BPMP Gorontalo
-                <br><br><br><br>
-                <b><u>{{ $kasubagUser->name ?? 'Kasubag Umum' }}</u></b><br>
-                NIP. {{ $kasubagUser->nip ?? '........................................' }}
+                @if($ttdKasubagBase64)
+                    <div style="height: 70px; margin: 4px 0;">
+                        <img src="{{ $ttdKasubagBase64 }}" alt="TTD Kasubag" style="max-height: 66px; max-width: 180px;">
+                    </div>
+                @else
+                    <br><br><br><br>
+                @endif
+                <b><u>{{ $signerKasubag->name ?? 'Kasubag Umum' }}</u></b><br>
+                NIP. {{ !empty($signerKasubag?->nip) ? $signerKasubag->nip : '........................................' }}
             </td>
         </tr>
     </table>

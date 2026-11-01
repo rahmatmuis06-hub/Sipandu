@@ -109,6 +109,9 @@
 
         $admin = $pengembalian->adminVerifier ?? \App\Models\User::where('role', 'adminpersediaan')->first();
         $kepala = \App\Models\User::where('role', 'kepalabpmp')->first();
+        $ttdAdmin = $ttdAdmin ?? $admin?->signature_base64;
+        $ttdPeminjam = $ttdPeminjam ?? $pengembalian->user?->signature_base64;
+        $ttdKepala = $ttdKepala ?? $kepala?->signature_base64;
     @endphp
 
     @if(file_exists(storage_path('app/public/kop_surat.png')))
@@ -234,13 +237,21 @@
         <tr>
             <td>
                 <div class="font-bold">PIHAK PERTAMA</div>
-                <div class="ttd-img-container"></div>
+                <div class="ttd-img-container">
+                    @if(!empty($ttdAdmin))
+                        <img src="{{ $ttdAdmin }}" alt="TTD Admin">
+                    @endif
+                </div>
                 <div class="ttd-nama">{{ $admin->name ?? 'Admin Persediaan' }}</div>
                 <div class="font-bold">NIP. {{ $admin->nip ?? '.......................................' }}</div>
             </td>
             <td>
                 <div class="font-bold">PIHAK KEDUA</div>
-                <div class="ttd-img-container"></div>
+                <div class="ttd-img-container">
+                    @if(!empty($ttdPeminjam))
+                        <img src="{{ $ttdPeminjam }}" alt="TTD Peminjam">
+                    @endif
+                </div>
                 <div class="ttd-nama">{{ $pengembalian->user->name ?? '.......................................' }}</div>
                 <div class="font-bold">NIP. {{ $pengembalian->user->nip ?? '.......................................' }}</div>
             </td>
@@ -249,7 +260,11 @@
             <td colspan="2" style="padding-top: 15px;">
                 <div class="font-bold">Mengetahui,</div>
                 <div class="font-bold">Kuasa Pengguna Barang / Kepala BPMP</div>
-                <div class="ttd-img-container"></div>
+                <div class="ttd-img-container">
+                    @if(!empty($ttdKepala))
+                        <img src="{{ $ttdKepala }}" alt="TTD Kepala">
+                    @endif
+                </div>
                 <div class="ttd-nama">{{ $kepala->name ?? 'Rudi Syaifullah, S. SI,M,M.' }}</div>
                 <div class="font-bold">NIP. {{ $kepala->nip ?? '197606272003121002' }}</div>
             </td>

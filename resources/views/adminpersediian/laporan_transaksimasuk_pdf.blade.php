@@ -156,15 +156,25 @@
     </table>
 
     <!-- TANDA TANGAN -->
+    @php
+        $signer = auth()->user();
+        $ttdBase64 = $signer?->signature_base64;
+    @endphp
     <table class="ttd-table">
         <tr>
             <td style="width: 70%;"></td>
             <td style="width: 30%; text-align: center;">
                 Gorontalo, {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}<br>
                 Admin Persediaan
-                <br><br><br><br>
-                <b><u>{{ auth()->user()->name ?? 'Administrator' }}</u></b><br>
-                NIP. ........................................
+                @if($ttdBase64)
+                    <div style="height: 70px; margin: 4px 0;">
+                        <img src="{{ $ttdBase64 }}" alt="TTD Admin Persediaan" style="max-height: 66px; max-width: 180px;">
+                    </div>
+                @else
+                    <br><br><br><br>
+                @endif
+                <b><u>{{ $signer->name ?? 'Administrator' }}</u></b><br>
+                NIP. {{ !empty($signer?->nip) ? $signer->nip : '........................................' }}
             </td>
         </tr>
     </table>

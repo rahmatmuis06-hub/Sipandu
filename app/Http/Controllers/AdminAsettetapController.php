@@ -1265,21 +1265,11 @@ class AdminAsettetapController extends Controller
         $kasubag = User::where('role', 'kasubag')->first(); // Akun Kasubag untuk tanda tangan
         $kepala = User::where('role', 'kepalabpmp')->first(); // Akun Kepala BPMP
 
-        // 2. Fungsi bantuan untuk mengubah tanda tangan (lokal) menjadi Base64 agar tampil di PDF
-        $getBase64 = function ($path) {
-            if ($path && Storage::disk('public')->exists($path)) {
-                $type = pathinfo(storage_path('app/public/' . $path), PATHINFO_EXTENSION);
-                $data = Storage::disk('public')->get($path);
-                return 'data:image/' . $type . ';base64,' . base64_encode($data);
-            }
-            return null;
-        };
-
-        // 3. Siapkan gambar tanda tangan (Signature) masing-masing pihak
-        $ttdPeminjam = $peminjam ? $getBase64($peminjam->signature) : null;
-        $ttdAdmin = $admin ? $getBase64($admin->signature) : null;
-        $ttdKasubag = $kasubag ? $getBase64($kasubag->signature) : null;
-        $ttdKepala = $kepala ? $getBase64($kepala->signature) : null;
+        // 2. Siapkan gambar tanda tangan (Signature) masing-masing pihak (Base64 aman untuk DomPDF)
+        $ttdPeminjam = $peminjam?->signature_base64;
+        $ttdAdmin = $admin?->signature_base64;
+        $ttdKasubag = $kasubag?->signature_base64;
+        $ttdKepala = $kepala?->signature_base64;
 
         // 4. Load View khusus untuk Surat Peminjaman Barang
         // Pastikan file view ini ada di resources/views/surat/peminjaman_barang.blade.php
@@ -1505,21 +1495,11 @@ class AdminAsettetapController extends Controller
         $kasubag = User::where('role', 'kasubag')->first();
         $kepala = User::where('role', 'kepalabpmp')->first(); // Pastikan rolenya sesuai dengan database Anda
 
-        // 2. Fungsi bantuan untuk mengubah tanda tangan (lokal) menjadi Base64 agar bisa dirender DomPDF
-        $getBase64 = function ($path) {
-            if ($path && Storage::disk('public')->exists($path)) {
-                $type = pathinfo(storage_path('app/public/' . $path), PATHINFO_EXTENSION);
-                $data = Storage::disk('public')->get($path);
-                return 'data:image/' . $type . ';base64,' . base64_encode($data);
-            }
-            return null;
-        };
-
-        // 3. Siapkan gambar tanda tangan (Signature) masing-masing pihak
-        $ttdPeminjam = $peminjam ? $getBase64($peminjam->signature) : null;
-        $ttdAdmin = $admin ? $getBase64($admin->signature) : null;
-        $ttdKasubag = $kasubag ? $getBase64($kasubag->signature) : null;
-        $ttdKepala = $kepala ? $getBase64($kepala->signature) : null;
+        // 2. Siapkan gambar tanda tangan (Signature) masing-masing pihak (Base64 aman untuk DomPDF)
+        $ttdPeminjam = $peminjam?->signature_base64;
+        $ttdAdmin = $admin?->signature_base64;
+        $ttdKasubag = $kasubag?->signature_base64;
+        $ttdKepala = $kepala?->signature_base64;
 
         // 4. Load View khusus untuk Surat Peminjaman Kendaraan
         // Sesuaikan path 'surat.peminjaman_kendaraan' dengan lokasi file blade Berita Acara Anda

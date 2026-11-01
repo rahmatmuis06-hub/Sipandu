@@ -715,27 +715,10 @@ class AdminSarprasController extends Controller
         $admin = Auth::user();
         $kepala = User::where('role', 'kepalabpmp')->first();
 
-        // 2. Fungsi bantuan untuk mengubah tanda tangan menjadi Base64
-        $getBase64 = function ($path) {
-            if ($path && Storage::disk('public')->exists($path)) {
-                $type = pathinfo(storage_path('app/public/' . $path), PATHINFO_EXTENSION);
-                $data = Storage::disk('public')->get($path);
-                return 'data:image/' . $type . ';base64,' . base64_encode($data);
-            }
-            return null;
-        };
-
-        // 3. Konversi signature menjadi Base64
-        $ttdAdmin = $getBase64($admin->signature);
-        $ttdKepala = $kepala ? $getBase64($kepala->signature) : null;
-
-        // Catatan: Jika tamu/peminjam memiliki kolom ttd, kita bisa memanggilnya di sini.
-        // Berdasarkan skema tabel Anda sebelumnya, pendaftar meminjam lewat form dan mungkin tidak punya field signature di model User untuk tamu.
-        // Jika ada, tambahkan logika untuk $ttdPeminjam di bawah ini.
-        $ttdPeminjam = null;
-        if ($peminjaman->user && isset($peminjaman->user->signature)) {
-            $ttdPeminjam = $getBase64($peminjaman->user->signature);
-        }
+        // 2. Konversi signature menjadi Base64 dengan deteksi MIME yang aman untuk DomPDF
+        $ttdAdmin = $admin?->signature_base64;
+        $ttdKepala = $kepala?->signature_base64;
+        $ttdPeminjam = $peminjaman->user?->signature_base64;
 
         // 4. Render tampilan PDF
         $pdf = Pdf::loadView('surat.peminjaman_gedung', compact(
