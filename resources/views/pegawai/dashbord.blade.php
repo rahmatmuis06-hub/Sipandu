@@ -196,14 +196,6 @@
     </div>
 
     <div class="stat-card">
-      <div class="stat-icon" style="background: rgba(217, 119, 6, 0.1); color: #d97706;"><i class="fas fa-plug"></i></div>
-      <div>
-        <div class="stat-label">Barang Lainnya</div>
-        <div class="stat-num" style="color: #d97706;">{{ $statBarangLainnya ?? 0 }}</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
       <div class="stat-icon teal"><i class="fas fa-undo"></i></div>
       <div>
         <div class="stat-label">Pengembalian Barang</div>
@@ -234,9 +226,6 @@
         </a>
         <a href="{{ route('pegawai.permintaan-persediaan') }}" class="qa-btn qa-green">
           <i class="fas fa-cubes"></i> Permintaan Persediaan
-        </a>
-        <a href="{{ route('pegawai.peminjaman-barang-lainnya') }}" class="qa-btn" style="background: linear-gradient(135deg, #d97706, #f59e0b);">
-          <i class="fas fa-plug"></i> Barang Lainnya
         </a>
         <a href="{{ route('pegawai.pengembalian-barang') }}" class="qa-btn qa-teal">
           <i class="fas fa-undo"></i> Pengembalian Barang
@@ -279,8 +268,6 @@
                   <div class="req-type-tag tag-blue"><i class="fas fa-box"></i> Barang</div>
               @elseif($item['tipe'] == 'Kendaraan')
                   <div class="req-type-tag tag-amber"><i class="fas fa-car"></i> Kendaraan</div>
-              @elseif($item['tipe'] == 'Barang Lainnya')
-                  <div class="req-type-tag" style="background:#fef3c7; color:#b45309;"><i class="fas fa-plug"></i> Barang Lainnya</div>
               @elseif($item['tipe'] == 'Gedung')
                   <div class="req-type-tag tag-purple"><i class="fas fa-building"></i> Ruangan</div>
               @else

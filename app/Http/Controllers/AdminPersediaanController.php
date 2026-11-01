@@ -21,7 +21,6 @@ use App\Models\{
     TransaksiKeluarPersediaan,
     TransaksiMasukPersediaan,
     BarangLainnya,
-    PeminjamanBarangLainnya,
 };
 use App\Services\FonnteService;
 use Maatwebsite\Excel\Facades\Excel;
@@ -50,16 +49,8 @@ class AdminPersediaanController extends Controller
         $permintaanDitolak = \App\Models\PermintaanPersediaan::whereIn('status', ['ditolak', 'ditolak_kasubag'])->count();
         $totalPermintaan = \App\Models\PermintaanPersediaan::count();
 
-        // 4. Data Barang Lainnya (Khusus Kelola Admin Persediaan)
-        $this->ensureBarangLainnyaTable();
-        $totalBarangLainnya = 0;
-        $peminjamanLainnyaPending = 0;
-        if (Schema::hasTable('barang_lainnya')) {
-            $totalBarangLainnya = \App\Models\BarangLainnya::count();
-        }
-        if (Schema::hasTable('peminjaman_barang_lainnya')) {
-            $peminjamanLainnyaPending = \App\Models\PeminjamanBarangLainnya::where('status', 'pending')->count();
-        }
+        // 4. Total Unit Stok Tersedia Data Persediaan
+        $totalUnitPersediaan = (int) (\App\Models\Persediaan::where('kode_kategori', '!=', 'BLN')->sum('jumlah') ?? 0);
 
         // 5. Data Grafik: Tren Transaksi Keluar Bulanan (Tahun ini)
         $chartData = [];
@@ -75,6 +66,7 @@ class AdminPersediaanController extends Controller
 
         return view('adminpersediian.dashbord', compact(
             'totalPersediaan',
+            'totalUnitPersediaan',
             'totalNilaiPersediaan',
             'masukBulanIni',
             'keluarBulanIni',
@@ -82,8 +74,6 @@ class AdminPersediaanController extends Controller
             'permintaanDisetujui',
             'permintaanDitolak',
             'totalPermintaan',
-            'totalBarangLainnya',
-            'peminjamanLainnyaPending',
             'chartData',
             'maxChart',
             'tahunIni'
@@ -133,17 +123,7 @@ class AdminPersediaanController extends Controller
 
         $barangLainnya = $query->latest()->paginate(10)->withQueryString();
 
-        $stats = [
-            'total_item'  => (clone $query)->count(),
-            'total_stok'  => (int) (clone $query)->sum('jumlah'),
-            'total_nilai' => (float) (clone $query)->sum('harga_total'),
-        ];
-
-        // Daftar Peminjaman Barang Lainnya
-        $peminjamanList = PeminjamanBarangLainnya::with('user')->latest()->paginate(10, ['*'], 'peminjaman_page');
-        $pendingPeminjamanCount = PeminjamanBarangLainnya::where('status', 'pending')->count();
-
-        return view('adminpersediian.barang_lainnya', compact('barangLainnya', 'stats', 'peminjamanList', 'pendingPeminjamanCount'));
+        return view('adminpersediian.barang_lainnya', compact('barangLainnya'));
     }
 
     /**
@@ -231,87 +211,7 @@ class AdminPersediaanController extends Controller
     }
 
     /**
-     * ⚡ SETUJUI PEMINJAMAN BARANG LAINNYA
-     */
-    public function approvePeminjamanBarangLainnya($id)
-    {
-        $this->ensureBarangLainnyaTable();
-
-        $pinjam = PeminjamanBarangLainnya::findOrFail($id);
-
-        if ($pinjam->status !== 'pending') {
-            return back()->with('error', 'Status peminjaman sudah tidak dapat diubah.');
-        }
-
-        // Cek stok barang
-        if ($pinjam->barang_lainnya_id) {
-            $barang = BarangLainnya::find($pinjam->barang_lainnya_id);
-            if ($barang) {
-                if ($barang->jumlah < $pinjam->jumlah) {
-                    return back()->with('error', "Stok barang '{$barang->nama_barang}' tidak mencukupi (Tersisa: {$barang->jumlah} {$barang->satuan}).");
-                }
-                $barang->decrement('jumlah', $pinjam->jumlah);
-                $barang->harga_total = $barang->jumlah * $barang->harga_satuan;
-                $barang->save();
-            }
-        }
-
-        $pinjam->update([
-            'status'      => 'disetujui',
-            'approved_by' => Auth::id(),
-        ]);
-
-        return back()->with('success', "Peminjaman barang '{$pinjam->nama_barang}' oleh {$pinjam->user?->name} berhasil disetujui!");
-    }
-
-    /**
-     * ⚡ TOLAK PEMINJAMAN BARANG LAINNYA
-     */
-    public function rejectPeminjamanBarangLainnya(Request $request, $id)
-    {
-        $this->ensureBarangLainnyaTable();
-
-        $pinjam = PeminjamanBarangLainnya::findOrFail($id);
-        $pinjam->update([
-            'status'        => 'ditolak',
-            'catatan_admin' => $request->input('catatan_admin', 'Permintaan peminjaman ditolak oleh admin.'),
-            'approved_by'   => Auth::id(),
-        ]);
-
-        return back()->with('success', "Peminjaman barang '{$pinjam->nama_barang}' berhasil ditolak.");
-    }
-
-    /**
-     * ⚡ SELESAIKAN / TANDAI PENGEMBALIAN BARANG LAINNYA
-     */
-    public function returnPeminjamanBarangLainnya($id)
-    {
-        $this->ensureBarangLainnyaTable();
-
-        $pinjam = PeminjamanBarangLainnya::findOrFail($id);
-
-        if ($pinjam->status === 'disetujui') {
-            if ($pinjam->barang_lainnya_id) {
-                $barang = BarangLainnya::find($pinjam->barang_lainnya_id);
-                if ($barang) {
-                    $barang->increment('jumlah', $pinjam->jumlah);
-                    $barang->harga_total = $barang->jumlah * $barang->harga_satuan;
-                    $barang->save();
-                }
-            }
-
-            $pinjam->update([
-                'status' => 'dikembalikan',
-            ]);
-
-            return back()->with('success', "Barang '{$pinjam->nama_barang}' telah dikembalikan dan stok diperbarui!");
-        }
-
-        return back()->with('error', 'Status peminjaman belum disetujui atau sudah selesai.');
-    }
-
-    /**
-     * Pastikan tabel barang_lainnya dan peminjaman_barang_lainnya ada di database secara otomatis
+     * Pastikan tabel barang_lainnya ada di database secara otomatis
      */
     private function ensureBarangLainnyaTable(): void
     {
@@ -329,29 +229,6 @@ class AdminPersediaanController extends Controller
                     $table->date('tanggal_masuk')->nullable();
                     $table->text('keterangan')->nullable();
                     $table->timestamps();
-                });
-            }
-
-            if (!Schema::hasTable('peminjaman_barang_lainnya')) {
-                Schema::create('peminjaman_barang_lainnya', function (Blueprint $table) {
-                    $table->id();
-                    $table->unsignedBigInteger('user_id');
-                    $table->unsignedBigInteger('barang_lainnya_id')->nullable();
-                    $table->string('nama_barang', 200);
-                    $table->string('kode_barang', 50)->nullable();
-                    $table->integer('jumlah')->default(1);
-                    $table->string('satuan', 50)->default('buah');
-                    $table->date('tanggal_pinjam');
-                    $table->date('tanggal_kembali')->nullable();
-                    $table->text('keperluan')->nullable();
-                    $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
-                    $table->text('catatan_admin')->nullable();
-                    $table->unsignedBigInteger('approved_by')->nullable();
-                    $table->timestamps();
-
-                    $table->index('user_id');
-                    $table->index('barang_lainnya_id');
-                    $table->index('status');
                 });
             }
         } catch (\Throwable $e) {

@@ -83,15 +83,6 @@
                     'route' => 'pegawai.permintaan-persediaan',
                 ],
                 [
-                    'section' => 'Barang Lainnya',
-                ],
-                [
-                    'href' => \Illuminate\Support\Facades\Route::has('pegawai.peminjaman-barang-lainnya') ? route('pegawai.peminjaman-barang-lainnya') : url('/pegawai/peminjaman-barang-lainnya'),
-                    'label' => 'Peminjaman Barang Lainnya',
-                    'icon' => 'fas fa-plug',
-                    'route' => 'pegawai.peminjaman-barang-lainnya',
-                ],
-                [
                     'section' => 'Pengaturan',
                 ],
                 [
@@ -282,17 +273,9 @@
                 ],
                 [
                     'href' => \Illuminate\Support\Facades\Route::has('adminpersediaan.barang-lainnya') ? route('adminpersediaan.barang-lainnya') : url('/adminpersediaan/barang-lainnya'),
-                    'label' => 'Data Barang Lainnya',
+                    'label' => 'Barang Lainnya',
                     'icon' => 'fas fa-plug',
                     'route' => 'adminpersediaan.barang-lainnya',
-                    'active' => request()->routeIs('adminpersediaan.barang-lainnya*') && request('tab') !== 'pinjam',
-                ],
-                [
-                    'href' => (\Illuminate\Support\Facades\Route::has('adminpersediaan.barang-lainnya') ? route('adminpersediaan.barang-lainnya') : url('/adminpersediaan/barang-lainnya')) . '?tab=pinjam',
-                    'label' => 'Peminjaman Barang Lainnya',
-                    'icon' => 'fas fa-hand-holding',
-                    'route' => 'adminpersediaan.barang-lainnya*',
-                    'active' => request()->routeIs('adminpersediaan.barang-lainnya*') && request('tab') === 'pinjam',
                 ],
                 [
                     'section' => 'Pengaturan',

@@ -106,7 +106,7 @@
     </div>
 
     <!-- Row 1: Persediaan & Transaksi -->
-    <div class="stats-grid">
+    <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
       <div class="stat-card card-bg-blue">
         <div class="stat-icon bg-blue">
           <svg viewBox="0 0 24 24"><path d="M4 4h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 10h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4zM4 16h4v4H4zm6 0h4v4h-4zm6 0h4v4h-4z"/></svg>
@@ -114,10 +114,18 @@
         <div class="stat-value">{{ number_format($totalPersediaan, 0, ',', '.') }}</div>
         <div class="stat-label">Total Jenis Barang</div>
       </div>
+
+      <div class="stat-card card-bg-teal">
+        <div class="stat-icon bg-teal">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+        </div>
+        <div class="stat-value">{{ number_format($totalUnitPersediaan ?? 0, 0, ',', '.') }}</div>
+        <div class="stat-label">Total Unit Stok Tersedia</div>
+      </div>
       
       <div class="stat-card card-bg-green">
         <div class="stat-icon bg-green">
-          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
         </div>
         <div class="stat-value">Rp {{ number_format($totalNilaiPersediaan, 0, ',', '.') }}</div>
         <div class="stat-label">Total Nilai Persediaan</div>
@@ -172,38 +180,6 @@
         </div>
         <div class="stat-value">{{ number_format($totalPermintaan, 0, ',', '.') }}</div>
         <div class="stat-label">Total Semua Permintaan</div>
-      </div>
-    </div>
-
-    <!-- Row 3: Menu Dedikasi Barang Lainnya (Dikelola oleh Admin Persediaan) -->
-    <div style="margin-top: 10px; margin-bottom: 24px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
-        <h2 style="font-size: 16px; font-weight: 700; color: #b45309; display: flex; align-items: center; gap: 8px;">
-          <span>⚡</span> Pengelolaan Barang Lainnya (Kabel Roll, Colokan, Steker, Peralatan)
-        </h2>
-        <a href="{{ route('adminpersediaan.barang-lainnya') }}" style="font-size: 12.5px; font-weight: 700; color: #d97706; text-decoration: none;">
-          Buka Kelola Barang Lainnya &rarr;
-        </a>
-      </div>
-      <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 0;">
-        <a href="{{ route('adminpersediaan.barang-lainnya') }}" style="text-decoration: none; color: inherit;">
-          <div class="stat-card" style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-color: #FDE68A;">
-            <div class="stat-icon" style="background: #F59E0B; color: #fff; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
-              ⚡
-            </div>
-            <div class="stat-value" style="color: #92400E;">{{ number_format($totalBarangLainnya ?? 0, 0, ',', '.') }}</div>
-            <div class="stat-label" style="color: #B45309; font-weight: 600;">Total Jenis Barang Lainnya</div>
-          </div>
-        </a>
-        <a href="{{ route('adminpersediaan.barang-lainnya') }}?tab=pinjam" style="text-decoration: none; color: inherit;">
-          <div class="stat-card" style="background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%); border-color: #FECACA;">
-            <div class="stat-icon" style="background: #EF4444; color: #fff; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
-              📋
-            </div>
-            <div class="stat-value" style="color: #991B1B;">{{ number_format($peminjamanLainnyaPending ?? 0, 0, ',', '.') }}</div>
-            <div class="stat-label" style="color: #B91C1C; font-weight: 600;">Peminjaman Barang Lainnya (Menunggu Approval)</div>
-          </div>
-        </a>
       </div>
     </div>
   </div>

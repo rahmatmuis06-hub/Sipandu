@@ -202,51 +202,7 @@
       </div>
     </div>
 
-    <!-- STATS CARDS -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#fef3c7; color:#d97706;">
-          <i class="fas fa-plug"></i>
-        </div>
-        <div>
-          <div class="stat-num">{{ $stats['total_item'] ?? 0 }}</div>
-          <div class="stat-lbl">Jenis Barang Terdaftar</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#ecfdf5; color:#059669;">
-          <i class="fas fa-cubes"></i>
-        </div>
-        <div>
-          <div class="stat-num">{{ number_format($stats['total_stok'] ?? 0) }}</div>
-          <div class="stat-lbl">Total Unit Stok Tersedia</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon" style="background:#eff6ff; color:#2563eb;">
-          <i class="fas fa-coins"></i>
-        </div>
-        <div>
-          <div class="stat-num">Rp {{ number_format($stats['total_nilai'] ?? 0, 0, ',', '.') }}</div>
-          <div class="stat-lbl">Total Nilai Persediaan</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB SWITCHER -->
-    <div style="display:flex; gap:10px; margin-bottom:18px;">
-      <button type="button" class="tab-btn active" id="tabBtnStok" onclick="switchMainTab('stok')" style="padding:10px 20px; border-radius:10px; font-weight:700; font-size:13.5px; border:none; cursor:pointer; background:var(--primary); color:#fff; display:flex; align-items:center; gap:8px; transition:all .2s;">
-        <i class="fas fa-boxes"></i> <span>Data Stok Barang Lainnya</span>
-      </button>
-      <button type="button" class="tab-btn" id="tabBtnPinjam" onclick="switchMainTab('pinjam')" style="padding:10px 20px; border-radius:10px; font-weight:700; font-size:13.5px; border:1px solid var(--border); cursor:pointer; background:#fff; color:var(--muted); display:flex; align-items:center; gap:8px; transition:all .2s;">
-        <i class="fas fa-hand-holding"></i> <span>Permohonan Peminjaman Pegawai</span>
-        @if(($pendingPeminjamanCount ?? 0) > 0)
-          <span style="background:#ef4444; color:#fff; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:800;">{{ $pendingPeminjamanCount }}</span>
-        @endif
-      </button>
-    </div>
-
-    <!-- PANE 1: TABLE STOK -->
+    <!-- TABLE STOK BARANG LAINNYA -->
     <div id="paneStok" class="table-card">
       <div class="table-toolbar">
         <form method="GET" action="{{ route('adminpersediaan.barang-lainnya') }}" class="search-wrap">
@@ -326,102 +282,6 @@
 
       <div style="padding: 16px 20px; border-top: 1px solid var(--border);">
         {{ $barangLainnya->links() }}
-      </div>
-    </div>
-
-    <!-- PANE 2: TABLE PEMINJAMAN PEGAWAI -->
-    <div id="panePinjam" class="table-card" style="display:none;">
-      <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: #FFFBEB; display: flex; align-items: center; justify-content: space-between;">
-        <div style="font-weight: 700; color: #92400E; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-          <i class="fas fa-hand-holding"></i> Daftar Pengajuan Peminjaman Barang Lainnya oleh Pegawai
-        </div>
-        <span style="font-size: 12px; color: var(--muted);">Total: {{ $peminjamanList->total() ?? 0 }} Pengajuan</span>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>No</th>
-            <th>Nama Pegawai</th>
-            <th>Nama Barang</th>
-            <th>Jumlah</th>
-            <th>Tgl Pinjam</th>
-            <th>Est. Kembali</th>
-            <th>Keperluan</th>
-            <th>Status</th>
-            <th>Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($peminjamanList as $pIdx => $p)
-            <tr>
-              <td><strong>{{ $peminjamanList->firstItem() + $pIdx }}</strong></td>
-              <td>
-                <div style="font-weight: 700;">{{ $p->user?->name ?? 'Pegawai' }}</div>
-                <div style="font-size: 11px; color: var(--muted);">{{ $p->user?->email ?? '-' }}</div>
-              </td>
-              <td>
-                <strong style="color: #b45309;">⚡ {{ $p->nama_barang }}</strong>
-                <div style="font-size: 11px; color: var(--muted);">Kode: {{ $p->kode_barang ?? '-' }}</div>
-              </td>
-              <td><strong>{{ $p->jumlah }}</strong> {{ $p->satuan }}</td>
-              <td>{{ $p->tanggal_pinjam?->format('d/m/Y') ?? '-' }}</td>
-              <td>{{ $p->tanggal_kembali?->format('d/m/Y') ?? '-' }}</td>
-              <td><span title="{{ $p->keperluan }}">{{ Str::limit($p->keperluan, 40) }}</span></td>
-              <td>
-                @if($p->status === 'pending')
-                  <span class="badge-stok" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;">Menunggu</span>
-                @elseif($p->status === 'disetujui')
-                  <span class="badge-stok" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0;">Sedang Dipinjam</span>
-                @elseif($p->status === 'dikembalikan')
-                  <span class="badge-stok" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe;">Dikembalikan</span>
-                @elseif($p->status === 'ditolak')
-                  <span class="badge-stok" style="background:#fef2f2; color:#dc2626; border:1px solid #fecaca;">Ditolak</span>
-                @else
-                  <span class="badge-stok" style="background:#f1f5f9; color:#64748b;">Dibatalkan</span>
-                @endif
-              </td>
-              <td>
-                <div style="display:flex; gap:6px;">
-                  @if($p->status === 'pending')
-                    <form method="POST" action="{{ route('adminpersediaan.barang-lainnya.peminjaman.approve', $p->id) }}" onsubmit="return confirm('Setujui peminjaman barang ini?')">
-                      @csrf
-                      <button type="submit" class="btn" style="padding:5px 12px; font-size:11.5px; background:#10B981; color:#fff; border-radius:6px;" title="Setujui">
-                        <i class="fas fa-check"></i> Setujui
-                      </button>
-                    </form>
-                    <form method="POST" action="{{ route('adminpersediaan.barang-lainnya.peminjaman.reject', $p->id) }}" onsubmit="return confirm('Tolak peminjaman barang ini?')">
-                      @csrf
-                      <button type="submit" class="btn" style="padding:5px 12px; font-size:11.5px; background:#EF4444; color:#fff; border-radius:6px;" title="Tolak">
-                        <i class="fas fa-times"></i> Tolak
-                      </button>
-                    </form>
-                  @elseif($p->status === 'disetujui')
-                    <form method="POST" action="{{ route('adminpersediaan.barang-lainnya.peminjaman.return', $p->id) }}" onsubmit="return confirm('Tandai bahwa barang sudah dikembalikan?')">
-                      @csrf
-                      <button type="submit" class="btn" style="padding:5px 12px; font-size:11.5px; background:#2563EB; color:#fff; border-radius:6px;" title="Tandai Sudah Dikembalikan">
-                        <i class="fas fa-undo"></i> Tandai Dikembalikan
-                      </button>
-                    </form>
-                  @else
-                    <span style="font-size:12px; color:var(--muted);">-</span>
-                  @endif
-                </div>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="9" style="text-align:center; padding:40px; color:var(--muted);">
-                <i class="fas fa-inbox" style="font-size:32px; margin-bottom:8px; display:block;"></i>
-                Belum ada pengajuan peminjaman barang lainnya dari pegawai.
-              </td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
-
-      <div style="padding: 16px 20px; border-top: 1px solid var(--border);">
-        {{ $peminjamanList->links() }}
       </div>
     </div>
 
@@ -723,42 +583,6 @@ function openDelete(id, nama) {
   document.getElementById('deleteNamaBarang').innerText = nama;
   document.getElementById('formDelete').action = `/adminpersediaan/barang-lainnya/${id}`;
   openModal('modalDelete');
-}
-
-function switchMainTab(tab) {
-  const btnStok = document.getElementById('tabBtnStok');
-  const btnPinjam = document.getElementById('tabBtnPinjam');
-  const paneStok = document.getElementById('paneStok');
-  const panePinjam = document.getElementById('panePinjam');
-
-  if (tab === 'pinjam') {
-    btnPinjam.style.background = 'var(--primary)';
-    btnPinjam.style.color = '#fff';
-    btnPinjam.style.border = 'none';
-
-    btnStok.style.background = '#fff';
-    btnStok.style.color = 'var(--muted)';
-    btnStok.style.border = '1px solid var(--border)';
-
-    paneStok.style.display = 'none';
-    panePinjam.style.display = 'block';
-  } else {
-    btnStok.style.background = 'var(--primary)';
-    btnStok.style.color = '#fff';
-    btnStok.style.border = 'none';
-
-    btnPinjam.style.background = '#fff';
-    btnPinjam.style.color = 'var(--muted)';
-    btnPinjam.style.border = '1px solid var(--border)';
-
-    paneStok.style.display = 'block';
-    panePinjam.style.display = 'none';
-  }
-}
-
-// Cek jika halaman dibuka dengan peminjaman_page
-if (window.location.search.includes('peminjaman_page') || window.location.search.includes('tab=pinjam')) {
-  switchMainTab('pinjam');
 }
 </script>
 
