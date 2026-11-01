@@ -1355,11 +1355,7 @@
                   <div class="text-slate-400 text-xs mt-0.5"></div>
                 </div>
                 <div class="flex gap-2">
-                  <button onclick="closeModal()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition">Kembali</button>
-                  <a href="{{ route('login', [], false) }}" class="btn-primary px-5 py-2.5 rounded-xl text-white text-sm font-semibold flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="16" height="13" x="2" y="5" rx="2"/><path d="m22 8-8 5-8-5"/></svg>
-                    Hubungi Kami
-                  </a>
+                  <button onclick="closeModal()" class="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition">Kembali</button>
                 </div>
               </div>
             </div>
