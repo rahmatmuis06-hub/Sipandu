@@ -1046,6 +1046,10 @@ tbody tr:hover{background:#fafbff;transition:background .15s}
 
 <!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
 <script>
+/* ── File Arrays Global ── */
+var tambahFiles = [];
+var editFiles = [];
+
 /* ── Date ── */
 (function(){
   const d=new Date();
@@ -1165,9 +1169,6 @@ function statusBadge(s){
 }
 
 /* ── MULTI-PHOTO UPLOAD HANDLERS ── */
-let tambahFiles = [];
-let editFiles = [];
-
 function handleTambahFotos(input) {
   const container = document.getElementById('t-fotos-preview');
   for (let i = 0; i < input.files.length; i++) {
