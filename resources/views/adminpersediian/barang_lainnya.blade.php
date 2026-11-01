@@ -502,7 +502,7 @@
         </div>
         <div>
           <div style="font-size: 16px; font-weight: 800;">Tambah Barang Lainnya</div>
-          <div style="font-size: 12px; color: var(--muted);">Pilih template cepat atau input barang manual</div>
+          <div style="font-size: 12px; color: var(--muted);">Input data barang pendukung operasional baru</div>
         </div>
       </div>
       <button type="button" onclick="closeModal('modalTambahLainnya')" class="btn-action">✕</button>
@@ -511,25 +511,6 @@
     <form method="POST" action="{{ route('adminpersediaan.barang-lainnya.store') }}">
       @csrf
       <div style="padding: 20px 24px; max-height: 70vh; overflow-y: auto;">
-        
-        <!-- Pilihan Cepat Template -->
-        <div class="form-group" style="background: #FFFBEB; border: 1.5px dashed #FCD34D; border-radius: 10px; padding: 12px;">
-          <label class="form-label" style="color: #92400E; margin-bottom: 4px;">⚡ Template Barang Cepat</label>
-          <select id="presetBarangLainnya" class="form-select" onchange="pilihPresetBarangLainnya(this)">
-            <option value="">-- Ketik Manual atau Pilih Template di Sini --</option>
-            <option value="STEKER / COLOKAN LISTRIK ARDE" data-satuan="buah">🔌 Steker / Colokan Listrik Arde (Buah)</option>
-            <option value="STOPKONTAK KABEL ROLL 10 METER" data-satuan="unit">🌀 Stopkontak Kabel Roll 10 Meter (Unit)</option>
-            <option value="STOPKONTAK KABEL ROLL 15 METER" data-satuan="unit">🌀 Stopkontak Kabel Roll 15 Meter (Unit)</option>
-            <option value="T-PLUG / STOP KONTAK CABANG 3" data-satuan="buah">🔌 T-Plug / Cabang 3 (Buah)</option>
-            <option value="ADAPTOR STEKER LISTRIK UNIVERSAL" data-satuan="buah">🔌 Adaptor Steker Universal Travel (Buah)</option>
-            <option value="KABEL EXTENSION / SAMBUNGAN LISTRIK 5M" data-satuan="unit">🔌 Kabel Extension / Sambungan Listrik 5M (Unit)</option>
-            <option value="BATERAI AA ALKALINE (ISI 2)" data-satuan="pasang">🔋 Baterai AA Alkaline (Pasang)</option>
-            <option value="BATERAI AAA ALKALINE (ISI 2)" data-satuan="pasang">🔋 Baterai AAA Alkaline (Pasang)</option>
-            <option value="LAKBAN / ISOLASI LISTRIK HITAM" data-satuan="roll">🩹 Lakban / Isolasi Listrik Hitam (Roll)</option>
-            <option value="KABEL HDMI HIGH SPEED 5 METER" data-satuan="unit">🖥️ Kabel HDMI High Speed 5M (Unit)</option>
-            <option value="LAMPU LED HEMAT ENERGI 14 WATT" data-satuan="buah">💡 Lampu LED Hemat Energi 14W (Buah)</option>
-          </select>
-        </div>
 
         <div class="form-group">
           <label class="form-label">Nama Barang <span style="color:var(--danger)">*</span></label>
@@ -805,16 +786,6 @@ function closeModal(id) {
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(); });
 });
-
-function pilihPresetBarangLainnya(el) {
-  const opt = el.options[el.selectedIndex];
-  if (!opt || !opt.value) return;
-
-  document.getElementById('inputNamaLainnya').value = opt.value;
-  if (opt.dataset.satuan) {
-    document.getElementById('inputSatuanLainnya').value = opt.dataset.satuan;
-  }
-}
 
 function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID').format(num || 0);
