@@ -83,6 +83,15 @@
                     'route' => 'pegawai.permintaan-persediaan',
                 ],
                 [
+                    'section' => 'Barang Lainnya',
+                ],
+                [
+                    'href' => \Illuminate\Support\Facades\Route::has('pegawai.peminjaman-barang-lainnya') ? route('pegawai.peminjaman-barang-lainnya') : url('/pegawai/peminjaman-barang-lainnya'),
+                    'label' => 'Peminjaman Barang Lainnya',
+                    'icon' => 'fas fa-plug',
+                    'route' => 'pegawai.peminjaman-barang-lainnya',
+                ],
+                [
                     'section' => 'Pengaturan',
                 ],
                 [
