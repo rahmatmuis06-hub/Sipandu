@@ -47,7 +47,15 @@ class PegawaiController extends Controller
         $kendaraanSetuju = PeminjamanKendaraan::where('user_id', $userId)->where('status', 'disetujui')->count();
 
         $statGedung = 0; $gedungPending = 0; $gedungSetuju = 0;
-        $statPersediaan = 0; $persediaanPending = 0; $persediaanSetuju = 0;
+        $statPersediaan = \App\Models\PermintaanPersediaan::where('user_id', $userId)->count();
+        $persediaanPending = \App\Models\PermintaanPersediaan::where('user_id', $userId)->whereIn('status', ['pending', 'dalam_review'])->count();
+        $persediaanSetuju = \App\Models\PermintaanPersediaan::where('user_id', $userId)->whereIn('status', ['disetujui', 'disetujui_kasubag'])->count();
+
+        // ⚡ Peminjaman Barang Lainnya (Kabel Roll, Stopkontak, Steker, Colokan, dll)
+        $this->ensureBarangLainnyaTable();
+        $statBarangLainnya = PeminjamanBarangLainnya::where('user_id', $userId)->count();
+        $barangLainnyaPending = PeminjamanBarangLainnya::where('user_id', $userId)->where('status', 'pending')->count();
+        $barangLainnyaSetuju = PeminjamanBarangLainnya::where('user_id', $userId)->where('status', 'disetujui')->count();
 
         $riwayatBarang = PeminjamanBarang::where('user_id', $userId)
             ->latest()->take(5)->get()->map(function ($item) {
@@ -69,14 +77,26 @@ class PegawaiController extends Controller
                 ];
             });
 
+        $riwayatLainnya = PeminjamanBarangLainnya::where('user_id', $userId)
+            ->latest()->take(5)->get()->map(function ($item) {
+                return [
+                    'tipe' => 'Barang Lainnya',
+                    'nama_item' => $item->nama_barang,
+                    'status' => $item->status,
+                    'tanggal' => $item->created_at
+                ];
+            });
+
         $riwayatTerbaru = collect($riwayatBarang)
             ->merge($riwayatKendaraan)
+            ->merge($riwayatLainnya)
             ->sortByDesc('tanggal')
             ->take(5);
 
         return view('pegawai.dashbord', compact(
             'statBarang', 'barangPending', 'barangSetuju', 'statKendaraan', 'kendaraanPending', 'kendaraanSetuju',
-            'statGedung', 'gedungPending', 'gedungSetuju', 'statPersediaan', 'persediaanPending', 'persediaanSetuju', 'riwayatTerbaru'
+            'statGedung', 'gedungPending', 'gedungSetuju', 'statPersediaan', 'persediaanPending', 'persediaanSetuju',
+            'statBarangLainnya', 'barangLainnyaPending', 'barangLainnyaSetuju', 'riwayatTerbaru'
         ));
     }
 

@@ -534,7 +534,7 @@
         <!-- Tombol Tambah Baris Barang -->
         <div style="margin-top: 18px;">
           <button type="button" onclick="tambahBarisPersediaan()" class="btn" style="background:#EEF2FF; color:var(--blue); border:1.5px dashed #A5B4FC; width:100%; padding:12px; font-weight:700; border-radius:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
-            <i class="fas fa-plus-circle"></i> + Tambah Baris Barang Persediaan Lainnya
+            <i class="fas fa-plus-circle"></i> + Tambah Baris Barang Persediaan
           </button>
         </div>
       </div>

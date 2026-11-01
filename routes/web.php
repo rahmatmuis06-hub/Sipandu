@@ -169,18 +169,22 @@ Route::middleware('auth')->group(function () {
             Route::post('/data-persediaan/import', [AdminPersediaanController::class, 'importPersediaan'])->name('data-persediaan.import');
 
             Route::post('/data-persediaan', [AdminPersediaanController::class, 'store'])->name('data-persediaan.store');
-            Route::post('/data-persediaan/barang-lainnya', [AdminPersediaanController::class, 'storeBarangLainnya'])->name('data-persediaan.store-barang-lainnya');
+            Route::get('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'show'])->name('data-persediaan.show');
+            Route::get('/data-persediaan/{persediaan}/edit', [AdminPersediaanController::class, 'edit'])->name('data-persediaan.edit');
+            Route::put('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'update'])->name('data-persediaan.update');
+            Route::delete('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'destroy'])->name('data-persediaan.destroy');
+
+            // ⚡ MENU DEDIKASI BARANG LAINNYA (Dikelola oleh Admin Persediaan, Terpisah dari Persediaan)
             Route::get('/barang-lainnya', [AdminPersediaanController::class, 'barangLainnya'])->name('barang-lainnya');
+            Route::get('/barang-lainnya/peminjaman', function () {
+                return redirect()->route('adminpersediaan.barang-lainnya', ['tab' => 'pinjam']);
+            })->name('barang-lainnya.peminjaman');
             Route::post('/barang-lainnya', [AdminPersediaanController::class, 'storeBarangLainnya'])->name('barang-lainnya.store');
             Route::put('/barang-lainnya/{id}', [AdminPersediaanController::class, 'updateBarangLainnya'])->name('barang-lainnya.update');
             Route::delete('/barang-lainnya/{id}', [AdminPersediaanController::class, 'destroyBarangLainnya'])->name('barang-lainnya.destroy');
             Route::post('/barang-lainnya/peminjaman/{id}/approve', [AdminPersediaanController::class, 'approvePeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.approve');
             Route::post('/barang-lainnya/peminjaman/{id}/reject', [AdminPersediaanController::class, 'rejectPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.reject');
             Route::post('/barang-lainnya/peminjaman/{id}/return', [AdminPersediaanController::class, 'returnPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.return');
-            Route::get('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'show'])->name('data-persediaan.show');
-            Route::get('/data-persediaan/{persediaan}/edit', [AdminPersediaanController::class, 'edit'])->name('data-persediaan.edit');
-            Route::put('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'update'])->name('data-persediaan.update');
-            Route::delete('/data-persediaan/{persediaan}', [AdminPersediaanController::class, 'destroy'])->name('data-persediaan.destroy');
 
 
 

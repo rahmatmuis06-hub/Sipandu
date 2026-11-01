@@ -174,6 +174,38 @@
         <div class="stat-label">Total Semua Permintaan</div>
       </div>
     </div>
+
+    <!-- Row 3: Menu Dedikasi Barang Lainnya (Dikelola oleh Admin Persediaan) -->
+    <div style="margin-top: 10px; margin-bottom: 24px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <h2 style="font-size: 16px; font-weight: 700; color: #b45309; display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> Pengelolaan Barang Lainnya (Kabel Roll, Colokan, Steker, Peralatan)
+        </h2>
+        <a href="{{ route('adminpersediaan.barang-lainnya') }}" style="font-size: 12.5px; font-weight: 700; color: #d97706; text-decoration: none;">
+          Buka Kelola Barang Lainnya &rarr;
+        </a>
+      </div>
+      <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 0;">
+        <a href="{{ route('adminpersediaan.barang-lainnya') }}" style="text-decoration: none; color: inherit;">
+          <div class="stat-card" style="background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border-color: #FDE68A;">
+            <div class="stat-icon" style="background: #F59E0B; color: #fff; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+              ⚡
+            </div>
+            <div class="stat-value" style="color: #92400E;">{{ number_format($totalBarangLainnya ?? 0, 0, ',', '.') }}</div>
+            <div class="stat-label" style="color: #B45309; font-weight: 600;">Total Jenis Barang Lainnya</div>
+          </div>
+        </a>
+        <a href="{{ route('adminpersediaan.barang-lainnya') }}?tab=pinjam" style="text-decoration: none; color: inherit;">
+          <div class="stat-card" style="background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%); border-color: #FECACA;">
+            <div class="stat-icon" style="background: #EF4444; color: #fff; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+              📋
+            </div>
+            <div class="stat-value" style="color: #991B1B;">{{ number_format($peminjamanLainnyaPending ?? 0, 0, ',', '.') }}</div>
+            <div class="stat-label" style="color: #B91C1C; font-weight: 600;">Peminjaman Barang Lainnya (Menunggu Approval)</div>
+          </div>
+        </a>
+      </div>
+    </div>
   </div>
 </main>
 

@@ -41,6 +41,9 @@
                     'route' => 'pegawai.dashboard',
                 ],
                 [
+                    'section' => 'Aset Tetap',
+                ],
+                [
                     'href' => route('pegawai.ajuan-mutasi.index'),
                     'label' => 'Ajuan Mutasi',
                     'icon' => 'fas fa-map-marker-alt',
@@ -59,19 +62,6 @@
                     'route' => 'pegawai.peminjaman-kendaraan',
                 ],
                 [
-                    'href' => route('pegawai.peminjaman-barang-lainnya'),
-                    'label' => 'Peminjaman Barang Lainnya',
-                    'icon' => 'fas fa-plug',
-                    'route' => 'pegawai.peminjaman-barang-lainnya',
-                ],
-                [
-                    'href' => route('pegawai.permintaan-persediaan'),
-                    'label' => 'Permintaan Persediaan',
-                    'icon' => 'fas fa-boxes',
-                    'route' => 'pegawai.permintaan-persediaan',
-                ],
-
-                [
                     'href' => route('pegawai.pengembalian-barang'),
                     'label' => 'Pengembalian Barang',
                     'icon' => 'fas fa-undo',
@@ -83,7 +73,27 @@
                     'icon' => 'fas fa-undo',
                     'route' => 'pegawai.pengembalian-kendaraan',
                 ],
-
+                [
+                    'section' => 'Persediaan',
+                ],
+                [
+                    'href' => route('pegawai.permintaan-persediaan'),
+                    'label' => 'Permintaan Persediaan',
+                    'icon' => 'fas fa-boxes',
+                    'route' => 'pegawai.permintaan-persediaan',
+                ],
+                [
+                    'section' => 'Barang Lainnya',
+                ],
+                [
+                    'href' => route('pegawai.peminjaman-barang-lainnya'),
+                    'label' => 'Peminjaman Barang Lainnya',
+                    'icon' => 'fas fa-plug',
+                    'route' => 'pegawai.peminjaman-barang-lainnya',
+                ],
+                [
+                    'section' => 'Pengaturan',
+                ],
                 [
                     'href' => route('pegawai.pengaturan-akun'),
                     'label' => 'Pengaturan Akun',
@@ -206,16 +216,13 @@
                     'route' => 'adminpersediaan.dashboard',
                 ],
                 [
+                    'section' => 'Persediaan',
+                ],
+                [
                     'href' => route('adminpersediaan.data-persediaan'),
                     'label' => 'Data Persediaan',
                     'icon' => 'fas fa-database',
                     'route' => 'adminpersediaan.data-persediaan',
-                ],
-                [
-                    'href' => route('adminpersediaan.barang-lainnya'),
-                    'label' => 'Barang Lainnya',
-                    'icon' => 'fas fa-plug',
-                    'route' => 'adminpersediaan.barang-lainnya',
                 ],
                 ...(config('features.show_stok_opname') ? [[
                     'href' => route('adminpersediaan.opname.index'),
@@ -237,7 +244,7 @@
                 ],
 
                 [
-                    'label' => 'Manajemen Permintaan Persediaan',
+                    'label' => 'Manajemen Permintaan',
                     'icon' => 'fas fa-exchange-alt',
                     'route' => 'NONE',
                     'children' => [
@@ -269,6 +276,26 @@
                             'route' => 'adminpersediaan.laporan-permintaan-persediaan',
                         ],
                     ],
+                ],
+                [
+                    'section' => 'Barang Lainnya',
+                ],
+                [
+                    'href' => route('adminpersediaan.barang-lainnya'),
+                    'label' => 'Data Barang Lainnya',
+                    'icon' => 'fas fa-plug',
+                    'route' => 'adminpersediaan.barang-lainnya',
+                    'active' => request()->routeIs('adminpersediaan.barang-lainnya*') && request('tab') !== 'pinjam',
+                ],
+                [
+                    'href' => route('adminpersediaan.barang-lainnya') . '?tab=pinjam',
+                    'label' => 'Peminjaman Barang Lainnya',
+                    'icon' => 'fas fa-hand-holding',
+                    'route' => 'adminpersediaan.barang-lainnya*',
+                    'active' => request()->routeIs('adminpersediaan.barang-lainnya*') && request('tab') === 'pinjam',
+                ],
+                [
+                    'section' => 'Pengaturan',
                 ],
                 [
                     'href' => route('adminpersediaan.pengaturan-akun'),
@@ -590,6 +617,24 @@
         display: flex;
         flex-direction: column;
         gap: 0;
+    }
+
+    /* Section Title */
+    .sidebar-section-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.7px;
+        color: #94a3b8;
+        padding: 14px 12px 4px 12px;
+        margin-top: 6px;
+        border-top: 1px solid #f1f5f9;
+    }
+
+    .sidebar-section-title:first-child {
+        border-top: none;
+        margin-top: 0;
+        padding-top: 4px;
     }
 
     /* Menu Item */
@@ -943,7 +988,11 @@
     <nav class="sidebar-nav">
         <div class="nav-group">
             @foreach ($config['navItems'] as $item)
-                @if (isset($item['children']))
+                @if (isset($item['section']))
+                    <div class="sidebar-section-title">
+                        {{ $item['section'] }}
+                    </div>
+                @elseif (isset($item['children']))
                     @php
                         $isParentActive = collect($item['children'])->contains(function ($child) {
                             return request()->routeIs($child['route'] ?? '');
@@ -969,8 +1018,13 @@
                         </div>
                     </div>
                 @else
+                    @php
+                        $isActive = isset($item['active'])
+                            ? (bool)$item['active']
+                            : (isset($item['route']) && request()->routeIs($item['route']));
+                    @endphp
                     <a href="{{ $item['href'] }}"
-                        class="nav-item {{ request()->routeIs($item['route'] ?? '') ? 'active' : '' }}">
+                        class="nav-item {{ $isActive ? 'active' : '' }}">
                         <i class="{{ $item['icon'] }} nav-icon"></i>
                         <span>{{ $item['label'] }}</span>
                     </a>

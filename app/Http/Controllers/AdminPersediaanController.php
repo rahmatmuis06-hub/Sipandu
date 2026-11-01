@@ -50,7 +50,12 @@ class AdminPersediaanController extends Controller
         $permintaanDitolak = \App\Models\PermintaanPersediaan::whereIn('status', ['ditolak', 'ditolak_kasubag'])->count();
         $totalPermintaan = \App\Models\PermintaanPersediaan::count();
 
-        // 4. Data Grafik: Tren Transaksi Keluar Bulanan (Tahun ini)
+        // 4. Data Barang Lainnya (Khusus Kelola Admin Persediaan)
+        $this->ensureBarangLainnyaTable();
+        $totalBarangLainnya = \App\Models\BarangLainnya::count();
+        $peminjamanLainnyaPending = \App\Models\PeminjamanBarangLainnya::where('status', 'pending')->count();
+
+        // 5. Data Grafik: Tren Transaksi Keluar Bulanan (Tahun ini)
         $chartData = [];
         $maxChart = 1; // Mencegah division by zero
         for ($i = 1; $i <= 12; $i++) {
@@ -71,6 +76,8 @@ class AdminPersediaanController extends Controller
             'permintaanDisetujui',
             'permintaanDitolak',
             'totalPermintaan',
+            'totalBarangLainnya',
+            'peminjamanLainnyaPending',
             'chartData',
             'maxChart',
             'tahunIni'
