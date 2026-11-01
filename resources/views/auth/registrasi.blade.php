@@ -166,14 +166,34 @@
               <label for="regPassword" class="block text-sm font-semibold text-navy-800 mb-2">Password <span class="text-red-400">*</span></label>
               <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
-                <input id="regPassword" name="password" type="password" autocomplete="new-password"
+                <input id="regPassword" name="password" type="password" autocomplete="new-password" required
                   oninput="checkPasswordStrength(this.value)"
                   class="auth-input w-full pl-9 pr-12 py-3 border {{ $errors->has('password') ? 'border-red-400' : 'border-slate-200' }} rounded-xl text-sm text-navy-900 bg-slate-50 placeholder:text-slate-400"
-                  placeholder="Minimal 8 karakter">
+                  placeholder="Min. 8 karakter &amp; huruf besar (cth: Sipandu26)">
                 <button type="button" onclick="togglePass('regPassword','eyeReg')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy-600 transition">
                   <svg id="eyeReg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </div>
+
+              {{-- Notes Ketentuan Password --}}
+              <div class="mt-2.5 rounded-xl border border-amber-200 bg-amber-50/80 px-3.5 py-2.5 text-xs text-amber-900">
+                <div class="font-bold text-amber-800 mb-1 flex items-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                  <span>Catatan Pembuatan Password:</span>
+                </div>
+                <ul class="space-y-1 ml-0.5">
+                  <li id="ruleLength" class="flex items-center gap-1.5 text-slate-600 transition-colors">
+                    <span id="ruleLengthIcon" class="inline-flex w-4 h-4 rounded-full bg-slate-200 text-slate-500 items-center justify-center text-[10px] font-bold">•</span>
+                    <span>Wajib minimal <strong>8 karakter</strong></span>
+                  </li>
+                  <li id="ruleUpper" class="flex items-center gap-1.5 text-slate-600 transition-colors">
+                    <span id="ruleUpperIcon" class="inline-flex w-4 h-4 rounded-full bg-slate-200 text-slate-500 items-center justify-center text-[10px] font-bold">•</span>
+                    <span>Wajib memuat minimal <strong>1 huruf besar / kapital (A–Z)</strong></span>
+                  </li>
+                </ul>
+                <p class="text-[11px] text-amber-700/90 mt-1.5">Contoh password yang benar: <code class="bg-amber-100/90 px-1.5 py-0.5 rounded font-semibold">Sipandu2026</code></p>
+              </div>
+
               <div class="mt-2 flex gap-1" id="strengthBars">
                 <div class="strength-bar flex-1 bg-slate-200"></div>
                 <div class="strength-bar flex-1 bg-slate-200"></div>
@@ -249,25 +269,52 @@
       : '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
   }
 
+  function updateRuleIndicator(rowId, iconId, passed) {
+    const row  = document.getElementById(rowId);
+    const icon = document.getElementById(iconId);
+    if (!row || !icon) return;
+    if (passed) {
+      row.className  = 'flex items-center gap-1.5 text-emerald-700 font-semibold transition-colors';
+      icon.className = 'inline-flex w-4 h-4 rounded-full bg-emerald-500 text-white items-center justify-center text-[10px] font-bold';
+      icon.textContent = '✓';
+    } else {
+      row.className  = 'flex items-center gap-1.5 text-slate-600 transition-colors';
+      icon.className = 'inline-flex w-4 h-4 rounded-full bg-slate-200 text-slate-500 items-center justify-center text-[10px] font-bold';
+      icon.textContent = '•';
+    }
+  }
+
   function checkPasswordStrength(val) {
     const bars  = document.querySelectorAll('#strengthBars .strength-bar');
     const text  = document.getElementById('strengthText');
+    const hasMin8  = val.length >= 8;
+    const hasUpper = /[A-Z]/.test(val);
+
+    updateRuleIndicator('ruleLength', 'ruleLengthIcon', hasMin8);
+    updateRuleIndicator('ruleUpper', 'ruleUpperIcon', hasUpper);
+
     if (!val) { resetStrength(); return; }
     let score = 0;
-    if (val.length >= 6)  score++;
-    if (val.length >= 10) score++;
-    if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+    if (hasMin8) score++;
+    if (hasUpper) score++;
+    if (/[0-9]/.test(val) || val.length >= 10) score++;
     if (/[^A-Za-z0-9]/.test(val)) score++;
+    if (score === 0) score = 1;
     const colors     = ['bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-500'];
-    const labels     = ['Sangat Lemah', 'Lemah', 'Cukup Kuat', 'Kuat'];
-    const textColors = ['text-red-500', 'text-orange-500', 'text-yellow-600', 'text-green-600'];
-    bars.forEach((b, i) => { b.className = 'strength-bar flex-1 ' + (i < score ? colors[score - 1] : 'bg-slate-200'); });
-    text.className   = 'text-xs mt-1 ' + textColors[score - 1];
-    text.textContent = labels[score - 1] || 'Masukkan password';
+    const labels     = ['Belum Memenuhi Syarat', 'Cukup (Pastikan 8 Karakter & Huruf Besar)', 'Kuat', 'Sangat Kuat'];
+    const textColors = ['text-red-500', 'text-orange-500', 'text-emerald-600', 'text-green-600'];
+    const finalIdx   = (!hasMin8 || !hasUpper) ? 0 : Math.max(2, score) - 1;
+    bars.forEach((b, i) => { b.className = 'strength-bar flex-1 ' + (i <= finalIdx ? colors[finalIdx] : 'bg-slate-200'); });
+    text.className   = 'text-xs mt-1 ' + textColors[finalIdx];
+    text.textContent = (!hasMin8 || !hasUpper)
+      ? 'Pastikan minimal 8 karakter & memuat 1 huruf besar (A-Z)'
+      : labels[finalIdx];
   }
 
   function resetStrength() {
     document.querySelectorAll('#strengthBars .strength-bar').forEach(b => b.className = 'strength-bar flex-1 bg-slate-200');
+    updateRuleIndicator('ruleLength', 'ruleLengthIcon', false);
+    updateRuleIndicator('ruleUpper', 'ruleUpperIcon', false);
     const t = document.getElementById('strengthText');
     t.className   = 'text-xs text-slate-400 mt-1';
     t.textContent = 'Masukkan password untuk melihat kekuatan';

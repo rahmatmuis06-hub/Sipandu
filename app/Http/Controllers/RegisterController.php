@@ -42,7 +42,7 @@ class RegisterController extends Controller
                 'alpha_dash',
                 Rule::unique('users', 'username'),
             ],
-            'password'      => ['required', 'string', 'min:8', 'confirmed'],
+            'password'      => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'confirmed'],
             'unit_kerja_id' => ['required', 'exists:unit_kerjas,id'],
         ], [
             'name.required'          => 'Nama lengkap wajib diisi.',
@@ -51,7 +51,8 @@ class RegisterController extends Controller
             'username.alpha_dash'    => 'Username hanya boleh berisi huruf, angka, strip, dan underscore.',
             'username.unique'        => 'Username sudah digunakan, pilih yang lain.',
             'password.required'      => 'Password wajib diisi.',
-            'password.min'           => 'Password minimal 8 karakter.',
+            'password.min'           => 'Password minimal harus memuat 8 karakter.',
+            'password.regex'         => 'Password wajib memuat minimal 1 huruf besar/kapital (A-Z).',
             'password.confirmed'     => 'Konfirmasi password tidak cocok.',
             'unit_kerja_id.required' => 'Unit kerja wajib dipilih.',
             'unit_kerja_id.exists'   => 'Unit kerja yang dipilih tidak valid dalam sistem.',

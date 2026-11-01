@@ -1185,7 +1185,12 @@
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</span>
-                <p class="text-slate-600"><strong class="text-navy-900">Registrasi Pegawai Baru:</strong> Klik tombol <strong>"Daftar"</strong>, lengkapi Nama Lengkap, NIP/NIK, pilih Unit Kerja, serta buat Username dan Kata Sandi (minimal 8 karakter).</p>
+                <div class="text-slate-600">
+                  <p><strong class="text-navy-900">Registrasi Pegawai Baru:</strong> Klik tombol <strong>"Daftar"</strong>, lengkapi Nama Lengkap, NIP/NIK, pilih Unit Kerja, serta buat Username dan Kata Sandi.</p>
+                  <div class="mt-1.5 inline-block rounded-lg bg-amber-50 border border-amber-200 px-3 py-1.5 text-xs text-amber-800">
+                    💡 <strong>Catatan Password:</strong> Wajib memuat minimal <strong>8 karakter</strong> dan minimal <strong>1 huruf besar/kapital (A–Z)</strong>, contoh: <code>Sipandu2026</code>.
+                  </div>
+                </div>
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
