@@ -871,9 +871,6 @@
             <button type="button" onclick="switchRoleGuide('pegawai')" id="roleBtn-pegawai" class="role-pill active px-4 py-2 rounded-xl text-xs md:text-sm font-bold border transition-all duration-200 flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 shadow-sm">
               <span class="w-2 h-2 rounded-full bg-blue-600"></span> Pegawai
             </button>
-            <button type="button" onclick="switchRoleGuide('tamu')" id="roleBtn-tamu" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-cyan-500"></span> Tamu / Eksternal
-            </button>
             <button type="button" onclick="switchRoleGuide('kasubag')" id="roleBtn-kasubag" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-indigo-600"></span> Kasubag Umum
             </button>
@@ -889,6 +886,9 @@
             <button type="button" onclick="switchRoleGuide('kepalabpmp')" id="roleBtn-kepalabpmp" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-purple-600"></span> Kepala BPMP
             </button>
+            <button type="button" onclick="switchRoleGuide('superadmin')" id="roleBtn-superadmin" class="role-pill px-4 py-2 rounded-xl text-xs md:text-sm font-semibold border border-slate-200 text-slate-600 hover:bg-slate-50 transition-all duration-200 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-rose-600"></span> Operator
+            </button>
           </div>
         </div>
 
@@ -900,67 +900,51 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Pegawai BPMP Gorontalo</h3>
-              <p class="text-slate-600 text-sm mt-1">Diberikan kepada seluruh ASN / Pegawai BPMP untuk mengajukan kebutuhan operasional kerja, peminjaman sarana, dan mutasi inventaris.</p>
+              <p class="text-slate-600 text-sm mt-1">Digunakan oleh seluruh ASN / Pegawai BPMP untuk mengajukan peminjaman aset tetap &amp; kendaraan dinas, permintaan ATK/persediaan, peminjaman barang lainnya per kode unit, serta mutasi inventaris.</p>
             </div>
           </div>
 
-          <div class="grid md:grid-cols-2 gap-4">
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
               <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
                 <span class="text-blue-600">📦</span> Peminjaman Barang &amp; Kendaraan
               </h4>
-              <p class="text-slate-500 text-xs">Mengajukan pinjam alat kantor dan mobil/motor dinas untuk perjalanan dinas luar kota/daerah.</p>
+              <p class="text-slate-500 text-xs leading-relaxed">Mengajukan peminjaman peralatan kantor (terurut sesuai NUP) serta mobil/motor dinas untuk kegiatan operasional dan perjalanan dinas.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
+                <span class="text-indigo-600">↩️</span> Pengembalian Barang &amp; Kendaraan
+              </h4>
+              <p class="text-slate-500 text-xs leading-relaxed">Melaporkan pengembalian aset tetap maupun armada dinas disertai kondisi terkini, catatan pemakaian, dan unggah foto bukti.</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
               <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
                 <span class="text-emerald-600">📝</span> Permintaan Persediaan (ATK)
               </h4>
-              <p class="text-slate-500 text-xs">Meminta bahan operasional kantor, kertas, tinta, dan kebutuhan habis pakai unit kerja.</p>
+              <p class="text-slate-500 text-xs leading-relaxed">Mengajukan kebutuhan bahan habis pakai kantor (kertas, tinta, alat tulis, bahan kebersihan) untuk unit kerja masing-masing.</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
               <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
-                <span class="text-indigo-600">↩️</span> Pengembalian Barang &amp; Armada
+                <span class="text-amber-600">⚡</span> Pinjam &amp; Kembali Barang Lainnya
               </h4>
-              <p class="text-slate-500 text-xs">Formulir serah terima pengembalian barang dan input KM akhir serta kondisi kendaraan setelah selesai dinas.</p>
+              <p class="text-slate-500 text-xs leading-relaxed">Meminjam peralatan pendukung (kabel roll/cokrol, steker, adaptor) dengan memilih <strong>Kode Unit fisik (Kode A, B, C, dst.)</strong> serta melaporkan pengembaliannya.</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
               <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
-                <span class="text-amber-600">📍</span> Ajuan Mutasi Inventaris
+                <span class="text-orange-600">📍</span> Ajuan Mutasi Inventaris
               </h4>
-              <p class="text-slate-500 text-xs">Mengajukan pengalihan tanggung jawab atau perpindahan lokasi fisik aset ruangan.</p>
+              <p class="text-slate-500 text-xs leading-relaxed">Mengajukan perpindahan lokasi ruangan atau pengalihan penanggung jawab atas aset tetap di unit kerja.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
+                <span class="text-slate-600">⚙️</span> Pengaturan Akun &amp; Notifikasi WA
+              </h4>
+              <p class="text-slate-500 text-xs leading-relaxed">Memperbarui profil, nomor WhatsApp untuk notifikasi persetujuan otomatis, tanda tangan digital, dan kata sandi.</p>
             </div>
           </div>
         </div>
 
-        <!-- 2. DETAIL TAMU -->
-        <div id="roleDetail-tamu" class="role-detail-box hidden space-y-6">
-          <div class="bg-cyan-50/60 rounded-2xl p-5 border border-cyan-100 flex items-start gap-4">
-            <div class="w-12 h-12 rounded-xl bg-cyan-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M9 8h1"/><path d="M9 12h1"/><path d="M9 16h1"/><path d="M14 8h1"/><path d="M14 12h1"/><path d="M14 16h1"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/></svg>
-            </div>
-            <div>
-              <h3 class="text-xl font-bold text-navy-900">Peran: Tamu / Pengguna Eksternal</h3>
-              <p class="text-slate-600 text-sm mt-1">Diberikan kepada masyarakat umum, sekolah, dinas, atau instansi mitra yang ingin menyewa/meminjam fasilitas gedung BPMP.</p>
-            </div>
-          </div>
-
-          <div class="grid md:grid-cols-3 gap-4">
-            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-              <h4 class="font-bold text-navy-900 text-sm mb-1 text-cyan-700">1. Informasi Fasilitas</h4>
-              <p class="text-slate-500 text-xs">Cek kapasitas ruangan, luas, fasilitas pendukung (AC, Proyektor, Sound), dan galeri foto.</p>
-            </div>
-            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-              <h4 class="font-bold text-navy-900 text-sm mb-1 text-cyan-700">2. Peminjaman Gedung</h4>
-              <p class="text-slate-500 text-xs">Pilih gedung, tanggal kegiatan, kuantitas peserta, dan upload surat permohonan resmi.</p>
-            </div>
-            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-              <h4 class="font-bold text-navy-900 text-sm mb-1 text-cyan-700">3. Survei Layanan</h4>
-              <p class="text-slate-500 text-xs">Mengisi kuesioner kepuasan pelayanan sarpras pasca penggunaan fasilitas.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. DETAIL KASUBAG -->
+        <!-- 2. DETAIL KASUBAG -->
         <div id="roleDetail-kasubag" class="role-detail-box hidden space-y-6">
           <div class="bg-indigo-50/60 rounded-2xl p-5 border border-indigo-100 flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-indigo-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
@@ -968,27 +952,31 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Kasubag Umum</h3>
-              <p class="text-slate-600 text-sm mt-1">Otorisator penentu persetujuan (*Approval*) berjenjang untuk peminjaman sarana dan pengeluaran barang persediaan kantor.</p>
+              <p class="text-slate-600 text-sm mt-1">Pejabat otorisator persetujuan (*Approval*) berjenjang untuk peminjaman barang &amp; kendaraan dinas, sekaligus pengawas monitoring penyaluran persediaan dan aset.</p>
             </div>
           </div>
 
-          <div class="grid md:grid-cols-3 gap-4">
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Barang</h4>
-              <p class="text-slate-500 text-xs">Validasi permohonan pinjam alat kantor dari pegawai (Setujui / Tolak dengan catatan).</p>
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Peminjaman Barang</h4>
+              <p class="text-slate-500 text-xs leading-relaxed">Memvalidasi permohonan pinjam aset tetap yang telah diverifikasi Admin Aset (Setujui / Tolak dengan catatan).</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Kendaraan</h4>
-              <p class="text-slate-500 text-xs">Otorisasi peminjaman kendaraan dinas berdasarkan urgensi tugas dan alokasi BBM.</p>
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Kendaraan Dinas</h4>
+              <p class="text-slate-500 text-xs leading-relaxed">Memberikan otorisasi pemakaian armada dinas berdasarkan jadwal kegiatan dan urgensi tugas pegawai.</p>
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
-              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Persetujuan Persediaan</h4>
-              <p class="text-slate-500 text-xs">Otorisasi pengeluaran ATK dan bahan operasional dari gudang logistik.</p>
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Monitoring Terpadu</h4>
+              <p class="text-slate-500 text-xs leading-relaxed">Memantau riwayat Permintaan Persediaan, status peminjaman Barang/Aset Tetap, dan pergerakan Kendaraan secara real-time.</p>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+              <h4 class="font-bold text-navy-900 text-sm mb-1 text-indigo-700">Laporan Transaksi Keluar</h4>
+              <p class="text-slate-500 text-xs leading-relaxed">Meninjau rekapitulasi pengeluaran barang persediaan gudang dan mengekspor laporan resmi PDF.</p>
             </div>
           </div>
         </div>
 
-        <!-- 4. DETAIL ADMIN ASET TETAP -->
+        <!-- 3. DETAIL ADMIN ASET TETAP -->
         <div id="roleDetail-adminasettetap" class="role-detail-box hidden space-y-6">
           <div class="bg-orange-50/60 rounded-2xl p-5 border border-orange-100 flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-orange-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
@@ -996,31 +984,31 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Admin Aset Tetap</h3>
-              <p class="text-slate-600 text-sm mt-1">Mengelola siklus hidup lengkap Barang Milik Negara (BMN) dari penerimaan, peminjaman, mutasi, hingga penghapusan.</p>
+              <p class="text-slate-600 text-sm mt-1">Mengelola siklus hidup lengkap Barang Milik Negara (BMN) mulai dari pendataan master aset, transaksi masuk/keluar, mutasi ruangan, hingga layanan peminjaman &amp; pengembalian.</p>
             </div>
           </div>
 
           <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Master Data Aset</strong>
-              <span class="text-slate-500">Katalog BMN, NUP, Merk, Nilai, Import Excel &amp; Cetak Barcode.</span>
+              <strong class="text-navy-900 block mb-1">Data Aset Tetap</strong>
+              <span class="text-slate-500 leading-relaxed">Katalog BMN, NUP berurutan, merk/tipe, kondisi fisik, nilai perolehan, Import Excel &amp; cetak barcode.</span>
             </div>
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Transaksi Masuk / Keluar</strong>
-              <span class="text-slate-500">Pencatatan pengadaan baru &amp; penghapusan aset rusak/dijual.</span>
+              <strong class="text-navy-900 block mb-1">Transaksi &amp; Mutasi Barang</strong>
+              <span class="text-slate-500 leading-relaxed">Pencatatan pengadaan masuk, pengeluaran/penghapusan aset, mutasi lokasi, &amp; proses Info Ajuan Mutasi pegawai.</span>
             </div>
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Layanan Peminjaman</strong>
-              <span class="text-slate-500">Verifikasi barang/kendaraan, buat BAST &amp; Surat Izin Jalan.</span>
+              <strong class="text-navy-900 block mb-1">Peminjaman &amp; Pengembalian</strong>
+              <span class="text-slate-500 leading-relaxed">Verifikasi awal pinjam barang/kendaraan ke Kasubag, verifikasi pengembalian fisik, &amp; cetak BAST / Surat Kembali.</span>
             </div>
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Laporan &amp; Analitik</strong>
-              <span class="text-slate-500">Rekap depresiasi, transaksi keluar, unduh berkas PDF/Excel.</span>
+              <strong class="text-navy-900 block mb-1">Laporan &amp; Statistik</strong>
+              <span class="text-slate-500 leading-relaxed">Ringkasan analitik kondisi BMN, perhitungan nilai aset, serta ekspor Laporan Transaksi Keluar (PDF/Excel).</span>
             </div>
           </div>
         </div>
 
-        <!-- 5. DETAIL ADMIN PERSEDIAAN -->
+        <!-- 4. DETAIL ADMIN PERSEDIAAN -->
         <div id="roleDetail-adminpersediaan" class="role-detail-box hidden space-y-6">
           <div class="bg-emerald-50/60 rounded-2xl p-5 border border-emerald-100 flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
@@ -1028,33 +1016,31 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Admin Persediaan</h3>
-              <p class="text-slate-600 text-sm mt-1">Mengelola logistik habis pakai, ATK, bahan kebersihan,@if(config('features.show_stok_opname')) stok opname berkala,@endif dan penyaluran barang ke unit kerja.</p>
+              <p class="text-slate-600 text-sm mt-1">Mengelola stok barang habis pakai (ATK &amp; operasional) dengan riwayat harga pengadaan, melayani permintaan pegawai, serta mengelola peminjaman <strong>Barang Lainnya</strong> berbasis Kode Unit.</p>
             </div>
           </div>
 
           <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Master Persediaan</strong>
-              <span class="text-slate-500">Katalog barang habis pakai, satuan, harga perolehan, batas minimum.</span>
-            </div>
-            @if(config('features.show_stok_opname'))
-            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Stok Opname Bulanan</strong>
-              <span class="text-slate-500">Cek fisik gudang bulanan, hitung selisih otomatis, finalisasi opname.</span>
-            </div>
-            @endif
-            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Masuk &amp; Keluar Gudang</strong>
-              <span class="text-slate-500">Penerimaan dari vendor &amp; pengeluaran logistik operasional kantor.</span>
+              <strong class="text-navy-900 block mb-1">Data Persediaan &amp; Riwayat Harga</strong>
+              <span class="text-slate-500 leading-relaxed">Katalog barang habis pakai, Import Excel, pemantauan stok kritis, dan daftar riwayat harga per transaksi masuk.</span>
             </div>
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Laporan Logistik</strong>
-              <span class="text-slate-500">Cetak rekap masuk/keluar &amp; permintaan unit kerja (PDF).</span>
+              <strong class="text-navy-900 block mb-1">Transaksi Masuk, Keluar &amp; Permintaan</strong>
+              <span class="text-slate-500 leading-relaxed">Input barang masuk multi-item, pengeluaran stok gudang, serta verifikasi &amp; penyaluran permintaan ATK pegawai.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Barang Lainnya (Kode Unit)</strong>
+              <span class="text-slate-500 leading-relaxed">Kelola alat pendukung berkode unit otomatis (A, B, C...) yang bisa diedit manual, konfirmasi kode unit pinjam, &amp; verifikasi kembali + cetak Berita Acara PDF.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Laporan &amp; Statistik Logistik</strong>
+              <span class="text-slate-500 leading-relaxed">Cetak rekap Laporan Transaksi Masuk, Transaksi Keluar, dan Laporan Permintaan Persediaan unit kerja (PDF).@if(config('features.show_stok_opname')) Termasuk Stok Opname Bulanan.@endif</span>
             </div>
           </div>
         </div>
 
-        <!-- 6. DETAIL ADMIN SARPRAS -->
+        <!-- 5. DETAIL ADMIN SARPRAS -->
         <div id="roleDetail-adminsarpras" class="role-detail-box hidden space-y-6">
           <div class="bg-cyan-50/60 rounded-2xl p-5 border border-cyan-100 flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-cyan-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
@@ -1062,27 +1048,31 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Admin Sarpras</h3>
-              <p class="text-slate-600 text-sm mt-1">Mengelola fasilitas fisik, data gedung, galeri etalase beranda, serta pencatatan dan perbaikan kerusakan sarpras.</p>
+              <p class="text-slate-600 text-sm mt-1">Mengelola data gedung &amp; etalase fasilitas beranda, pencatatan serta tindak lanjut kerusakan sarana prasarana, hingga sinkronisasi layanan ULT.</p>
             </div>
           </div>
 
-          <div class="grid sm:grid-cols-3 gap-3 text-xs">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
               <strong class="text-navy-900 block mb-1">Data Gedung &amp; Etalase</strong>
-              <span class="text-slate-500">Kelola master gedung, kapasitas, fasilitas, dan foto galeri landing page.</span>
+              <span class="text-slate-500 leading-relaxed">Kelola master gedung, aula, ruang kelas, asrama/mess, spesifikasi kapasitas, serta galeri fasilitas di beranda.</span>
             </div>
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Pencatatan Kerusakan</strong>
-              <span class="text-slate-500">Input data kerusakan sarana gedung, estimasi biaya, dan vendor teknisi.</span>
+              <strong class="text-navy-900 block mb-1">Data Kerusakan Sarpras</strong>
+              <span class="text-slate-500 leading-relaxed">Pencatatan kerusakan fisik bangunan/fasilitas, tingkat keparahan, estimasi penanganan, dan progres perbaikan.</span>
             </div>
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Laporan Pemeliharaan</strong>
-              <span class="text-slate-500">Cetak riwayat pemeliharaan dan laporan biaya perbaikan (PDF).</span>
+              <strong class="text-navy-900 block mb-1">Laporan Kerusakan</strong>
+              <span class="text-slate-500 leading-relaxed">Rekapitulasi riwayat pemeliharaan dan pencetakan dokumen Laporan Kerusakan Sarpras (PDF).</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Integrasi ULT</strong>
+              <span class="text-slate-500 leading-relaxed">Pemantauan dan integrasi informasi ketersediaan fasilitas bersama Unit Layanan Terpadu BPMP.</span>
             </div>
           </div>
         </div>
 
-        <!-- 7. DETAIL KEPALA BPMP -->
+        <!-- 6. DETAIL KEPALA BPMP -->
         <div id="roleDetail-kepalabpmp" class="role-detail-box hidden space-y-6">
           <div class="bg-purple-50/60 rounded-2xl p-5 border border-purple-100 flex items-start gap-4">
             <div class="w-12 h-12 rounded-xl bg-purple-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
@@ -1090,18 +1080,50 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Kepala BPMP</h3>
-              <p class="text-slate-600 text-sm mt-1">Pimpinan eksekutif untuk pengawasan, monitoring neraca BMN, dan pengesahan laporan rekapitulasi instansi.</p>
+              <p class="text-slate-600 text-sm mt-1">Pimpinan eksekutif untuk pengawasan menyeluruh, pemantauan neraca kondisi BMN, dan pengunduhan laporan rekapitulasi resmi instansi.</p>
             </div>
           </div>
 
           <div class="grid sm:grid-cols-2 gap-4 text-xs">
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 text-sm block mb-1">📊 Dashboard Eksekutif</strong>
-              <span class="text-slate-500">Pantauan grafik kondisi aset (Baik/Rusak), kapitalisasi nilai BMN, dan mutasi barang secara real-time.</span>
+              <strong class="text-navy-900 text-sm block mb-1">📊 Dashboard &amp; Analitik Eksekutif</strong>
+              <span class="text-slate-500 leading-relaxed">Pantauan grafik kondisi aset tetap (Baik, Rusak Ringan, Rusak Berat), total nilai aset terkelola, stok persediaan, dan aktivitas transaksi secara real-time.</span>
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 text-sm block mb-1">📥 Unduh Laporan Lengkap</strong>
-              <span class="text-slate-500">Download rekapitulasi resmi laporan persediaan, aset tetap, sarpras, hingga laporan gabungan (PDF).</span>
+              <strong class="text-navy-900 text-sm block mb-1">📥 Laporan BMN &amp; Unduh Rekapitulasi PDF</strong>
+              <span class="text-slate-500 leading-relaxed">Akses cepat untuk mengunduh Laporan Persediaan, Laporan Aset Tetap, Laporan Sarpras, hingga Laporan Gabungan Lengkap ber-kop resmi (PDF).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. DETAIL OPERATOR / SUPER ADMIN -->
+        <div id="roleDetail-superadmin" class="role-detail-box hidden space-y-6">
+          <div class="bg-rose-50/60 rounded-2xl p-5 border border-rose-100 flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-md">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><circle cx="12" cy="11" r="3"/></svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-navy-900">Peran: Operator (Super Admin)</h3>
+              <p class="text-slate-600 text-sm mt-1">Administrator utama sistem yang mengelola akun pengguna lintas peran, struktur unit kerja, pencadangan (*backup*) database, dan pengaturan fitur sistem.</p>
+            </div>
+          </div>
+
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Kelola Pengguna</strong>
+              <span class="text-slate-500 leading-relaxed">Tambah, ubah peran, reset kata sandi, dan aktif/nonaktifkan akun pegawai maupun admin pengelola.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Kelola Unit Kerja</strong>
+              <span class="text-slate-500 leading-relaxed">Pengaturan daftar tim kerja / subbagian resmi di lingkungan BPMP Provinsi Gorontalo.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Backup &amp; Pemeliharaan Data</strong>
+              <span class="text-slate-500 leading-relaxed">Unduh backup database penuh atau per modul (SQL/JSON) serta pembersihan data terproteksi kata sandi.</span>
+            </div>
+            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
+              <strong class="text-navy-900 block mb-1">Pengaturan Fitur Sistem</strong>
+              <span class="text-slate-500 leading-relaxed">Kontrol aktivasi modul lanjutan seperti metode antrean batch harga FIFO pada Persediaan.</span>
             </div>
           </div>
         </div>
@@ -1115,38 +1137,37 @@
           <!-- SOP 1 -->
           <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-blue-50/30 flex flex-col">
             <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center mb-4">1</div>
-            <h4 class="font-bold text-navy-900 text-base mb-2">Pinjam Barang &amp; Kendaraan</h4>
+            <h4 class="font-bold text-navy-900 text-base mb-2">Peminjaman &amp; Pengembalian Aset / Kendaraan</h4>
             <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
-              <li>Pegawai membuat pengajuan di sistem.</li>
-              <li>Admin Aset verifikasi ketersediaan armada/alat.</li>
-              <li>Kasubag Umum menyetujui (*Approve*).</li>
-              <li>Admin Aset cetak BAST / Surat Izin Jalan.</li>
-              <li>Pegawai menggunakan aset dinas.</li>
-              <li>Pegawai serahkan kembali &amp; Admin verifikasi selesai.</li>
+              <li>Pegawai memilih barang (urut NUP) atau kendaraan dinas pada menu peminjaman.</li>
+              <li>Admin Aset Tetap memverifikasi ketersediaan fisik dan meneruskan ke Kasubag Umum.</li>
+              <li>Kasubag Umum menyetujui (*Approve*) dan notifikasi WhatsApp terkirim otomatis.</li>
+              <li>Selesai dinas, Pegawai mengisi form <strong>Pengembalian</strong> beserta kondisi &amp; foto bukti.</li>
+              <li>Admin Aset memverifikasi laporan kembali dan mencetak Berita Acara Pengembalian (PDF).</li>
             </ol>
           </div>
 
           <!-- SOP 2 -->
           <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-emerald-50/30 flex flex-col">
             <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center mb-4">2</div>
-            <h4 class="font-bold text-navy-900 text-base mb-2">Permintaan Persediaan (ATK)</h4>
+            <h4 class="font-bold text-navy-900 text-base mb-2">Permintaan Persediaan (ATK &amp; Habis Pakai)</h4>
             <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
-              <li>Pegawai input item &amp; kuantitas ATK.</li>
-              <li>Admin Persediaan cek stok gudang.</li>
-              <li>Kasubag Umum menyetujui penyaluran.</li>
-              <li>Admin Persediaan serah terima barang (stok gudang terpotong otomatis) &amp; cetak BAST.</li>
+              <li>Pegawai memilih item persediaan dan mengisi jumlah kebutuhan unit kerja.</li>
+              <li>Admin Persediaan memeriksa ketersediaan stok gudang pada menu Permintaan Persediaan.</li>
+              <li>Saat disetujui &amp; disalurkan, stok gudang otomatis terpotong dan tercatat sebagai Transaksi Keluar.</li>
+              <li>Kasubag Umum &amp; Kepala BPMP dapat memantau rekap penyaluran secara real-time maupun PDF.</li>
             </ol>
           </div>
 
           <!-- SOP 3 -->
-          <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-cyan-50/30 flex flex-col">
-            <div class="w-10 h-10 rounded-xl bg-cyan-100 text-cyan-700 font-bold flex items-center justify-center mb-4">3</div>
-            <h4 class="font-bold text-navy-900 text-base mb-2">Peminjaman Gedung (Tamu)</h4>
+          <div class="border border-slate-200 rounded-2xl p-5 bg-gradient-to-b from-white to-amber-50/30 flex flex-col">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 font-bold flex items-center justify-center mb-4">3</div>
+            <h4 class="font-bold text-navy-900 text-base mb-2">Peminjaman Barang Lainnya (Kode Unit)</h4>
             <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
-              <li>Tamu cek fasilitas &amp; daftar akun.</li>
-              <li>Ajukan pinjam gedung (+ upload surat dinas).</li>
-              <li>Admin Sarpras &amp; Kasubag telaah jadwal.</li>
-              <li>Persetujuan terbit &amp; izin pemakaian diberikan.</li>
+              <li>Pegawai memilih perlengkapan (misal <em>Kabel Roll</em>) lalu mengklik <strong>Kode Unit</strong> yang tersedia (misal <code>Kode B</code>).</li>
+              <li>Admin Persediaan menyetujui pengajuan sekaligus memverifikasi (atau menyesuaikan) Kode Unit fisik yang diserahkan.</li>
+              <li>Status <code>Kode B</code> terkunci sebagai <strong>Dipinjam</strong> agar tidak bentrok dengan peminjam lain.</li>
+              <li>Pegawai melaporkan pengembalian, Admin memverifikasi kondisi, Cetak Bukti PDF tersedia, dan <code>Kode B</code> kembali <strong>Tersedia</strong>.</li>
             </ol>
           </div>
 
@@ -1157,31 +1178,31 @@
       <div id="guideContent-akses" class="hidden bg-white rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-lg">
         <div class="grid md:grid-cols-2 gap-8 items-center">
           <div class="space-y-4">
-            <h3 class="text-2xl font-bold text-navy-900">Cara Masuk &amp; Pendaftaran Akun</h3>
+            <h3 class="text-2xl font-bold text-navy-900">Cara Masuk &amp; Pendaftaran Akun Pegawai</h3>
             <p class="text-slate-600 text-sm leading-relaxed">
-              SIPANDU menggunakan sistem autentikasi pintar yang secara otomatis mengarahkan setiap pengguna ke dashboard perannya masing-masing setelah login berhasil.
+              SIPANDU dirancang khusus untuk internal lingkungan BPMP Provinsi Gorontalo dan secara otomatis mengarahkan setiap pengguna ke dashboard sesuai perannya setelah berhasil masuk.
             </p>
             <div class="space-y-3 text-sm">
               <div class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</span>
-                <p class="text-slate-600"><strong class="text-navy-900">Pengguna Terdaftar:</strong> Klik menu <strong>"Masuk"</strong> di navbar, masukkan username dan password Anda.</p>
+                <p class="text-slate-600"><strong class="text-navy-900">Pegawai &amp; Admin Terdaftar:</strong> Klik tombol <strong>"Masuk"</strong> di bagian atas halaman, lalu masukkan <em>Username</em> dan <em>Password</em> akun Anda.</p>
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</span>
-                <p class="text-slate-600"><strong class="text-navy-900">Pengguna Baru / Tamu:</strong> Klik menu <strong>"Daftar"</strong>, isi nama, nomor telepon, username, dan kata sandi baru.</p>
+                <p class="text-slate-600"><strong class="text-navy-900">Registrasi Pegawai Baru:</strong> Klik tombol <strong>"Daftar"</strong>, lengkapi Nama Lengkap, NIP/NIK, pilih Unit Kerja, serta buat Username dan Kata Sandi (minimal 8 karakter).</p>
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
-                <p class="text-slate-600"><strong class="text-navy-900">Keamanan:</strong> Sistem dilengkapi proteksi rate limiter jika salah kata sandi lebih dari 5 kali berturut-turut.</p>
+                <p class="text-slate-600"><strong class="text-navy-900">Profil, WhatsApp &amp; Keamanan:</strong> Lengkapi nomor WhatsApp dan tanda tangan digital di menu <strong>Pengaturan Akun</strong> untuk mendukung notifikasi otomatis serta dokumen BAST.</p>
               </div>
             </div>
-            <div class="pt-2 flex gap-3">
+            <div class="pt-2 flex gap-3 flex-wrap">
               <a href="{{ route('login', [], false) }}" class="btn-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl inline-flex items-center gap-2">
                 <span>Buka Halaman Masuk</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </a>
               <a href="{{ route('register') }}" class="border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-semibold px-6 py-2.5 rounded-xl inline-flex items-center gap-2">
-                <span>Daftar Akun Baru</span>
+                <span>Daftar Akun Pegawai</span>
               </a>
             </div>
           </div>
@@ -1191,10 +1212,10 @@
               <span>Butuh Bantuan Lebih Lanjut?</span>
             </h4>
             <p class="text-blue-100 text-xs leading-relaxed mb-4">
-              Jika Anda mengalami kendala aktivasi akun, lupa kata sandi, atau memerlukan bantuan teknis pengajuan, silakan hubungi tim Sarpras / Bagian Umum BPMP Provinsi Gorontalo.
+              Jika Anda mengalami kendala aktivasi akun pegawai, lupa kata sandi, penyesuaian unit kerja, atau memerlukan bantuan teknis penggunaan aplikasi, silakan hubungi Operator / Tim BMN &amp; Umum BPMP Provinsi Gorontalo.
             </p>
             <div class="border-t border-white/10 pt-3 text-xs text-blue-200 space-y-1">
-              <div>📞 <strong>Hotline Sarpras:</strong> 081313266661</div>
+              <div>📞 <strong>Hotline Layanan BMN &amp; Sarpras:</strong> 081313266661</div>
               <div>📧 <strong>Email:</strong> bpmpgorontalo@kemdikdasmen.go.id</div>
             </div>
           </div>
@@ -1222,10 +1243,11 @@
     }
 
     function switchRoleGuide(role) {
-      const roles = ['pegawai', 'tamu', 'kasubag', 'adminasettetap', 'adminpersediaan', 'adminsarpras', 'kepalabpmp'];
+      const roles = ['pegawai', 'kasubag', 'adminasettetap', 'adminpersediaan', 'adminsarpras', 'kepalabpmp', 'superadmin'];
       roles.forEach(r => {
         const btn = document.getElementById('roleBtn-' + r);
         const detail = document.getElementById('roleDetail-' + r);
+        if (!btn || !detail) return;
         if (r === role) {
           btn.className = 'role-pill active px-4 py-2 rounded-xl text-xs md:text-sm font-bold border transition-all duration-200 flex items-center gap-2 bg-blue-50 text-blue-700 border-blue-200 shadow-sm';
           detail.classList.remove('hidden');
