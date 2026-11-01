@@ -120,6 +120,8 @@ class PegawaiController extends Controller
             ->where('kondisi', '!=', 'rusak berat')
             ->where('kategori', '!=', 'Kendaraan')
             ->orderBy('nama_barang', 'asc')
+            ->orderBy('kode_barang', 'asc')
+            ->orderByRaw('CASE WHEN nup IS NULL OR nup = "" THEN 1 ELSE 0 END, CAST(nup AS UNSIGNED) ASC, nup ASC')
             ->get();
 
         $riwayat = PeminjamanBarang::where('user_id', Auth::id())

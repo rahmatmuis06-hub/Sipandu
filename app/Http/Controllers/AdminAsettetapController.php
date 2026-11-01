@@ -88,6 +88,7 @@ class AdminAsettetapController extends Controller
             })
             ->orderBy('nama_barang', 'asc')
             ->orderBy('kode_barang', 'asc')
+            ->orderByRaw('CASE WHEN nup IS NULL OR nup = "" THEN 1 ELSE 0 END, CAST(nup AS UNSIGNED) ASC, nup ASC')
             ->get();
 
         $stats = [
@@ -664,6 +665,7 @@ class AdminAsettetapController extends Controller
             ->whereIn('status', ['Tersedia', 'Keluar'])
             ->orWhereNull('status')
             ->orderBy('nama_barang')
+            ->orderByRaw('CASE WHEN nup IS NULL OR nup = "" THEN 1 ELSE 0 END, CAST(nup AS UNSIGNED) ASC, nup ASC')
             ->get();
 
 
@@ -894,7 +896,22 @@ class AdminAsettetapController extends Controller
         $asetTetap = AssetTetap::select('id', 'kode_barang', 'nup', 'nama_barang', 'lokasi', 'kondisi')
             ->orderBy('nama_barang', 'asc')
             ->orderBy('kode_barang', 'asc')
-            ->get();
+            ->orderByRaw('CASE WHEN nup IS NULL OR nup = "" THEN 1 ELSE 0 END, CAST(nup AS UNSIGNED) ASC, nup ASC')
+            ->get()
+            ->sort(function ($a, $b) {
+                $cmpNama = strcasecmp($a->nama_barang ?? '', $b->nama_barang ?? '');
+                if ($cmpNama !== 0) return $cmpNama;
+
+                $cmpKode = strcasecmp($a->kode_barang ?? '', $b->kode_barang ?? '');
+                if ($cmpKode !== 0) return $cmpKode;
+
+                $nupA = $a->nup ?? '';
+                $nupB = $b->nup ?? '';
+                if ($nupA === '' && $nupB !== '') return 1;
+                if ($nupA !== '' && $nupB === '') return -1;
+                return strnatcasecmp($nupA, $nupB);
+            })
+            ->values();
 
         return view('adminasettetap.mutasi_barang', compact('mutasi_barang', 'asetTetap'));
     }

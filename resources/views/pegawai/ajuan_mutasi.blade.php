@@ -293,7 +293,11 @@ class AjuanManager {
         if (asetSelect) {
             this.tomSelect = new TomSelect(asetSelect, {
                 create: false,
-                sortField: { field: "text", direction: "asc" },
+                maxOptions: null,
+                sortField: [
+                    { field: '$order' }
+                ],
+                searchField: ['text'],
                 placeholder: "-- Ketik kode atau nama barang --"
             });
 

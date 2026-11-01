@@ -300,7 +300,11 @@ class MutasiManager {
             // Inisialisasi Tom Select untuk form Aset Tetap
             this.tomSelect = new TomSelect(asetSelect, {
                 create: false,
-                sortField: { field: "text", direction: "asc" },
+                maxOptions: null,
+                sortField: [
+                    { field: '$order' }
+                ],
+                searchField: ['text'],
                 placeholder: "-- Ketik kode atau nama barang --"
             });
 
