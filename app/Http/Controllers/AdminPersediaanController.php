@@ -106,8 +106,9 @@ class AdminPersediaanController extends Controller
         }
 
         $persediaan = $query->latest()->paginate(10)->withQueryString();
+        $fifoEnabled = PersediaanBatchService::isFifoEnabled();
 
-        return view('adminpersediian.data_persediaan', compact('persediaan'));
+        return view('adminpersediian.data_persediaan', compact('persediaan', 'fifoEnabled'));
     }
 
     /**
@@ -724,10 +725,11 @@ class AdminPersediaanController extends Controller
         $transaksi = $query->latest('tanggal_input')->paginate(10);
 
         PersediaanBatchService::syncAllUnbatched();
+        $fifoEnabled = PersediaanBatchService::isFifoEnabled();
 
         // 🔥 AMBIL DATA MASTER PERSEDIAAN UNTUK DROPDOWN DI MODAL INDEX
         // Menggunakan getRawOriginal() agar harga_satuan murni berupa nominal numerik asli database (tanpa embel-embel string "Rp")
-        $masterPersediaan = Persediaan::with('batches')->orderBy('nama_barang')->get()->map(function($item) {
+        $masterPersediaan = Persediaan::with('batches')->orderBy('nama_barang')->get()->map(function($item) use ($fifoEnabled) {
             $activeBatches = $item->batches
                 ->where('jumlah_sisa', '>', 0)
                 ->values()
@@ -738,7 +740,7 @@ class AdminPersediaanController extends Controller
                     'jumlah_sisa'   => (int) $b->jumlah_sisa,
                 ])->all();
 
-            $firstFifoPrice = !empty($activeBatches)
+            $hargaDefault = ($fifoEnabled && !empty($activeBatches))
                 ? (float) $activeBatches[0]['harga_satuan']
                 : (float) $item->getRawOriginal('harga_satuan');
 
@@ -750,13 +752,13 @@ class AdminPersediaanController extends Controller
                 'kode_kategori'    => $item->kode_kategori,
                 'kategori'         => $item->kategori,
                 'satuan'           => $item->satuan, // MAP DATA SATUAN KE FRONTEND
-                'harga_satuan'     => $firstFifoPrice,
+                'harga_satuan'     => $hargaDefault,
                 'stok_tersedia'    => (int) $item->jumlah,
-                'batches'          => $activeBatches,
+                'batches'          => $fifoEnabled ? $activeBatches : [],
             ];
         });
         
-        return view('adminpersediian.transaksi_keluar', compact('transaksi', 'masterPersediaan'));
+        return view('adminpersediian.transaksi_keluar', compact('transaksi', 'masterPersediaan', 'fifoEnabled'));
 
     }
 

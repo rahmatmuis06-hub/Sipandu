@@ -13,6 +13,100 @@ use Illuminate\Validation\ValidationException;
 class PersediaanBatchService
 {
     protected static bool $tableEnsured = false;
+    protected static bool $settingsEnsured = false;
+    protected static ?bool $fifoEnabledCache = null;
+
+    /**
+     * Pastikan tabel system_settings tersedia (default: FIFO nonaktif = '0').
+     */
+    public static function ensureSettingsTable(): void
+    {
+        if (self::$settingsEnsured) {
+            return;
+        }
+
+        try {
+            if (!Schema::hasTable('system_settings')) {
+                Schema::create('system_settings', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('key', 100)->unique();
+                    $table->text('value')->nullable();
+                    $table->timestamps();
+                });
+            }
+
+            $exists = DB::table('system_settings')->where('key', 'fifo_persediaan_enabled')->exists();
+            if (!$exists) {
+                DB::table('system_settings')->insert([
+                    'key'        => 'fifo_persediaan_enabled',
+                    'value'      => '0',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            self::$settingsEnsured = true;
+        } catch (\Throwable $e) {
+            // Fallback aman jika DB belum siap
+        }
+    }
+
+    /**
+     * Cek apakah fitur FIFO Persediaan sedang diaktifkan oleh Super Admin (Default: false / disembunyikan).
+     */
+    public static function isFifoEnabled(): bool
+    {
+        if (self::$fifoEnabledCache !== null) {
+            return self::$fifoEnabledCache;
+        }
+
+        self::ensureSettingsTable();
+
+        try {
+            if (Schema::hasTable('system_settings')) {
+                $val = DB::table('system_settings')->where('key', 'fifo_persediaan_enabled')->value('value');
+                self::$fifoEnabledCache = in_array((string) $val, ['1', 'true', 'on'], true);
+                return self::$fifoEnabledCache;
+            }
+        } catch (\Throwable $e) {
+            // Default nonaktif
+        }
+
+        self::$fifoEnabledCache = false;
+        return false;
+    }
+
+    /**
+     * Aktifkan atau nonaktifkan fitur FIFO Persediaan dari panel Super Admin & hitung ulang nilai master.
+     */
+    public static function setFifoEnabled(bool $enabled): void
+    {
+        self::ensureSettingsTable();
+        self::ensureTable();
+
+        DB::table('system_settings')->updateOrInsert(
+            ['key' => 'fifo_persediaan_enabled'],
+            [
+                'value'      => $enabled ? '1' : '0',
+                'updated_at' => now(),
+            ]
+        );
+
+        self::$fifoEnabledCache = $enabled;
+
+        // Sinkronkan ulang seluruh item persediaan agar harga_total & harga_satuan sesuai mode aktif/nonaktif
+        try {
+            if (Schema::hasTable('persediaan') && Schema::hasTable('persediaan_batches')) {
+                self::syncAllUnbatched();
+                $items = Persediaan::all();
+                foreach ($items as $item) {
+                    self::recalculatePersediaan($item);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Abaikan jika gagal rekalkulasi massal
+        }
+    }
 
     /**
      * Pastikan tabel persediaan_batches & kolom pendukung tersedia (aman di hosting sebelum php artisan migrate).
@@ -422,6 +516,8 @@ class PersediaanBatchService
         self::ensureBatchesForItem($persediaan);
         $persediaan->refresh();
 
+        $hargaMasterSebelum = (float) ($persediaan->getRawOriginal('harga_satuan') ?? $persediaan->harga_satuan ?? 0);
+
         if ($persediaan->jumlah < $qtyKeluar) {
             throw ValidationException::withMessages([
                 'jumlah_keluar' => "Stok barang '{$persediaan->nama_barang}' tidak mencukupi (Tersedia: {$persediaan->jumlah}).",
@@ -464,7 +560,7 @@ class PersediaanBatchService
 
         // Fallback pengaman jika ada selisih stok
         if ($sisaKebutuhan > 0) {
-            $hargaFallback = (float) ($persediaan->getRawOriginal('harga_satuan') ?? $persediaan->harga_satuan ?? 0);
+            $hargaFallback = $hargaMasterSebelum;
             $subtotalFallback = $sisaKebutuhan * $hargaFallback;
             $totalNilaiKeluar += $subtotalFallback;
             $alokasi[] = [
@@ -477,9 +573,18 @@ class PersediaanBatchService
 
         self::recalculatePersediaan($persediaan);
 
+        // Jika fitur FIFO dinonaktifkan Super Admin, gunakan perhitungan harga keluar standar (non-FIFO)
+        if (!self::isFifoEnabled()) {
+            return [
+                'harga_satuan' => $hargaMasterSebelum,
+                'total_nilai'  => round($hargaMasterSebelum * $qtyKeluar, 2),
+                'alokasi'      => $alokasi,
+            ];
+        }
+
         $hargaSatuanEfektif = $qtyKeluar > 0
             ? round($totalNilaiKeluar / $qtyKeluar, 2)
-            : (float) ($persediaan->getRawOriginal('harga_satuan') ?? 0);
+            : $hargaMasterSebelum;
 
         return [
             'harga_satuan' => $hargaSatuanEfektif,
@@ -666,7 +771,8 @@ class PersediaanBatchService
     }
 
     /**
-     * Hitung ulang stok total, harga_total akurat (Σ sisa * harga_batch), dan harga_satuan aktif terbaru pada tabel master persediaan.
+     * Hitung ulang stok total, harga_total, dan harga_satuan pada tabel master persediaan
+     * menyesuaikan status aktif/nonaktif fitur FIFO.
      */
     public static function recalculatePersediaan(Persediaan $persediaan): void
     {
@@ -679,18 +785,21 @@ class PersediaanBatchService
             return;
         }
 
+        $fifoActive = self::isFifoEnabled();
         $totalJumlah = 0;
-        $totalNilai = 0.0;
+        $totalNilaiFifo = 0.0;
 
         foreach ($batches as $b) {
             $sisa = max(0, (int) $b->jumlah_sisa);
             $harga = (float) ($b->getRawOriginal('harga_satuan') ?? $b->harga_satuan ?? 0);
             $totalJumlah += $sisa;
-            $totalNilai += ($sisa * $harga);
+            $totalNilaiFifo += ($sisa * $harga);
         }
 
-        // Harga satuan representatif di baris utama: harga dari batch aktif terbaru (atau batch terakhir jika stok 0)
-        $latestRefBatch = $batches->where('jumlah_sisa', '>', 0)->last() ?? $batches->last();
+        $latestRefBatch = $fifoActive
+            ? ($batches->where('jumlah_sisa', '>', 0)->last() ?? $batches->last())
+            : $batches->last();
+
         $hargaTerbaru = $latestRefBatch
             ? (float) ($latestRefBatch->getRawOriginal('harga_satuan') ?? $latestRefBatch->harga_satuan ?? 0)
             : (float) ($persediaan->getRawOriginal('harga_satuan') ?? 0);
@@ -701,12 +810,16 @@ class PersediaanBatchService
                 : (string) $latestRefBatch->tanggal_masuk)
             : $persediaan->tanggal_masuk;
 
+        $nilaiMaster = $fifoActive
+            ? round($totalNilaiFifo, 2)
+            : round($totalJumlah * $hargaTerbaru, 2);
+
         DB::table('persediaan')
             ->where('id', $persediaan->id)
             ->update([
                 'jumlah'        => $totalJumlah,
                 'harga_satuan'  => $hargaTerbaru,
-                'harga_total'   => round($totalNilai, 2),
+                'harga_total'   => $nilaiMaster,
                 'tanggal_masuk' => $tanggalTerbaru,
                 'updated_at'    => now(),
             ]);

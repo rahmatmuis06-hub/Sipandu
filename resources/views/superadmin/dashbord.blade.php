@@ -78,7 +78,18 @@
     $countAset = $countAset ?? (\Illuminate\Support\Facades\Schema::hasTable('aset_tetap') ? \App\Models\AssetTetap::count() : 0);
     $countPersediaan = $countPersediaan ?? (\Illuminate\Support\Facades\Schema::hasTable('persediaan') ? \App\Models\Persediaan::where('kode_kategori', '!=', 'BLN')->count() : 0);
     $countBarangLainnya = $countBarangLainnya ?? (\Illuminate\Support\Facades\Schema::hasTable('barang_lainnya') ? \App\Models\BarangLainnya::count() : 0);
+    $fifoEnabled = $fifoEnabled ?? \App\Services\PersediaanBatchService::isFifoEnabled();
   @endphp
+
+  @if(session('success'))
+    <div style="padding: 14px 18px; border-radius: 12px; margin-bottom: 24px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-check-circle" style="font-size: 18px;"></i>
+        <span>{{ session('success') }}</span>
+      </div>
+      <button onclick="this.parentElement.remove()" style="border:none; background:none; cursor:pointer; color:inherit; font-size:15px;">✕</button>
+    </div>
+  @endif
 
   <div style="font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
     <i class="fas fa-users-cog" style="color: var(--primary);"></i> Ringkasan Pengguna Sistem
@@ -149,6 +160,44 @@
       <a href="{{ route('superadmin.unit_kerja.index') }}" class="btn-kelola" style="background: #475569;">
         <i class="fas fa-building"></i> Kelola Unit Kerja
       </a>
+    </div>
+
+    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+          <span style="font-size: 15px; font-weight: 700; color: var(--text);">
+            <i class="fas fa-layer-group" style="color: var(--primary); margin-right: 4px;"></i> Metode FIFO Data Persediaan
+          </span>
+          @if($fifoEnabled)
+            <span style="padding: 3px 10px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 11.5px; font-weight: 700;">
+              ● AKTIF
+            </span>
+          @else
+            <span style="padding: 3px 10px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 11.5px; font-weight: 700;">
+              ○ NONAKTIF (Disembunyikan)
+            </span>
+          @endif
+        </div>
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.5;">
+          @if($fifoEnabled)
+            Saat ini perhitungan stok keluar & rincian sisa per batch menggunakan metode <strong>FIFO (First-In, First-Out)</strong>. Klik tombol di samping jika ingin menyembunyikan bagian FIFO kembali.
+          @else
+            Saat ini bagian <strong>FIFO disembunyikan</strong> (daftar riwayat harga masuk barang tetap tersimpan di Detail Data Persediaan). Anda dapat menghidupkan kembali fitur FIFO kapan saja.
+          @endif
+        </p>
+      </div>
+      <form method="POST" action="{{ route('superadmin.toggle-fifo') }}">
+        @csrf
+        @if($fifoEnabled)
+          <button type="submit" class="btn-kelola" style="background: #64748b; border: none; cursor: pointer;">
+            <i class="fas fa-eye-slash"></i> Sembunyikan / Nonaktifkan FIFO
+          </button>
+        @else
+          <button type="submit" class="btn-kelola" style="background: linear-gradient(135deg, #10b981, #059669); border: none; cursor: pointer;">
+            <i class="fas fa-power-off"></i> Hidupkan Fitur FIFO
+          </button>
+        @endif
+      </form>
     </div>
   </div>
 

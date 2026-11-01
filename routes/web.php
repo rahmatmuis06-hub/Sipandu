@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/kelola-data', [SuperadminController::class, 'kelolaData'])->name('kelola-data');
             Route::post('/kelola-data/backup', [SuperadminController::class, 'backupData'])->name('kelola-data.backup');
             Route::post('/kelola-data/hapus', [SuperadminController::class, 'hapusData'])->name('kelola-data.hapus');
+            Route::post('/pengaturan/toggle-fifo', [SuperadminController::class, 'toggleFifoPersediaan'])->name('toggle-fifo');
         });
 
     // ──────────────────────────────────────────────────────────────────

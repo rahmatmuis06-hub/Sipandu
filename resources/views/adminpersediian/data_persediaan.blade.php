@@ -409,16 +409,30 @@
             <td>{{ $item->tanggal_masuk->format('d/m/Y') }}</td>
             <td class="font-mono">
               <div>{{ $item->harga_satuan_format }}</div>
-              @if($distinctActivePrices > 1)
-                <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat daftar variasi harga barang ini"
-                  style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #C7D2FE; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); color:#4338CA; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;">
-                  🏷️ {{ $distinctActivePrices }} Harga • Lihat
-                </button>
-              @elseif($distinctAllPrices > 1 || $totalBatchesCount > 1)
-                <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat riwayat batch harga masuk"
-                  style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #E2E8F0; background:#F8FAFC; color:#475569; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s;">
-                  📋 {{ $totalBatchesCount }} Batch • Lihat
-                </button>
+              @if(!empty($fifoEnabled))
+                @if($distinctActivePrices > 1)
+                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat daftar variasi harga barang ini"
+                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #C7D2FE; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); color:#4338CA; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;">
+                    🏷️ {{ $distinctActivePrices }} Harga • Lihat
+                  </button>
+                @elseif($distinctAllPrices > 1 || $totalBatchesCount > 1)
+                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat riwayat batch harga masuk"
+                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #E2E8F0; background:#F8FAFC; color:#475569; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s;">
+                    📋 {{ $totalBatchesCount }} Batch • Lihat
+                  </button>
+                @endif
+              @else
+                @if($distinctAllPrices > 1)
+                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat daftar harga barang ini"
+                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #C7D2FE; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); color:#4338CA; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;">
+                    🏷️ {{ $distinctAllPrices }} Harga • Lihat
+                  </button>
+                @elseif($totalBatchesCount > 1)
+                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat riwayat harga masuk"
+                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #E2E8F0; background:#F8FAFC; color:#475569; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s;">
+                    📋 {{ $totalBatchesCount }} Riwayat • Lihat
+                  </button>
+                @endif
               @endif
             </td>
             <td class="font-mono font-semibold text-green-600">{{ $item->harga_total_format }}</td>
@@ -897,7 +911,9 @@ document.addEventListener('blur', function(e) {
   }
 }, true);
 
-// 🔥 DETAIL MODAL - MULTI-HARGA BATCH FIFO
+// 🔥 DETAIL MODAL - LIST HARGA & OPSIONAL MODE FIFO
+const IS_FIFO_ENABLED = @json($fifoEnabled ?? false);
+
 function formatSumberBatch(sumber) {
   switch (sumber) {
     case 'transaksi_masuk': return { label: 'Transaksi Masuk', bg: '#EEF2FF', color: '#4338CA' };
@@ -923,98 +939,64 @@ function populateDetailModal(data) {
   const satuanLabel = escapeHtmlSafe(data.satuan || '');
   const batches = Array.isArray(data.batches) ? data.batches : [];
 
-  let firstActiveFound = false;
-  let batchRowsHtml = '';
+  let tableSectionHtml = '';
 
-  if (batches.length > 0) {
-    batches.forEach((b, idx) => {
-      const sisa = parseInt(b.jumlah_sisa) || 0;
-      const awal = parseInt(b.jumlah_awal) || 0;
-      const harga = parseFloat(b.harga_satuan) || 0;
-      const subtotal = sisa * harga;
-      const isNextFifo = (!firstActiveFound && sisa > 0);
-      if (isNextFifo) firstActiveFound = true;
+  if (IS_FIFO_ENABLED) {
+    let firstActiveFound = false;
+    let batchRowsHtml = '';
 
-      const sumberInfo = formatSumberBatch(b.sumber);
-      const rowBg = sisa === 0 ? '#F8FAFC' : (isNextFifo ? '#F0FDF4' : '#FFFFFF');
-      const rowOpacity = sisa === 0 ? '0.68' : '1';
+    if (batches.length > 0) {
+      batches.forEach((b, idx) => {
+        const sisa = parseInt(b.jumlah_sisa) || 0;
+        const awal = parseInt(b.jumlah_awal) || 0;
+        const harga = parseFloat(b.harga_satuan) || 0;
+        const subtotal = sisa * harga;
+        const isNextFifo = (!firstActiveFound && sisa > 0);
+        if (isNextFifo) firstActiveFound = true;
 
-      batchRowsHtml += `
-        <tr style="background:${rowBg}; opacity:${rowOpacity}; border-bottom:1px solid #E2E8F0;">
-          <td style="padding:10px 12px; font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap;">
-            #${idx + 1}
-            ${isNextFifo ? `<div style="margin-top:3px;"><span style="display:inline-block; padding:2px 7px; border-radius:999px; background:#DCFCE7; color:#15803D; font-size:10px; font-weight:800;">Dipakai Duluan (FIFO)</span></div>` : ''}
-          </td>
-          <td style="padding:10px 12px; font-size:12.5px; white-space:nowrap;">
-            <div style="font-weight:600; color:var(--text);">${escapeHtmlSafe(b.tanggal_masuk || '-')}</div>
-            <span style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:6px; background:${sumberInfo.bg}; color:${sumberInfo.color}; font-size:10.5px; font-weight:700;">${sumberInfo.label}</span>
-          </td>
-          <td style="padding:10px 12px; font-size:13px; font-weight:700; color:var(--text); text-align:right; font-family:monospace; white-space:nowrap;">
-            Rp ${formatCurrency(harga)}
-          </td>
-          <td style="padding:10px 12px; font-size:12.5px; color:var(--muted); text-align:center; white-space:nowrap;">
-            ${awal.toLocaleString('id-ID')} ${satuanLabel}
-          </td>
-          <td style="padding:10px 12px; font-size:13px; text-align:center; white-space:nowrap;">
-            ${sisa > 0
-              ? `<span style="display:inline-block; padding:3px 9px; border-radius:999px; background:#ECFDF5; color:#059669; font-weight:800;">${sisa.toLocaleString('id-ID')} ${satuanLabel}</span>`
-              : `<span style="display:inline-block; padding:3px 9px; border-radius:999px; background:#F1F5F9; color:#94A3B8; font-weight:700; font-size:11.5px;">Habis (0)</span>`
-            }
-          </td>
-          <td style="padding:10px 12px; font-size:13px; font-weight:700; color:${sisa > 0 ? 'var(--blue)' : '#94A3B8'}; text-align:right; font-family:monospace; white-space:nowrap;">
-            Rp ${formatCurrency(subtotal)}
+        const sumberInfo = formatSumberBatch(b.sumber);
+        const rowBg = sisa === 0 ? '#F8FAFC' : (isNextFifo ? '#F0FDF4' : '#FFFFFF');
+        const rowOpacity = sisa === 0 ? '0.68' : '1';
+
+        batchRowsHtml += `
+          <tr style="background:${rowBg}; opacity:${rowOpacity}; border-bottom:1px solid #E2E8F0;">
+            <td style="padding:10px 12px; font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap;">
+              #${idx + 1}
+              ${isNextFifo ? `<div style="margin-top:3px;"><span style="display:inline-block; padding:2px 7px; border-radius:999px; background:#DCFCE7; color:#15803D; font-size:10px; font-weight:800;">Dipakai Duluan (FIFO)</span></div>` : ''}
+            </td>
+            <td style="padding:10px 12px; font-size:12.5px; white-space:nowrap;">
+              <div style="font-weight:600; color:var(--text);">${escapeHtmlSafe(b.tanggal_masuk || '-')}</div>
+              <span style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:6px; background:${sumberInfo.bg}; color:${sumberInfo.color}; font-size:10.5px; font-weight:700;">${sumberInfo.label}</span>
+            </td>
+            <td style="padding:10px 12px; font-size:13px; font-weight:700; color:var(--text); text-align:right; font-family:monospace; white-space:nowrap;">
+              Rp ${formatCurrency(harga)}
+            </td>
+            <td style="padding:10px 12px; font-size:12.5px; color:var(--muted); text-align:center; white-space:nowrap;">
+              ${awal.toLocaleString('id-ID')} ${satuanLabel}
+            </td>
+            <td style="padding:10px 12px; font-size:13px; text-align:center; white-space:nowrap;">
+              ${sisa > 0
+                ? `<span style="display:inline-block; padding:3px 9px; border-radius:999px; background:#ECFDF5; color:#059669; font-weight:800;">${sisa.toLocaleString('id-ID')} ${satuanLabel}</span>`
+                : `<span style="display:inline-block; padding:3px 9px; border-radius:999px; background:#F1F5F9; color:#94A3B8; font-weight:700; font-size:11.5px;">Habis (0)</span>`
+              }
+            </td>
+            <td style="padding:10px 12px; font-size:13px; font-weight:700; color:${sisa > 0 ? 'var(--blue)' : '#94A3B8'}; text-align:right; font-family:monospace; white-space:nowrap;">
+              Rp ${formatCurrency(subtotal)}
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      batchRowsHtml = `
+        <tr>
+          <td colspan="6" style="padding:18px; text-align:center; color:var(--muted); font-size:13px;">
+            1 Harga Aktif: Rp ${formattedHargaSatuan} (${parseInt(data.jumlah || 0).toLocaleString('id-ID')} ${satuanLabel})
           </td>
         </tr>
       `;
-    });
-  } else {
-    batchRowsHtml = `
-      <tr>
-        <td colspan="6" style="padding:18px; text-align:center; color:var(--muted); font-size:13px;">
-          1 Harga Aktif: Rp ${formattedHargaSatuan} (${parseInt(data.jumlah || 0).toLocaleString('id-ID')} ${satuanLabel})
-        </td>
-      </tr>
-    `;
-  }
+    }
 
-  document.getElementById('detailContent').innerHTML = `
-    <div style="display:flex; flex-direction:column; gap:18px; width: 100%;">
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kode Unik Barang</div>
-          <div style="font-size:15px; font-weight:800; color:var(--text);">${escapeHtmlSafe(data.kode_unik_barang)}</div>
-        </div>
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kategori</div>
-          <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">${escapeHtmlSafe(data.kategori)}</div>
-        </div>
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Nama Barang</div>
-          <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">${escapeHtmlSafe(data.nama_barang)}</div>
-        </div>
-      </div>
-      
-      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; padding:16px 18px; background:#F8FAFF; border-radius:12px; border:1px solid var(--border);">
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Tanggal Masuk Terakhir</div>
-          <div style="font-weight:700; font-size:13.5px;">${data.tanggal_masuk ? new Date(data.tanggal_masuk).toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric'}) : '-'}</div>
-        </div>
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Total Sisa Stok</div>
-          <div style="font-weight:800; font-size:19px; color:var(--success);">${parseInt(data.jumlah || 0).toLocaleString('id-ID')} <span style="font-size:12.5px; font-weight:600; color:var(--muted); text-transform:capitalize;">${satuanLabel}</span></div>
-        </div>
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Harga Terbaru</div>
-          <div style="font-weight:700; font-size:14px; color:var(--text);">Rp ${formattedHargaSatuan}</div>
-        </div>
-        <div>
-          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Total Nilai Persediaan</div>
-          <div style="font-weight:800; font-size:16px; color:var(--blue); background:linear-gradient(135deg,#EEF2FF,#E0E7FF); padding:6px 10px; border-radius:8px; display:inline-block;">
-            Rp ${formattedHargaTotal}
-          </div>
-        </div>
-      </div>
-
+    tableSectionHtml = `
       <div style="border:1.5px solid var(--border); border-radius:14px; overflow:hidden; background:#FFFFFF;">
         <div style="padding:12px 16px; background:linear-gradient(135deg,#EEF2FF,#F8FAFF); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
           <div style="font-size:13px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:6px;">
@@ -1058,6 +1040,119 @@ function populateDetailModal(data) {
           💡 <strong>Catatan FIFO:</strong> Saat barang keluar (melalui Transaksi Keluar maupun Permintaan Persediaan), stok otomatis dipotong dari batch yang masuk lebih awal hingga habis sebelum beralih ke harga berikutnya.
         </div>
       </div>
+    `;
+  } else {
+    // MODE STANDAR (FIFO DISEMBUNYIKAN) — Menampilkan Daftar List Harga Masuk saja
+    let listHargaRows = '';
+    if (batches.length > 0) {
+      batches.forEach((b, idx) => {
+        const awal = parseInt(b.jumlah_awal) || 0;
+        const harga = parseFloat(b.harga_satuan) || 0;
+        const subtotalMasuk = awal * harga;
+        const sumberInfo = formatSumberBatch(b.sumber);
+        const isLatest = (idx === batches.length - 1);
+
+        listHargaRows += `
+          <tr style="background:${isLatest ? '#F8FAFF' : '#FFFFFF'}; border-bottom:1px solid #E2E8F0;">
+            <td style="padding:10px 12px; font-size:12.5px; font-weight:700; color:var(--text); white-space:nowrap;">
+              #${idx + 1}
+              ${isLatest ? `<span style="margin-left:4px; display:inline-block; padding:2px 7px; border-radius:999px; background:#EEF2FF; color:#4338CA; font-size:10px; font-weight:800;">Terbaru</span>` : ''}
+            </td>
+            <td style="padding:10px 12px; font-size:12.5px; white-space:nowrap;">
+              <div style="font-weight:600; color:var(--text);">${escapeHtmlSafe(b.tanggal_masuk || '-')}</div>
+              <span style="display:inline-block; margin-top:3px; padding:2px 7px; border-radius:6px; background:${sumberInfo.bg}; color:${sumberInfo.color}; font-size:10.5px; font-weight:700;">${sumberInfo.label}</span>
+            </td>
+            <td style="padding:10px 12px; font-size:13px; font-weight:700; color:var(--text); text-align:right; font-family:monospace; white-space:nowrap;">
+              Rp ${formatCurrency(harga)}
+            </td>
+            <td style="padding:10px 12px; font-size:12.5px; color:var(--text); font-weight:600; text-align:center; white-space:nowrap;">
+              ${awal.toLocaleString('id-ID')} ${satuanLabel}
+            </td>
+            <td style="padding:10px 12px; font-size:13px; font-weight:700; color:var(--blue); text-align:right; font-family:monospace; white-space:nowrap;">
+              Rp ${formatCurrency(subtotalMasuk)}
+            </td>
+          </tr>
+        `;
+      });
+    } else {
+      listHargaRows = `
+        <tr>
+          <td colspan="5" style="padding:18px; text-align:center; color:var(--muted); font-size:13px;">
+            Harga Tercatat: Rp ${formattedHargaSatuan} (${parseInt(data.jumlah || 0).toLocaleString('id-ID')} ${satuanLabel})
+          </td>
+        </tr>
+      `;
+    }
+
+    tableSectionHtml = `
+      <div style="border:1.5px solid var(--border); border-radius:14px; overflow:hidden; background:#FFFFFF;">
+        <div style="padding:12px 16px; background:linear-gradient(135deg,#EEF2FF,#F8FAFF); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <div style="font-size:13px; font-weight:800; color:var(--text); display:flex; align-items:center; gap:6px;">
+            🏷️ Daftar Riwayat Harga Barang
+          </div>
+          <span style="font-size:11px; font-weight:700; color:#4338CA; background:#E0E7FF; padding:3px 10px; border-radius:999px;">
+            ${batches.length} Riwayat Harga Masuk
+          </span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#F8FAFC; border-bottom:1.5px solid #E2E8F0;">
+                <th style="padding:10px 12px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">No</th>
+                <th style="padding:10px 12px; text-align:left; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Tgl Masuk</th>
+                <th style="padding:10px 12px; text-align:right; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Harga Satuan</th>
+                <th style="padding:10px 12px; text-align:center; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Jumlah Masuk</th>
+                <th style="padding:10px 12px; text-align:right; font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase;">Subtotal Masuk</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${listHargaRows}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('detailContent').innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:18px; width: 100%;">
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kode Unik Barang</div>
+          <div style="font-size:15px; font-weight:800; color:var(--text);">${escapeHtmlSafe(data.kode_unik_barang)}</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Kategori</div>
+          <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">${escapeHtmlSafe(data.kategori)}</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); font-weight:600; margin-bottom:4px;">Nama Barang</div>
+          <div style="font-size:14px; font-weight:700; color:var(--text); line-height:1.3;">${escapeHtmlSafe(data.nama_barang)}</div>
+        </div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; padding:16px 18px; background:#F8FAFF; border-radius:12px; border:1px solid var(--border);">
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Tanggal Masuk Terakhir</div>
+          <div style="font-weight:700; font-size:13.5px;">${data.tanggal_masuk ? new Date(data.tanggal_masuk).toLocaleDateString('id-ID', {day:'2-digit', month:'2-digit', year:'numeric'}) : '-'}</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Total Sisa Stok</div>
+          <div style="font-weight:800; font-size:19px; color:var(--success);">${parseInt(data.jumlah || 0).toLocaleString('id-ID')} <span style="font-size:12.5px; font-weight:600; color:var(--muted); text-transform:capitalize;">${satuanLabel}</span></div>
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Harga Terbaru</div>
+          <div style="font-weight:700; font-size:14px; color:var(--text);">Rp ${formattedHargaSatuan}</div>
+        </div>
+        <div>
+          <div style="font-size:11.5px; color:var(--muted); margin-bottom:4px;">Total Nilai Persediaan</div>
+          <div style="font-weight:800; font-size:16px; color:var(--blue); background:linear-gradient(135deg,#EEF2FF,#E0E7FF); padding:6px 10px; border-radius:8px; display:inline-block;">
+            Rp ${formattedHargaTotal}
+          </div>
+        </div>
+      </div>
+
+      ${tableSectionHtml}
     </div>
   `;
 }

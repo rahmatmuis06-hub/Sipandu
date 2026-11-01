@@ -464,7 +464,7 @@
 
         {{-- Total --}}
         <div style="display:flex; align-items:center; border:2px solid #FECACA; border-radius:12px; overflow:hidden; background:#FFF5F5;">
-          <span style="padding:12px 14px; font-size:13px; font-weight:700; color:var(--danger); border-right:2px solid #FECACA; background:#FEF2F2; white-space:nowrap;">Total (FIFO)</span>
+          <span style="padding:12px 14px; font-size:13px; font-weight:700; color:var(--danger); border-right:2px solid #FECACA; background:#FEF2F2; white-space:nowrap;">{{ !empty($fifoEnabled) ? 'Total (FIFO)' : 'Total' }}</span>
           <input type="text" id="create_total_display" readonly
             style="border:none; outline:none; width:100%; padding:14px 16px; font-family:inherit; font-size:18px; font-weight:800; color:var(--danger); background:#FFF5F5;" value="Rp 0">
         </div>
@@ -643,6 +643,8 @@
 </div>
 
 <script>
+  const IS_FIFO_ENABLED = @json($fifoEnabled ?? false);
+
   function formatRupiah(angka) {
     return 'Rp ' + new Intl.NumberFormat('id-ID', { minimumFractionDigits: 0 }).format(angka);
   }
@@ -651,7 +653,7 @@
     const jumlah = parseInt(document.getElementById(prefix + '_jumlah_keluar').value) || 0;
     const harga  = parseFloat(document.getElementById(prefix + '_harga').value) || 0;
 
-    if (prefix === 'create') {
+    if (IS_FIFO_ENABLED && prefix === 'create') {
       const select = document.getElementById('create_select_barang');
       const selectedOption = select ? select.options[select.selectedIndex] : null;
       const breakdownEl = document.getElementById('create_fifo_breakdown');

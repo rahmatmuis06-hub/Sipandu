@@ -205,6 +205,50 @@
     </div>
   </div>
 
+  {{-- PENGATURAN FITUR FIFO PERSEDIAAN --}}
+  @php
+    $fifoEnabled = $fifoEnabled ?? \App\Services\PersediaanBatchService::isFifoEnabled();
+  @endphp
+  <div class="backup-panel" style="margin-bottom: 28px; border-color: {{ $fifoEnabled ? '#a7f3d0' : '#e2e8f0' }};">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 260px;">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+          <span style="font-family: 'Space Grotesk', sans-serif; font-size: 16.5px; font-weight: 700; color: var(--text);">
+            <i class="fas fa-layer-group" style="color: var(--primary); margin-right: 6px;"></i> Pengaturan Metode FIFO Persediaan
+          </span>
+          @if($fifoEnabled)
+            <span style="padding: 4px 12px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 11.5px; font-weight: 800;">
+              ● AKTIF
+            </span>
+          @else
+            <span style="padding: 4px 12px; border-radius: 999px; background: #f1f5f9; color: #475569; font-size: 11.5px; font-weight: 800;">
+              ○ NONAKTIF (Disembunyikan)
+            </span>
+          @endif
+        </div>
+        <p style="font-size: 13px; color: var(--muted); line-height: 1.55;">
+          @if($fifoEnabled)
+            Mode <strong>FIFO (First-In, First-Out)</strong> sedang aktif pada Data Persediaan & Transaksi Keluar. Anda dapat menonaktifkannya kembali tanpa menghapus data batch harga yang tersimpan.
+          @else
+            Bagian <strong>FIFO sedang disembunyikan</strong> sesuai pengaturan standar (riwayat list harga tiap barang tetap tersimpan & tampil di Detail Persediaan). Klik tombol di kanan untuk menghidupkan kembali bagian FIFO.
+          @endif
+        </p>
+      </div>
+      <form method="POST" action="{{ route('superadmin.toggle-fifo') }}">
+        @csrf
+        @if($fifoEnabled)
+          <button type="submit" class="btn-backup-full" style="background: linear-gradient(135deg, #64748b, #475569); box-shadow: none;">
+            <i class="fas fa-eye-slash"></i> Sembunyikan / Nonaktifkan FIFO
+          </button>
+        @else
+          <button type="submit" class="btn-backup-full" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);">
+            <i class="fas fa-power-off"></i> Hidupkan Kembali Fitur FIFO
+          </button>
+        @endif
+      </form>
+    </div>
+  </div>
+
   {{-- ROW 2: PUSAT PENCADANGAN (BACKUP) DATA --}}
   <div class="backup-panel">
     <div class="section-title">

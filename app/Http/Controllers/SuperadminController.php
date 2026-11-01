@@ -25,10 +25,11 @@ class SuperadminController extends Controller
         $countAset = Schema::hasTable('aset_tetap') ? AssetTetap::count() : 0;
         $countPersediaan = Schema::hasTable('persediaan') ? Persediaan::where('kode_kategori', '!=', 'BLN')->count() : 0;
         $countBarangLainnya = Schema::hasTable('barang_lainnya') ? BarangLainnya::count() : 0;
+        $fifoEnabled = \App\Services\PersediaanBatchService::isFifoEnabled();
 
         return view('superadmin.dashbord', compact(
             'totalUsers', 'activeUsers', 'inactiveUsers',
-            'countAset', 'countPersediaan', 'countBarangLainnya'
+            'countAset', 'countPersediaan', 'countBarangLainnya', 'fifoEnabled'
         ));
     }
 
@@ -171,7 +172,26 @@ class SuperadminController extends Controller
             ],
         ];
 
-        return view('superadmin.kelola_data', compact('stats'));
+        $fifoEnabled = \App\Services\PersediaanBatchService::isFifoEnabled();
+
+        return view('superadmin.kelola_data', compact('stats', 'fifoEnabled'));
+    }
+
+    /**
+     * ⚡ HIDUPKAN / SEMBUNYIKAN FITUR FIFO PERSEDIAAN
+     */
+    public function toggleFifoPersediaan(Request $request)
+    {
+        $current = \App\Services\PersediaanBatchService::isFifoEnabled();
+        $newState = !$current;
+
+        \App\Services\PersediaanBatchService::setFifoEnabled($newState);
+
+        $statusLabel = $newState
+            ? 'DIHIDUPKAN (Aktif). Perhitungan stok & tampilan keluar persediaan kini menggunakan metode FIFO.'
+            : 'DINONAKTIFKAN (Disembunyikan). Tampilan & perhitungan kembali ke mode standar (tanpa FIFO), namun daftar riwayat harga tetap tersimpan.';
+
+        return back()->with('success', "Fitur FIFO Persediaan berhasil {$statusLabel}");
     }
 
     /**
