@@ -803,11 +803,12 @@ class PegawaiController extends Controller
             'kode_barang' => 'required',
             'nup' => 'nullable', // Menambahkan NUP untuk kendaraan jika ada
             'jumlah' => 'required|integer|min:1',
-            'tanggal_peminjaman' => 'required|date|after:today',
+            'tanggal_peminjaman' => 'required|date|after_or_equal:today',
             'tanggal_pengembalian' => 'required|date|after_or_equal:tanggal_peminjaman',
             'deskripsi_peruntukan' => 'required|string',
         ], [
-            'tanggal_peminjaman.after' => 'Pengajuan peminjaman kendaraan dinas wajib dilakukan maksimal H-1. Anda tidak bisa meminjam untuk hari ini.'
+            'tanggal_peminjaman.after_or_equal' => 'Tanggal peminjaman minimal hari ini.',
+            'tanggal_pengembalian.after_or_equal' => 'Tanggal pengembalian harus sama atau setelah tanggal peminjaman.',
         ]);
 
         try {

@@ -158,10 +158,6 @@
             </div>
             @endif
 
-            <div style="font-size: 12px; color: var(--danger); background: rgba(239, 68, 68, 0.1); padding: 8px 12px; border-radius: 8px; margin-bottom: 14px; border: 1px solid rgba(239, 68, 68, 0.2); font-weight: 500;">
-              <i class="fas fa-info-circle"></i> <b>Perhatian:</b> Pengajuan peminjaman kendaraan wajib dilakukan maksimal H-1. Anda tidak bisa memilih tanggal hari ini.
-            </div>
-
             <div class="form-group">
               <div class="form-label"><i class="fas fa-search"></i> Pilih Kendaraan <span class="req">*</span></div>
               <select class="form-select" name="kode_barang" id="kendaraanSelect" required>
@@ -235,11 +231,11 @@
             <div class="input-row">
               <div class="form-group">
                 <div class="form-label"><i class="fas fa-calendar"></i> Tgl Pinjam <span class="req">*</span></div>
-                <input type="date" class="form-input" name="tanggal_peminjaman" id="tglPinjam" min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" required>
+                <input type="date" class="form-input" name="tanggal_peminjaman" id="tglPinjam" min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}" required>
               </div>
               <div class="form-group">
                 <div class="form-label"><i class="fas fa-calendar-check"></i> Tgl Kembali <span class="req">*</span></div>
-                <input type="date" class="form-input" name="tanggal_pengembalian" id="tglKembali" min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}" required>
+                <input type="date" class="form-input" name="tanggal_pengembalian" id="tglKembali" min="{{ \Carbon\Carbon::today()->format('Y-m-d') }}" required>
               </div>
             </div>
 
@@ -465,14 +461,26 @@
       btn.disabled = true;
     });
 
-    // SINKRONISASI JAVASCRIPT VALIDASI TANGGAL MINIMAL BESOK (H-1)
+    // SINKRONISASI JAVASCRIPT VALIDASI TANGGAL (Bisa mulai hari ini)
     document.addEventListener('DOMContentLoaded', function() {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const minDate = tomorrow.toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0];
+      const tglPinjam = document.getElementById('tglPinjam');
+      const tglKembali = document.getElementById('tglKembali');
       
-      if (document.getElementById('tglPinjam')) document.getElementById('tglPinjam').min = minDate;
-      if (document.getElementById('tglKembali')) document.getElementById('tglKembali').min = minDate;
+      if (tglPinjam) {
+        tglPinjam.min = today;
+        tglPinjam.addEventListener('change', function() {
+          if (tglKembali) {
+            tglKembali.min = this.value || today;
+            if (tglKembali.value && tglKembali.value < this.value) {
+              tglKembali.value = this.value;
+            }
+          }
+        });
+      }
+      if (tglKembali) {
+        tglKembali.min = today;
+      }
     });
 
     function showDetail(id) {
