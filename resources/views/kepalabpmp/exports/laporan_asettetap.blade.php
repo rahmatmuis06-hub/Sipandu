@@ -4,20 +4,23 @@
     <meta charset="UTF-8">
     <title>{{ $title }}</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Helvetica','Arial',sans-serif;font-size:11px;color:#1e293b;line-height:1.5}
-        .header{text-align:center;border-bottom:3px solid #ea580c;padding-bottom:12px;margin-bottom:16px}
-        .header h1{font-size:16px;color:#ea580c;margin-bottom:2px}
-        .header h2{font-size:13px;color:#334155;margin-bottom:4px}
-        .header p{font-size:10px;color:#64748b}
-        .section{margin-bottom:18px}
-        .section-title{font-size:13px;font-weight:bold;color:#ea580c;border-bottom:2px solid #fed7aa;padding-bottom:4px;margin-bottom:8px}
-        table{width:100%;border-collapse:collapse;margin-bottom:12px}
-        th{background:#ea580c;color:#fff;padding:6px 8px;font-size:10px;text-align:left;text-transform:uppercase}
-        td{padding:5px 8px;border-bottom:1px solid #e2e8f0;font-size:10px}
-        tr:nth-child(even) td{background:#f8fafc}
-        .footer{margin-top:20px;padding-top:10px;border-top:1px solid #e2e8f0;font-size:9px;color:#94a3b8;text-align:center}
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica', 'Arial', sans-serif; font-size: 11px; color: #1e293b; line-height: 1.5; padding: 10px; }
+        .header { text-align: center; border-bottom: 3px solid #ea580c; padding-bottom: 12px; margin-bottom: 16px; }
+        .header h1 { font-size: 16px; color: #ea580c; margin-bottom: 2px; }
+        .header h2 { font-size: 13px; color: #334155; margin-bottom: 4px; }
+        .header p { font-size: 10px; color: #64748b; }
+        .section { margin-bottom: 18px; }
+        .section-title { font-size: 13px; font-weight: bold; color: #ea580c; border-bottom: 2px solid #fed7aa; padding-bottom: 4px; margin-bottom: 8px; }
+        .sub-title { font-size: 11px; font-weight: bold; color: #334155; margin: 8px 0 4px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        th { background: #ea580c; color: #fff; padding: 6px 8px; font-size: 10px; text-align: left; text-transform: uppercase; }
+        td { padding: 5px 8px; border-bottom: 1px solid #e2e8f0; font-size: 10px; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: 9px; color: #94a3b8; text-align: center; }
         .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .badge { padding: 2px 4px; font-weight: bold; text-transform: uppercase; font-size: 9px; background: #f1f5f9; border-radius: 3px; }
     </style>
 </head>
 <body>
@@ -27,187 +30,281 @@
         <p>Periode: {{ $periode }} | Dicetak oleh: {{ $generated_by }} | Tanggal: {{ $generated_at->format('d/m/Y H:i') }}</p>
     </div>
 
+    {{-- RINGKASAN STATISTIK --}}
     <div class="section">
-        <div class="section-title">Ringkasan Statistik</div>
+        <div class="section-title">Ringkasan Statistik Aset Tetap</div>
         <table>
             <tr>
-                <td><strong>Total Aset:</strong></td><td>{{ number_format($stats['total_aset'] ?? 0) }}</td>
-                <td><strong>Nilai Aset:</strong></td><td>Rp {{ number_format($stats['total_nilai'] ?? 0, 0, ',', '.') }}</td>
+                <td style="width: 25%;"><strong>Total Master Aset:</strong></td>
+                <td style="width: 25%;">{{ number_format($stats['total_aset'] ?? 0) }} Unit</td>
+                <td style="width: 25%;"><strong>Total Nilai Aset:</strong></td>
+                <td style="width: 25%;">Rp {{ number_format($stats['total_nilai'] ?? 0, 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td><strong>Transaksi Masuk:</strong></td><td>{{ $stats['total_masuk'] ?? 0 }}</td>
-                <td><strong>Transaksi Keluar:</strong></td><td>{{ $stats['total_keluar'] ?? 0 }}</td>
+                <td><strong>Transaksi Masuk Periode Ini:</strong></td>
+                <td>{{ $stats['total_masuk'] ?? 0 }} Trx</td>
+                <td><strong>Transaksi Keluar Periode Ini:</strong></td>
+                <td>{{ $stats['total_keluar'] ?? 0 }} Trx</td>
             </tr>
             <tr>
-                <td><strong>Total Mutasi:</strong></td><td>{{ $stats['total_mutasi'] ?? 0 }}</td>
-                <td></td><td></td>
+                <td><strong>Total Mutasi Lokasi:</strong></td>
+                <td>{{ $stats['total_mutasi'] ?? 0 }} Mutasi</td>
+                <td></td>
+                <td></td>
             </tr>
         </table>
     </div>
 
+    {{-- 1. DATA MASTER ASET TETAP --}}
     <div class="section">
-        <div class="section-title">Data Aset Tetap (Penambahan/Pembaruan Periode Ini)</div>
+        <div class="section-title">1. Data Master Inventaris Aset Tetap</div>
         <table>
-            <thead><tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Kategori</th><th>Kondisi</th><th>Lokasi</th><th>Jumlah</th><th>Nilai</th></tr></thead>
-            <tbody>
-            @foreach($aset as $i => $item)
+            <thead>
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->kode_barang }}</td>
-                    <td>{{ $item->nama_barang }}</td>
-                    <td>{{ $item->kategori }}</td>
-                    <td>{{ $item->kondisi }}</td>
-                    <td>{{ $item->lokasi }}</td>
-                    <td>{{ $item->jumlah }}</td>
-                    <td>Rp {{ number_format($item->nilai_perolehan ?? 0, 0, ',', '.') }}</td>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 14%;">Kode Barang</th>
+                    <th>Nama Barang</th>
+                    <th>Kategori</th>
+                    <th style="width: 10%;" class="text-center">Kondisi</th>
+                    <th>Lokasi</th>
+                    <th style="width: 8%;" class="text-center">Jumlah</th>
+                    <th style="width: 15%;" class="text-right">Nilai Perolehan</th>
                 </tr>
-            @endforeach
+            </thead>
+            <tbody>
+            @forelse($aset as $i => $item)
+                <tr>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td>{{ $item->kode_barang }}</td>
+                    <td><strong>{{ $item->nama_barang }}</strong></td>
+                    <td>{{ $item->kategori ?? '-' }}</td>
+                    <td class="text-center">{{ $item->kondisi ?? '-' }}</td>
+                    <td>{{ $item->lokasi ?? '-' }}</td>
+                    <td class="text-center">{{ $item->jumlah ?? 1 }}</td>
+                    <td class="text-right">Rp {{ number_format($item->nilai_perolehan ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="8" class="text-center">Tidak ada data aset tetap</td></tr>
+            @endforelse
             </tbody>
+            <tfoot>
+                <tr style="background:#f8fafc; font-weight:bold;">
+                    <td colspan="6" class="text-right"><strong>TOTAL:</strong></td>
+                    <td class="text-center"><strong>{{ number_format($aset->sum('jumlah')) }}</strong></td>
+                    <td class="text-right"><strong>Rp {{ number_format($stats['total_nilai'] ?? $aset->sum('nilai_perolehan'), 0, ',', '.') }}</strong></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
 
+    {{-- 2. TRANSAKSI MASUK ASET TETAP --}}
     <div class="section">
-        <div class="section-title">Transaksi Masuk Aset Tetap</div>
+        <div class="section-title">2. Log Transaksi Masuk Aset Tetap (Pengadaan / Perolehan)</div>
         <table>
-            <thead><tr><th>No</th><th>Tanggal</th><th>Nama Barang</th><th>Kategori</th><th>Nilai Perolehan</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tanggal</th>
+                    <th>Nama Barang</th>
+                    <th style="width: 10%;" class="text-center">Kondisi</th>
+                    <th>Kategori</th>
+                    <th style="width: 15%;" class="text-right">Nilai Perolehan</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($transaksi_masuk as $i => $item)
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $item->nama_barang }}</td>
-                    <td>{{ $item->kondisi ?? '-' }}</td>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->tanggal_perolehan ? \Carbon\Carbon::parse($item->tanggal_perolehan)->format('d/m/Y') : '-' }}</td>
+                    <td><strong>{{ $item->nama_barang }}</strong></td>
+                    <td class="text-center">{{ $item->kondisi ?? '-' }}</td>
                     <td>{{ $item->kategori ?? '-' }}</td>
-                    <td>Rp {{ number_format($item->nilai_perolehan ?? 0, 0, ',', '.') }}</td>
+                    <td class="text-right">Rp {{ number_format($item->nilai_perolehan ?? 0, 0, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
+                <tr><td colspan="6" class="text-center">Tidak ada rekaman transaksi masuk pada periode ini</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
 
+    {{-- 3. TRANSAKSI KELUAR ASET TETAP --}}
     <div class="section">
-        <div class="section-title">Transaksi Keluar Aset Tetap</div>
+        <div class="section-title">3. Log Transaksi Keluar Aset Tetap (Penghapusan / Pemindahtanganan)</div>
         <table>
-            <thead><tr><th>No</th><th>Tanggal Input</th><th>Nama Barang</th><th>Kategori</th><th>Keterangan</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tanggal</th>
+                    <th>Nama Barang</th>
+                    <th style="width: 10%;" class="text-center">Kondisi</th>
+                    <th>Kategori</th>
+                    <th>Keterangan Keperluan</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($transaksi_keluar as $i => $item)
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->tanggal_input ? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $item->nama_barang }}</td>
-                    <td>{{ $item->kondisi ?? '-' }}</td>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->tanggal_input ? \Carbon\Carbon::parse($item->tanggal_input)->format('d/m/Y') : '-' }}</td>
+                    <td><strong>{{ $item->nama_barang }}</strong></td>
+                    <td class="text-center">{{ $item->kondisi ?? '-' }}</td>
                     <td>{{ $item->kategori ?? '-' }}</td>
                     <td>{{ $item->keterangan ?? '-' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="text-center">Tidak ada data</td></tr>
+                <tr><td colspan="6" class="text-center">Tidak ada rekaman transaksi keluar pada periode ini</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
 
+    {{-- 4. MUTASI LOKASI ASET TETAP --}}
     <div class="section">
-        <div class="section-title">Mutasi Barang</div>
+        <div class="section-title">4. Log Mutasi Lokasi Aset Tetap</div>
         <table>
-            <thead><tr><th>No</th><th>Tanggal</th><th>Nama Barang</th><th>Dari</th><th>Ke</th><th>Keterangan</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tanggal</th>
+                    <th>Nama Barang</th>
+                    <th>Lokasi Asal</th>
+                    <th>Lokasi Tujuan</th>
+                    <th>Keterangan</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($mutasi as $i => $item)
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->tanggal_mutasi ? \Carbon\Carbon::parse($item->tanggal_mutasi)->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $item->nama_barang ?? $item->asetTetap?->nama_barang ?? '-' }}</td>
-                    <td>{{ $item->lokasi_awal ?? '-' }}</td>
-                    <td>{{ $item->lokasi_akhir ?? '-' }}</td>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->tanggal_mutasi ? \Carbon\Carbon::parse($item->tanggal_mutasi)->format('d/m/Y') : '-' }}</td>
+                    <td><strong>{{ $item->nama_barang ?? $item->asetTetap?->nama_barang ?? '-' }}</strong></td>
+                    <td>{{ $item->lokasi_awal ?? $item->lokasi_asal ?? '-' }}</td>
+                    <td>{{ $item->lokasi_akhir ?? $item->lokasi_tujuan ?? '-' }}</td>
                     <td>{{ $item->keterangan ?? '-' }}</td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
+                <tr><td colspan="6" class="text-center">Tidak ada riwayat mutasi aset pada periode ini</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
 
+    {{-- 5. PEMINJAMAN ASET TETAP --}}
     <div class="section">
-        <div class="section-title">Peminjaman Barang</div>
+        <div class="section-title">5. Log Peminjaman Aset Tetap (Barang & Kendaraan)</div>
+        <div class="sub-title">A. Peminjaman Barang Inventaris</div>
         <table>
-            <thead><tr><th>No</th><th>Tanggal Pinjam</th><th>Peminjam</th><th>Nama Barang</th><th>Jumlah</th><th>Status</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tgl Pinjam</th>
+                    <th>Peminjam</th>
+                    <th>Nama Barang</th>
+                    <th style="width: 8%;" class="text-center">Jumlah</th>
+                    <th style="width: 14%;" class="text-center">Status</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($peminjaman_barang as $i => $item)
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') : '-' }}</td>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->tanggal_peminjaman ? \Carbon\Carbon::parse($item->tanggal_peminjaman)->format('d/m/Y') : ($item->created_at ? $item->created_at->format('d/m/Y') : '-') }}</td>
                     <td>{{ $item->user?->name ?? '-' }}</td>
-                    <td>{{ $item->nama_barang ?? '-' }}</td>
-                    <td>{{ $item->jumlah ?? '-' }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $item->status ?? '-')) }}</td>
+                    <td><strong>{{ $item->nama_barang ?? '-' }}</strong></td>
+                    <td class="text-center">{{ $item->jumlah ?? 1 }}</td>
+                    <td class="text-center"><span class="badge">{{ ucfirst(str_replace('_', ' ', $item->status ?? '-')) }}</span></td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
+                <tr><td colspan="6" class="text-center">Tidak ada data peminjaman barang pada periode ini</td></tr>
             @endforelse
             </tbody>
         </table>
-    </div>
 
-    <div class="section">
-        <div class="section-title">Pengembalian Barang</div>
+        <div class="sub-title">B. Peminjaman Kendaraan Dinas / Operasional</div>
         <table>
-            <thead><tr><th>No</th><th>Tanggal Kembali</th><th>Peminjam</th><th>Nama Barang</th><th>Kondisi</th><th>Status</th></tr></thead>
-            <tbody>
-            @forelse($pengembalian_barang ?? [] as $i => $item)
+            <thead>
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') : '-' }}</td>
-                    <td>{{ $item->peminjamanBarang?->user?->name ?? '-' }}</td>
-                    <td>{{ $item->peminjamanBarang?->nama_barang ?? '-' }}</td>
-                    <td>{{ $item->kondisi_barang ?? '-' }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $item->status_pengembalian ?? '-')) }}</td>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tgl Pinjam</th>
+                    <th>Peminjam</th>
+                    <th>Kendaraan</th>
+                    <th>Tujuan Penggunaan</th>
+                    <th style="width: 14%;" class="text-center">Status</th>
                 </tr>
-            @empty
-                <tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">Peminjaman Kendaraan</div>
-        <table>
-            <thead><tr><th>No</th><th>Tanggal Pinjam</th><th>Peminjam</th><th>Kendaraan</th><th>Tujuan</th><th>Status</th></tr></thead>
+            </thead>
             <tbody>
             @forelse($peminjaman_kendaraan as $i => $item)
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->tanggal_peminjaman ? \Carbon\Carbon::parse($item->tanggal_peminjaman)->format('d/m/Y') : '-' }}</td>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->tanggal_peminjaman ? \Carbon\Carbon::parse($item->tanggal_peminjaman)->format('d/m/Y') : ($item->created_at ? $item->created_at->format('d/m/Y') : '-') }}</td>
                     <td>{{ $item->user?->name ?? '-' }}</td>
-                    <td>{{ $item->nama_kendaraan ?? $item->nama_barang ?? '-' }}</td>
+                    <td><strong>{{ $item->nama_kendaraan ?? $item->nama_barang ?? '-' }}</strong></td>
                     <td>{{ $item->tujuan ?? '-' }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $item->status ?? '-')) }}</td>
+                    <td class="text-center"><span class="badge">{{ ucfirst(str_replace('_', ' ', $item->status ?? '-')) }}</span></td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
+                <tr><td colspan="6" class="text-center">Tidak ada data peminjaman kendaraan pada periode ini</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
 
+    {{-- 6. PENGEMBALIAN ASET TETAP --}}
     <div class="section">
-        <div class="section-title">Pengembalian Kendaraan</div>
+        <div class="section-title">6. Log Pengembalian Aset Tetap (Barang & Kendaraan)</div>
+        <div class="sub-title">A. Pengembalian Barang Inventaris</div>
         <table>
-            <thead><tr><th>No</th><th>Tanggal Kembali</th><th>Peminjam</th><th>Kendaraan</th><th>Kondisi</th><th>Status</th></tr></thead>
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tgl Kembali</th>
+                    <th>Peminjam</th>
+                    <th>Nama Barang</th>
+                    <th style="width: 12%;" class="text-center">Kondisi</th>
+                    <th style="width: 14%;" class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            @forelse($pengembalian_barang ?? [] as $i => $item)
+                <tr>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') : '-' }}</td>
+                    <td>{{ $item->peminjamanBarang?->user?->name ?? '-' }}</td>
+                    <td><strong>{{ $item->peminjamanBarang?->nama_barang ?? '-' }}</strong></td>
+                    <td class="text-center">{{ $item->kondisi_barang ?? '-' }}</td>
+                    <td class="text-center"><span class="badge">{{ ucfirst(str_replace('_', ' ', $item->status_pengembalian ?? '-')) }}</span></td>
+                </tr>
+            @empty
+                <tr><td colspan="6" class="text-center">Tidak ada data pengembalian barang pada periode ini</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+
+        <div class="sub-title">B. Pengembalian Kendaraan Dinas / Operasional</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 4%;" class="text-center">No</th>
+                    <th style="width: 12%;" class="text-center">Tgl Kembali</th>
+                    <th>Peminjam</th>
+                    <th>Kendaraan</th>
+                    <th style="width: 12%;" class="text-center">Kondisi</th>
+                    <th style="width: 14%;" class="text-center">Status</th>
+                </tr>
+            </thead>
             <tbody>
             @forelse($pengembalian_kendaraan ?? [] as $i => $item)
                 <tr>
-                    <td>{{ $i+1 }}</td>
-                    <td>{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') : '-' }}</td>
+                    <td class="text-center">{{ $i+1 }}</td>
+                    <td class="text-center">{{ $item->created_at ? \Carbon\Carbon::parse($item->created_at)->format('d/m/Y') : '-' }}</td>
                     <td>{{ $item->peminjamanKendaraan?->user?->name ?? '-' }}</td>
-                    <td>{{ $item->peminjamanKendaraan?->nama_kendaraan ?? $item->peminjamanKendaraan?->nama_barang ?? '-' }}</td>
-                    <td>{{ $item->kondisi_kendaraan ?? '-' }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $item->status_pengembalian ?? '-')) }}</td>
+                    <td><strong>{{ $item->peminjamanKendaraan?->nama_kendaraan ?? $item->peminjamanKendaraan?->nama_barang ?? '-' }}</strong></td>
+                    <td class="text-center">{{ $item->kondisi_kendaraan ?? '-' }}</td>
+                    <td class="text-center"><span class="badge">{{ ucfirst(str_replace('_', ' ', $item->status_pengembalian ?? '-')) }}</span></td>
                 </tr>
             @empty
-                <tr><td colspan="6" class="text-center">Tidak ada data</td></tr>
+                <tr><td colspan="6" class="text-center">Tidak ada data pengembalian kendaraan pada periode ini</td></tr>
             @endforelse
             </tbody>
         </table>

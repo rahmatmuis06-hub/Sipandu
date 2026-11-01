@@ -346,13 +346,17 @@
                         <div class="action-icon" style="background: linear-gradient(135deg,#4338ca,#8b5cf6);"><i class="fas fa-file-alt"></i></div>
                         <div class="action-label">Lihat Laporan</div>
                     </a>
-                    <a href="{{ route('kepalabpmp.laporan.download-lengkap') }}" class="action-btn">
-                        <div class="action-icon" style="background: linear-gradient(135deg,#22c55e,#16a34a);"><i class="fas fa-download"></i></div>
-                        <div class="action-label">Download Lengkap</div>
+                    <a href="{{ route('kepalabpmp.laporan.download-aset-tetap') }}" class="action-btn">
+                        <div class="action-icon" style="background: linear-gradient(135deg,#f97316,#ea580c);"><i class="fas fa-warehouse"></i></div>
+                        <div class="action-label">Lap. Aset Tetap</div>
                     </a>
                     <a href="{{ route('kepalabpmp.laporan.download-persediaan') }}" class="action-btn">
-                        <div class="action-icon" style="background: linear-gradient(135deg,#f97316,#ea580c);"><i class="fas fa-boxes"></i></div>
+                        <div class="action-icon" style="background: linear-gradient(135deg,#22c55e,#16a34a);"><i class="fas fa-boxes"></i></div>
                         <div class="action-label">Lap. Persediaan</div>
+                    </a>
+                    <a href="{{ route('kepalabpmp.laporan.download-sarpras') }}" class="action-btn">
+                        <div class="action-icon" style="background: linear-gradient(135deg,#0ea5e9,#0284c7);"><i class="fas fa-building"></i></div>
+                        <div class="action-label">Lap. Sarpras</div>
                     </a>
                     <a href="{{ route('kepalabpmp.pengaturan-akun') }}" class="action-btn">
                         <div class="action-icon" style="background: linear-gradient(135deg,#a855f7,#7c3aed);"><i class="fas fa-cog"></i></div>

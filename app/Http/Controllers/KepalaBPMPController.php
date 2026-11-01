@@ -321,9 +321,8 @@ class KepalaBPMPController extends Controller
             'title' => 'Laporan Data Aset Tetap',
             'periode' => $startDate->format('d/m/Y') . ' s/d ' . $endDate->format('d/m/Y'),
             'generated_at' => now(),
-            'generated_by' => auth()->user()->name,
-            'aset' => AssetTetap::whereBetween('created_at', [$startDate, $endDate])
-                ->orderBy('kategori')->get(),
+            'generated_by' => auth()->user()->name ?? 'Kepala BPMP',
+            'aset' => AssetTetap::orderBy('kategori')->get(),
             'transaksi_masuk' => TransaksiMasukAssetTetap::whereBetween('tanggal_perolehan', [$startDate, $endDate])
                 ->orderBy('tanggal_perolehan', 'desc')->get(),
             'transaksi_keluar' => TransaksiKeluarAssetTetap::whereBetween('tanggal_input', [$startDate, $endDate])
@@ -348,9 +347,8 @@ class KepalaBPMPController extends Controller
             ],
         ];
 
-        // $pdf = Pdf::loadView('kepalabpmp.exports.laporan_asettetap', $data)->setPaper('a4', 'landscape');
-        // return $pdf->download('Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.pdf');
-        return Excel::download(new LaporanAsetTetapExport($data), 'Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.xlsx');
+        $pdf = Pdf::loadView('kepalabpmp.exports.laporan_asettetap', $data)->setPaper('a4', 'landscape');
+        return $pdf->download('Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.pdf');
     }
 
     /**
