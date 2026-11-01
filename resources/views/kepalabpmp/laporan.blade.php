@@ -87,7 +87,7 @@
             <p>Laporan komprehensif seluruh data yang dikelola oleh Admin Persediaan, Admin Aset Tetap, dan Admin Sarpras dalam satu tampilan terpadu.</p>
             <div class="report-meta">
                 <div><strong>Periode:</strong> {{ $startDate->format('d M Y') }} - {{ $endDate->format('d M Y') }}</div>
-                <div><strong>Pembuat:</strong> {{ auth()->user()->name }}</div>
+                <div><strong>Pembuat:</strong> {{ auth()->user()->name ?? 'Kepala BPMP' }}</div>
                 <div><strong>Dicetak:</strong> {{ now()->format('d M Y H:i') }}</div>
             </div>
         </section>
@@ -242,6 +242,10 @@
             <div class="summary-box">
                 <div class="marker" style="background:linear-gradient(135deg,#22c55e,#16a34a)"><i class="fas fa-cubes"></i></div>
                 <div class="summary-info"><div class="summary-value">{{ number_format($persediaan['total_item']) }}</div><div class="summary-label">Total Jenis Item</div></div>
+            </div>
+            <div class="summary-box">
+                <div class="marker" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="fas fa-money-bill-wave"></i></div>
+                <div class="summary-info"><div class="summary-value" style="font-size:16px;">Rp {{ number_format($persediaan['total_nilai'] ?? 0, 0, ',', '.') }}</div><div class="summary-label">Total Nilai Persediaan</div></div>
             </div>
             <div class="summary-box">
                 <div class="marker" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"><i class="fas fa-dolly-flatbed"></i></div>

@@ -53,7 +53,7 @@
         <table class="stats-table">
             <tr><td><strong>Transaksi Masuk:</strong></td><td>{{ $persediaan_stats['transaksi_masuk'] }}</td><td><strong>Nilai Masuk:</strong></td><td>Rp {{ number_format($persediaan_stats['nilai_masuk'],0,',','.') }}</td></tr>
             <tr><td><strong>Transaksi Keluar:</strong></td><td>{{ $persediaan_stats['transaksi_keluar'] }}</td><td><strong>Nilai Keluar:</strong></td><td>Rp {{ number_format($persediaan_stats['nilai_keluar'],0,',','.') }}</td></tr>
-            <tr><td><strong>Permintaan Persediaan:</strong></td><td>{{ $persediaan_stats['permintaan'] }}</td><td></td><td></td></tr>
+            <tr><td><strong>Permintaan Persediaan:</strong></td><td>{{ $persediaan_stats['permintaan'] }}</td><td><strong>Total Nilai Persediaan:</strong></td><td>Rp {{ number_format($persediaan_stats['total_nilai'] ?? 0,0,',','.') }}</td></tr>
         </table>
         <div class="sub-title">Daftar Persediaan</div>
         <table>

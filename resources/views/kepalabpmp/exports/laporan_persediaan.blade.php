@@ -42,7 +42,7 @@
             </tr>
             <tr>
                 <td><strong>Transaksi Keluar Periode Ini:</strong></td><td>{{ $stats['total_keluar'] ?? 0 }} Trx</td>
-                <td></td><td></td>
+                <td><strong>Total Nilai Persediaan:</strong></td><td>Rp {{ number_format($stats['total_nilai'] ?? 0,0,',','.') }}</td>
             </tr>
         </table>
     </div>
@@ -69,13 +69,21 @@
                     <td><strong>{{ $item->nama_barang }}</strong></td>
                     <td>{{ $item->kategori }}</td>
                     <td class="text-center">{{ $item->jumlah }}</td>
-                    <td class="text-right">Rp {{ number_format($item->getRawOriginal('harga_satuan') ?? $item->harga_satuan ?? 0,0,',','.') }}</td>
+                    <td class="text-right">Rp {{ number_format(method_exists($item, 'getRawOriginal') ? ($item->getRawOriginal('harga_satuan') ?? $item->harga_satuan ?? 0) : ($item->harga_satuan ?? 0), 0, ',', '.') }}</td>
                     <td class="text-right">Rp {{ number_format($item->harga_total ?? 0,0,',','.') }}</td>
                 </tr>
             @empty
                 <tr><td colspan="7" class="text-center">Tidak ada data master persediaan</td></tr>
             @endforelse
             </tbody>
+            <tfoot>
+                <tr style="background:#f8fafc; font-weight:bold;">
+                    <td colspan="4" class="text-right"><strong>TOTAL:</strong></td>
+                    <td class="text-center"><strong>{{ number_format($persediaan->sum('jumlah')) }}</strong></td>
+                    <td></td>
+                    <td class="text-right"><strong>Rp {{ number_format($stats['total_nilai'] ?? $persediaan->sum('harga_total'), 0, ',', '.') }}</strong></td>
+                </tr>
+            </tfoot>
         </table>
     </div>
 

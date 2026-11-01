@@ -159,6 +159,9 @@
                 <div class="stat-details">
                     <div class="stat-value">{{ number_format($totalPersediaan) }}</div>
                     <div class="stat-label">Total Persediaan</div>
+                    @if(isset($totalNilaiPersediaan) && $totalNilaiPersediaan > 0)
+                        <div style="font-size: 11px; color: #10b981; font-weight: 700; margin-top: 3px;">Rp {{ number_format($totalNilaiPersediaan, 0, ',', '.') }}</div>
+                    @endif
                 </div>
             </div>
 

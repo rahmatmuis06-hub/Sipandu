@@ -44,6 +44,7 @@ class KepalaBPMPController extends Controller
         // 📊 STATISTIK UTAMA (Pisah Aset & Persediaan, Tambah Mutasi & Peminjaman)
         $totalAsetTetap = AssetTetap::count();
         $totalPersediaan = Persediaan::count();
+        $totalNilaiPersediaan = (float) (Persediaan::sum('harga_total') ?? 0);
         $totalPengguna = User::count();
         $totalGedung = Gedung::count();
         
@@ -137,7 +138,7 @@ class KepalaBPMPController extends Controller
 
         // Mengirimkan semua variabel ke view dashbord
         return view('kepalabpmp.dashbord', compact(
-            'totalAsetTetap', 'totalPersediaan', 'totalPengguna', 'totalGedung',
+            'totalAsetTetap', 'totalPersediaan', 'totalNilaiPersediaan', 'totalPengguna', 'totalGedung',
             'totalMutasi', 'totalPeminjaman', 'permintaanBulanIni', 'menungguApproval', 'totalKerusakan',
             'chartLabels', 'chartPermintaan', 'chartPeminjaman', 'distribusiAset',
             'recentActivities', 'topDipinjam', 'topRusak', 'permintaanBulanLalu', 'trendPersen', 'persenKondisiBaik'
@@ -157,7 +158,7 @@ class KepalaBPMPController extends Controller
         // ══════════════════════════════════════════════════
         $persediaan = [
             'total_item' => Persediaan::count(),
-            'total_nilai' => Persediaan::sum(\DB::raw('CAST(harga_total AS DECIMAL(20,2))')),
+            'total_nilai' => (float) (Persediaan::sum('harga_total') ?? 0),
             'transaksi_masuk' => TransaksiMasukPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
             'transaksi_keluar' => TransaksiKeluarPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
             'nilai_masuk' => TransaksiMasukPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->sum('total'),
@@ -293,6 +294,7 @@ class KepalaBPMPController extends Controller
                 ->orderBy('created_at', 'desc')->get(),
             'stats' => [
                 'total_item' => Persediaan::count(),
+                'total_nilai' => (float) (Persediaan::sum('harga_total') ?? 0),
                 'total_masuk' => TransaksiMasukPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
                 'total_keluar' => TransaksiKeluarPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
                 'nilai_masuk' => TransaksiMasukPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->sum('total'),
@@ -400,6 +402,7 @@ class KepalaBPMPController extends Controller
             // Persediaan
             'persediaan_stats' => [
                 'total_item' => Persediaan::count(),
+                'total_nilai' => (float) (Persediaan::sum('harga_total') ?? 0),
                 'transaksi_masuk' => TransaksiMasukPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
                 'transaksi_keluar' => TransaksiKeluarPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->count(),
                 'nilai_masuk' => TransaksiMasukPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])->sum('total'),
