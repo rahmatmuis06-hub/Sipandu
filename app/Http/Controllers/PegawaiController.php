@@ -17,6 +17,7 @@ use App\Models\DetailPermintaanPersediaan;
 use App\Models\Persediaan;
 use App\Models\BarangLainnya;
 use App\Models\PeminjamanBarangLainnya;
+use App\Models\PengembalianBarangLainnya;
 use App\Models\User;
 use App\Services\FonnteService;
 use Illuminate\Support\Facades\Schema;
@@ -1174,6 +1175,117 @@ class PegawaiController extends Controller
     }
 
     /**
+     * Pengembalian Barang Lainnya (Pegawai)
+     */
+    public function pengembalianBarangLainnya()
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $peminjamanAktif = PeminjamanBarangLainnya::where('user_id', Auth::id())
+            ->whereIn('status', ['disetujui', 'proses_pengembalian'])
+            ->latest()
+            ->get();
+
+        $riwayat = PengembalianBarangLainnya::with('peminjamanBarangLainnya')
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('pegawai.pengembalian_barang_lainnya', compact('peminjamanAktif', 'riwayat'));
+    }
+
+    public function storePengembalianBarangLainnya(Request $request)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $request->validate([
+            'peminjaman_barang_lainnya_id' => 'required|exists:peminjaman_barang_lainnya,id',
+            'tanggal_pengembalian_aktual'  => 'required|date',
+            'jumlah_dikembalikan'          => 'required|integer|min:1',
+            'kondisi_barang'               => 'required|string',
+            'foto_sesudah'                 => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $peminjaman = PeminjamanBarangLainnya::where('user_id', Auth::id())
+            ->whereIn('status', ['disetujui', 'proses_pengembalian'])
+            ->findOrFail($request->peminjaman_barang_lainnya_id);
+
+        $fotoPath = null;
+        if ($request->hasFile('foto_sesudah')) {
+            $fotoPath = $request->file('foto_sesudah')->store('foto_pengembalian_lainnya', 'public');
+        }
+
+        $statusMap = [
+            'baik'         => 'lengkap',
+            'rusak-ringan' => 'rusak_ringan',
+            'rusak-berat'  => 'rusak_berat',
+            'hilang'       => 'hilang'
+        ];
+
+        PengembalianBarangLainnya::create([
+            'peminjaman_barang_lainnya_id' => $peminjaman->id,
+            'user_id'                      => Auth::id(),
+            'tanggal_pengembalian_aktual'  => $request->tanggal_pengembalian_aktual . ' ' . ($request->jam_pengembalian ?? '00:00:00'),
+            'jumlah_dikembalikan'          => $request->jumlah_dikembalikan,
+            'kondisi_barang'               => $request->kondisi_barang,
+            'status_pengembalian'          => $statusMap[$request->kondisi_barang] ?? 'lengkap',
+            'catatan'                      => $request->catatan,
+            'foto_sesudah'                 => $fotoPath,
+            'status_verifikasi'            => 'pending',
+        ]);
+
+        $peminjaman->update(['status' => 'proses_pengembalian']);
+
+        // Notifikasi WhatsApp ke Admin Persediaan
+        $adminPersediaan = User::where('role', 'adminpersediaan')->first();
+        if ($adminPersediaan && $adminPersediaan->nomor_telepon) {
+            $namaPegawai = Auth::user()->name;
+
+            $pesan = "*Laporan Pengembalian BARANG LAINNYA*\n\n";
+            $pesan .= "Halo Admin Persediaan,\n";
+            $pesan .= "Pegawai atas nama *{$namaPegawai}* melaporkan pengembalian barang lainnya:\n\n";
+            $pesan .= "📦 *Nama Barang:* {$peminjaman->nama_barang}\n";
+            $pesan .= "🔢 *Jumlah Dikembalikan:* {$request->jumlah_dikembalikan} {$peminjaman->satuan}\n";
+            $pesan .= "📅 *Tanggal Kembali:* {$request->tanggal_pengembalian_aktual}\n";
+            $pesan .= "🔍 *Kondisi:* " . ucfirst($request->kondisi_barang) . "\n";
+            $pesan .= "📝 *Catatan:* " . ($request->catatan ?? '-') . "\n\n";
+            $pesan .= "Silakan login ke sistem untuk melakukan verifikasi laporan pengembalian.";
+
+            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminPersediaan->nomor_telepon);
+            SendFonnteNotification::dispatch($noHpAdmin, $pesan);
+        }
+
+        return back()->with('success', 'Laporan pengembalian barang lainnya berhasil dikirim dan menunggu verifikasi Admin!');
+    }
+
+    public function showPengembalianBarangLainnyaJson($id)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $data = PengembalianBarangLainnya::with('peminjamanBarangLainnya')
+            ->where('user_id', Auth::id())
+            ->findOrFail($id);
+
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    public function cancelPengembalianBarangLainnya($id)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $pengembalian = PengembalianBarangLainnya::where('user_id', Auth::id())->findOrFail($id);
+        if ($pengembalian->status_verifikasi === 'pending') {
+            $pengembalian->peminjamanBarangLainnya->update(['status' => 'disetujui']);
+            $pengembalian->update([
+                'status_verifikasi' => 'dibatalkan',
+                'updated_at'        => now()
+            ]);
+            return back()->with('success', 'Laporan pengembalian berhasil dibatalkan.');
+        }
+        return back()->with('error', 'Laporan yang sudah diverifikasi tidak dapat dibatalkan.');
+    }
+
+    /**
      * Pastikan tabel barang_lainnya dan peminjaman_barang_lainnya ada
      */
     private function ensureBarangLainnyaTable(): void
@@ -1207,7 +1319,7 @@ class PegawaiController extends Controller
                     $table->date('tanggal_pinjam');
                     $table->date('tanggal_kembali')->nullable();
                     $table->text('keperluan')->nullable();
-                    $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
+                    $table->string('status', 50)->default('pending');
                     $table->text('catatan_admin')->nullable();
                     $table->unsignedBigInteger('approved_by')->nullable();
                     $table->timestamps();
@@ -1215,6 +1327,41 @@ class PegawaiController extends Controller
                     $table->index('user_id');
                     $table->index('barang_lainnya_id');
                     $table->index('status');
+                });
+            }
+
+            if (!Schema::hasTable('pengembalian_barang_lainnya')) {
+                Schema::create('pengembalian_barang_lainnya', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('peminjaman_barang_lainnya_id');
+                    $table->unsignedBigInteger('user_id');
+                    $table->unsignedBigInteger('verified_by_admin_id')->nullable();
+                    $table->timestamp('verified_at')->nullable();
+                    $table->text('komentar_admin')->nullable();
+                    $table->datetime('tanggal_pengembalian_aktual');
+                    $table->integer('jumlah_dikembalikan')->default(1);
+                    $table->text('kondisi_barang');
+                    $table->text('catatan')->nullable();
+                    $table->string('foto_sebelum')->nullable();
+                    $table->string('foto_sesudah')->nullable();
+                    $table->enum('status_pengembalian', [
+                        'lengkap',
+                        'rusak_ringan',
+                        'rusak_berat',
+                        'hilang'
+                    ])->default('lengkap');
+                    $table->enum('status_verifikasi', [
+                        'pending',
+                        'diterima',
+                        'ditolak',
+                        'dibatalkan'
+                    ])->default('pending');
+                    $table->timestamps();
+
+                    $table->index('peminjaman_barang_lainnya_id', 'idx_pbl_id');
+                    $table->index('user_id', 'idx_pbl_user');
+                    $table->index('status_verifikasi', 'idx_pbl_verif');
+                    $table->index('status_pengembalian', 'idx_pbl_status');
                 });
             }
         } catch (\Throwable $e) {

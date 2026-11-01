@@ -47,4 +47,9 @@ class PeminjamanBarangLainnya extends Model
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
+
+    public function pengembalianBarangLainnya()
+    {
+        return $this->hasOne(PengembalianBarangLainnya::class, 'peminjaman_barang_lainnya_id');
+    }
 }

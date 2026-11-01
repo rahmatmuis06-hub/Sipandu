@@ -98,6 +98,12 @@
                     'route' => 'pegawai.peminjaman-barang-lainnya',
                 ],
                 [
+                    'href' => \Illuminate\Support\Facades\Route::has('pegawai.pengembalian-barang-lainnya') ? route('pegawai.pengembalian-barang-lainnya') : url('/pegawai/pengembalian-barang-lainnya'),
+                    'label' => 'Pengembalian Barang Lainnya',
+                    'icon' => 'fas fa-undo',
+                    'route' => 'pegawai.pengembalian-barang-lainnya',
+                ],
+                [
                     'section' => 'Pengaturan',
                 ],
                 [
@@ -291,6 +297,12 @@
                     'label' => 'Barang Lainnya',
                     'icon' => 'fas fa-plug',
                     'route' => 'adminpersediaan.barang-lainnya',
+                ],
+                [
+                    'href' => \Illuminate\Support\Facades\Route::has('adminpersediaan.pengembalian-barang-lainnya') ? route('adminpersediaan.pengembalian-barang-lainnya') : url('/adminpersediaan/pengembalian-barang-lainnya'),
+                    'label' => 'Pengembalian Barang Lainnya',
+                    'icon' => 'fas fa-undo',
+                    'route' => 'adminpersediaan.pengembalian-barang-lainnya',
                 ],
                 [
                     'section' => 'Pengaturan',

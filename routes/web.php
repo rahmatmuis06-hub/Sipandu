@@ -188,6 +188,12 @@ Route::middleware('auth')->group(function () {
             Route::post('/barang-lainnya/peminjaman/{id}/reject', [AdminPersediaanController::class, 'rejectPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.reject');
             Route::post('/barang-lainnya/peminjaman/{id}/return', [AdminPersediaanController::class, 'returnPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.return');
 
+            // ⚡ PENGEMBALIAN BARANG LAINNYA
+            Route::get('/pengembalian-barang-lainnya', [AdminPersediaanController::class, 'pengembalianBarangLainnya'])->name('pengembalian-barang-lainnya');
+            Route::post('/pengembalian-barang-lainnya/{id}/verifikasi', [AdminPersediaanController::class, 'verifikasiPengembalianBarangLainnya'])->name('pengembalian-barang-lainnya.verifikasi');
+            Route::get('/pengembalian-barang-lainnya/{id}/json', [AdminPersediaanController::class, 'showPengembalianBarangLainnyaJsonAdmin'])->name('pengembalian-barang-lainnya.json');
+            Route::get('/pengembalian-barang-lainnya/{id}/cetak', [AdminPersediaanController::class, 'cetakSuratPengembalianBarangLainnya'])->name('pengembalian-barang-lainnya.cetak');
+
 
 
             // 📤 TRANSAKSI KELUAR
@@ -468,6 +474,12 @@ Route::middleware('auth')->group(function () {
             Route::get('/peminjaman-barang-lainnya', [PegawaiController::class, 'peminjamanBarangLainnya'])->name('peminjaman-barang-lainnya');
             Route::post('/peminjaman-barang-lainnya', [PegawaiController::class, 'storePeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.store');
             Route::post('/peminjaman-barang-lainnya/{id}/cancel', [PegawaiController::class, 'cancelPeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.cancel');
+
+            //PENGEMBALIAN BARANG LAINNYA
+            Route::get('/pengembalian-barang-lainnya', [PegawaiController::class, 'pengembalianBarangLainnya'])->name('pengembalian-barang-lainnya');
+            Route::post('/pengembalian-barang-lainnya', [PegawaiController::class, 'storePengembalianBarangLainnya'])->name('pengembalian-barang-lainnya.store');
+            Route::delete('/pengembalian-barang-lainnya/{id}', [PegawaiController::class, 'cancelPengembalianBarangLainnya'])->name('pengembalian-barang-lainnya.cancel');
+            Route::get('/pengembalian-barang-lainnya/{id}/json', [PegawaiController::class, 'showPengembalianBarangLainnyaJson'])->name('pengembalian-barang-lainnya.json');
 
             //PERMINTAAN PERSEDIAAN
             Route::get('/permintaan-persediaan', [PegawaiController::class, 'permintaanPersediaan'])->name('permintaan-persediaan');

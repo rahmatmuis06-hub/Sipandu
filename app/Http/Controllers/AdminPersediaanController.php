@@ -22,6 +22,7 @@ use App\Models\{
     TransaksiMasukPersediaan,
     BarangLainnya,
     PeminjamanBarangLainnya,
+    PengembalianBarangLainnya,
 };
 use App\Services\FonnteService;
 use Maatwebsite\Excel\Facades\Excel;
@@ -278,7 +279,7 @@ class AdminPersediaanController extends Controller
 
         $pinjam = PeminjamanBarangLainnya::findOrFail($id);
 
-        if ($pinjam->status === 'disetujui') {
+        if ($pinjam->status === 'disetujui' || $pinjam->status === 'proses_pengembalian') {
             if ($pinjam->barang_lainnya_id) {
                 $barang = BarangLainnya::find($pinjam->barang_lainnya_id);
                 if ($barang) {
@@ -296,6 +297,117 @@ class AdminPersediaanController extends Controller
         }
 
         return back()->with('error', 'Status peminjaman belum disetujui atau sudah selesai.');
+    }
+
+    /**
+     * ⚡ MANAJEMEN PENGEMBALIAN BARANG LAINNYA (ADMIN PERSEDIAAN)
+     */
+    public function pengembalianBarangLainnya(Request $request)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $query = PengembalianBarangLainnya::with([
+            'peminjamanBarangLainnya',
+            'user',
+            'adminVerifier'
+        ])
+            ->when($request->kondisi, fn($q, $k) => $q->kondisi($k))
+            ->when($request->status_verifikasi, fn($q, $s) => $q->where('status_verifikasi', $s))
+            ->when($request->search, fn($q, $s) => $q->search($s))
+            ->orderBy('tanggal_pengembalian_aktual', 'desc');
+
+        $pengembalianList = $query->paginate(10)->withQueryString();
+
+        return view('adminpersediian.pengembalian_barang_lainnya', compact('pengembalianList'));
+    }
+
+    public function verifikasiPengembalianBarangLainnya(Request $request, $id)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $pengembalian = PengembalianBarangLainnya::findOrFail($id);
+
+        $request->validate([
+            'status_verifikasi' => 'required|in:diterima,ditolak',
+            'komentar_admin'    => 'nullable|string'
+        ]);
+
+        $pengembalian->update([
+            'status_verifikasi'    => $request->status_verifikasi,
+            'komentar_admin'       => $request->komentar_admin,
+            'verified_by_admin_id' => Auth::id(),
+            'verified_at'          => now()
+        ]);
+
+        if ($request->status_verifikasi === 'diterima') {
+            $pengembalian->peminjamanBarangLainnya->update(['status' => 'dikembalikan']);
+
+            // Kembalikan stok fisik BarangLainnya
+            if ($pengembalian->peminjamanBarangLainnya->barang_lainnya_id) {
+                $barang = BarangLainnya::find($pengembalian->peminjamanBarangLainnya->barang_lainnya_id);
+                if ($barang) {
+                    $barang->increment('jumlah', $pengembalian->jumlah_dikembalikan);
+                    $barang->harga_total = $barang->jumlah * $barang->harga_satuan;
+                    $barang->save();
+                }
+            }
+        } else {
+            // Jika ditolak, kembalikan status ke disetujui agar pegawai bisa merevisi
+            $pengembalian->peminjamanBarangLainnya->update(['status' => 'disetujui']);
+        }
+
+        // WhatsApp Notification ke Pegawai
+        $pegawai = $pengembalian->user;
+        if ($pegawai && $pegawai->nomor_telepon) {
+            $namaBarang = $pengembalian->peminjamanBarangLainnya->nama_barang ?? 'Barang Lainnya';
+
+            if ($request->status_verifikasi === 'diterima') {
+                $pesanWa = "*Pengembalian Barang Lainnya DITERIMA*\n\n";
+                $pesanWa .= "Halo {$pegawai->name},\n";
+                $pesanWa .= "Terima kasih, laporan pengembalian barang lainnya Anda telah diverifikasi dan *Diterima* oleh Admin Persediaan.\n\n";
+                $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
+                $pesanWa .= "🔢 *Jumlah:* {$pengembalian->jumlah_dikembalikan}\n";
+                $pesanWa .= "📅 *Tgl Kembali:* " . \Carbon\Carbon::parse($pengembalian->tanggal_pengembalian_aktual)->format('d/m/Y') . "\n";
+                $pesanWa .= "🔍 *Kondisi:* " . ucfirst($pengembalian->kondisi_barang) . "\n\n";
+                $pesanWa .= "Status peminjaman barang lainnya Anda sekarang telah selesai.";
+            } else {
+                $pesanWa = "*Pengembalian Barang Lainnya DITOLAK/REVISI*\n\n";
+                $pesanWa .= "Halo {$pegawai->name},\n";
+                $pesanWa .= "Laporan pengembalian barang lainnya Anda *Ditolak* oleh Admin Persediaan.\n\n";
+                $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
+                $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar_admin ?? '-') . "\n\n";
+                $pesanWa .= "Silakan login ke sistem untuk memperbaiki data laporan pengembalian Anda.";
+            }
+
+            $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
+            SendFonnteNotification::dispatch($noHpPegawai, $pesanWa);
+        }
+
+        return back()->with('success', 'Verifikasi pengembalian barang lainnya berhasil disimpan!');
+    }
+
+    public function showPengembalianBarangLainnyaJsonAdmin($id)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $data = PengembalianBarangLainnya::with(['peminjamanBarangLainnya', 'user'])->find($id);
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    public function cetakSuratPengembalianBarangLainnya(Request $request, $id)
+    {
+        $request->validate(['tanggal_surat' => 'nullable|date']);
+        $tanggalSurat = $request->date('tanggal_surat');
+        $pengembalian = PengembalianBarangLainnya::with(['peminjamanBarangLainnya', 'user', 'adminVerifier'])->findOrFail($id);
+
+        if ($pengembalian->status_verifikasi !== 'diterima') {
+            abort(403, 'Hanya pengembalian yang disetujui yang dapat dicetak.');
+        }
+
+        $pdf = PDF::loadView('surat.pengembalian_barang_lainnya', compact('pengembalian', 'tanggalSurat'))->setPaper('a4', 'portrait');
+
+        $fileName = 'Surat_Pengembalian_' . ($pengembalian->peminjamanBarangLainnya->kode_barang ?? 'BLN') . '.pdf';
+        return $pdf->stream($fileName);
     }
 
     /**
@@ -332,7 +444,7 @@ class AdminPersediaanController extends Controller
                     $table->date('tanggal_pinjam');
                     $table->date('tanggal_kembali')->nullable();
                     $table->text('keperluan')->nullable();
-                    $table->enum('status', ['pending', 'disetujui', 'ditolak', 'dikembalikan', 'dibatalkan'])->default('pending');
+                    $table->string('status', 50)->default('pending');
                     $table->text('catatan_admin')->nullable();
                     $table->unsignedBigInteger('approved_by')->nullable();
                     $table->timestamps();
@@ -340,6 +452,41 @@ class AdminPersediaanController extends Controller
                     $table->index('user_id');
                     $table->index('barang_lainnya_id');
                     $table->index('status');
+                });
+            }
+
+            if (!Schema::hasTable('pengembalian_barang_lainnya')) {
+                Schema::create('pengembalian_barang_lainnya', function (Blueprint $table) {
+                    $table->id();
+                    $table->unsignedBigInteger('peminjaman_barang_lainnya_id');
+                    $table->unsignedBigInteger('user_id');
+                    $table->unsignedBigInteger('verified_by_admin_id')->nullable();
+                    $table->timestamp('verified_at')->nullable();
+                    $table->text('komentar_admin')->nullable();
+                    $table->datetime('tanggal_pengembalian_aktual');
+                    $table->integer('jumlah_dikembalikan')->default(1);
+                    $table->text('kondisi_barang');
+                    $table->text('catatan')->nullable();
+                    $table->string('foto_sebelum')->nullable();
+                    $table->string('foto_sesudah')->nullable();
+                    $table->enum('status_pengembalian', [
+                        'lengkap',
+                        'rusak_ringan',
+                        'rusak_berat',
+                        'hilang'
+                    ])->default('lengkap');
+                    $table->enum('status_verifikasi', [
+                        'pending',
+                        'diterima',
+                        'ditolak',
+                        'dibatalkan'
+                    ])->default('pending');
+                    $table->timestamps();
+
+                    $table->index('peminjaman_barang_lainnya_id', 'idx_pbl_id');
+                    $table->index('user_id', 'idx_pbl_user');
+                    $table->index('status_verifikasi', 'idx_pbl_verif');
+                    $table->index('status_pengembalian', 'idx_pbl_status');
                 });
             }
         } catch (\Throwable $e) {
