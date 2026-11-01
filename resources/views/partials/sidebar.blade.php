@@ -346,12 +346,7 @@
                     'icon' => 'fas fa-file-alt',
                     'route' => 'adminsarpras.laporan-kerusakan',
                 ],
-                [
-                    'href' => route('adminsarpras.integrasi-ult'),
-                    'label' => 'Integrasi ULT',
-                    'icon' => 'fas fa-network-wired',
-                    'route' => 'adminsarpras.integrasi-ult',
-                ],
+
 
                 [
                     'href' => route('adminsarpras.pengaturan-akun'),

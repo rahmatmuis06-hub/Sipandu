@@ -262,7 +262,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/pengaturan-akun', [AuthController::class, 'showProfile'])->name('pengaturan-akun');
             Route::get('/laporan-peminjaman/download', [AdminSarprasController::class, 'downloadLaporanPeminjaman'])->name('laporan.peminjaman.download');
             Route::get('/laporan-kerusakan/download', [AdminSarprasController::class, 'downloadLaporanKerusakan'])->name('laporan.kerusakan.download');
-            Route::get('/integrasi-ult', [AdminSarprasController::class, 'integrasiUlt'])->name('integrasi-ult');
 
             //DATA GEDUNG
             Route::get('/fasilitas-beranda', [\App\Http\Controllers\FasilitasBerandaController::class, 'index'])->name('fasilitas-beranda.index');
