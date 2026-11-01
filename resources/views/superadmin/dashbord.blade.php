@@ -71,13 +71,19 @@
   </div>
 
   @php
-    // Query ringan langsung di view (karena ini dashboard sederhana)
-    $totalUsers = \App\Models\User::count();
-    $activeUsers = \App\Models\User::where('is_active', true)->count();
-    $inactiveUsers = \App\Models\User::where('is_active', false)->count();
+    $totalUsers = $totalUsers ?? \App\Models\User::count();
+    $activeUsers = $activeUsers ?? \App\Models\User::where('is_active', true)->count();
+    $inactiveUsers = $inactiveUsers ?? \App\Models\User::where('is_active', false)->count();
+
+    $countAset = $countAset ?? (\Illuminate\Support\Facades\Schema::hasTable('aset_tetap') ? \App\Models\AssetTetap::count() : 0);
+    $countPersediaan = $countPersediaan ?? (\Illuminate\Support\Facades\Schema::hasTable('persediaan') ? \App\Models\Persediaan::where('kode_kategori', '!=', 'BLN')->count() : 0);
+    $countBarangLainnya = $countBarangLainnya ?? (\Illuminate\Support\Facades\Schema::hasTable('barang_lainnya') ? \App\Models\BarangLainnya::count() : 0);
   @endphp
 
-  <div class="stats-grid">
+  <div style="font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <i class="fas fa-users-cog" style="color: var(--primary);"></i> Ringkasan Pengguna Sistem
+  </div>
+  <div class="stats-grid" style="margin-bottom: 24px;">
     <div class="stat-card card-total">
       <div class="stat-icon"><i class="fas fa-users"></i></div>
       <div class="stat-info">
@@ -101,14 +107,49 @@
     </div>
   </div>
 
+  <div style="font-weight: 700; font-size: 15px; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+    <i class="fas fa-boxes" style="color: #059669;"></i> Ringkasan Data Inventaris & Logistik
+  </div>
+  <div class="stats-grid" style="margin-bottom: 32px;">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#e0e7ff; color:#4338ca;"><i class="fas fa-database"></i></div>
+      <div class="stat-info">
+        <h3>{{ number_format($countAset) }}</h3>
+        <p>Data Aset Tetap</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#dcfce7; color:#15803d;"><i class="fas fa-cubes"></i></div>
+      <div class="stat-info">
+        <h3>{{ number_format($countPersediaan) }}</h3>
+        <p>Data Persediaan</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" style="background:#fef3c7; color:#b45309;"><i class="fas fa-plug"></i></div>
+      <div class="stat-info">
+        <h3>{{ number_format($countBarangLainnya) }}</h3>
+        <p>Barang Lainnya</p>
+      </div>
+    </div>
+  </div>
+
   <div class="quick-actions">
-    <div class="qa-header"><i class="fas fa-cogs"></i> Kontrol Sistem</div>
+    <div class="qa-header"><i class="fas fa-cogs"></i> Kontrol Sistem & Pengelolaan Data</div>
     <p style="color: var(--muted); font-size: 14px; margin-bottom: 20px;">
-      Gunakan panel ini untuk mengelola data master pengguna, mengubah hak akses (role), mengatur status akun pegawai, serta memantau log aktivitas login di dalam sistem inventaris.
+      Gunakan panel ini untuk mengelola data master pengguna, mengatur hak akses, serta melakukan pencadangan (backup) dan pembersihan data inventaris (Aset Tetap, Persediaan, dan Barang Lainnya).
     </p>
-    <a href="{{ route('superadmin.manajemen-user') }}" class="btn-kelola">
-      <i class="fas fa-user-shield"></i> Kelola Hak Akses Pengguna
-    </a>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="{{ route('superadmin.manajemen-user') }}" class="btn-kelola">
+        <i class="fas fa-user-shield"></i> Kelola Hak Akses Pengguna
+      </a>
+      <a href="{{ route('superadmin.kelola-data') }}" class="btn-kelola" style="background: linear-gradient(135deg, #059669, #047857);">
+        <i class="fas fa-database"></i> Kelola & Backup Data Inventaris
+      </a>
+      <a href="{{ route('superadmin.unit_kerja.index') }}" class="btn-kelola" style="background: #475569;">
+        <i class="fas fa-building"></i> Kelola Unit Kerja
+      </a>
+    </div>
   </div>
 
 </div>

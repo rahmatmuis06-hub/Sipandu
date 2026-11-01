@@ -76,6 +76,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/unit-kerja', [UnitKerjaController::class, 'store'])->name('unit_kerja.store');
             Route::put('/unit-kerja/{id}', [UnitKerjaController::class, 'update'])->name('unit_kerja.update');
             Route::delete('/unit-kerja/{id}', [UnitKerjaController::class, 'destroy'])->name('unit_kerja.destroy');
+
+            // ⚡ KELOLA & BACKUP DATA (ASET, PERSEDIAAN, BARANG LAINNYA)
+            Route::get('/kelola-data', [SuperadminController::class, 'kelolaData'])->name('kelola-data');
+            Route::post('/kelola-data/backup', [SuperadminController::class, 'backupData'])->name('kelola-data.backup');
+            Route::post('/kelola-data/hapus', [SuperadminController::class, 'hapusData'])->name('kelola-data.hapus');
         });
 
     // ──────────────────────────────────────────────────────────────────

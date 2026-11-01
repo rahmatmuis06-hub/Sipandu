@@ -27,6 +27,12 @@
                     'icon' => 'fas fa-building',
                     'route' => 'superadmin.unit_kerja.index',
                 ],
+                [
+                    'href' => route('superadmin.kelola-data'),
+                    'label' => 'Kelola & Backup Data',
+                    'icon' => 'fas fa-database',
+                    'route' => 'superadmin.kelola-data*',
+                ],
             ],
         ],
         'pegawai' => [
