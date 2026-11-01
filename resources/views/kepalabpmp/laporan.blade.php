@@ -105,7 +105,7 @@
         <div class="download-section">
             <div class="section-title" style="margin-top:0"><i class="fas fa-download"></i> Download Laporan</div>
             <div class="download-grid">
-                <a href="{{ route('kepalabpmp.laporan.download-aset-tetap', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" class="download-btn">
+                <a href="{{ route('kepalabpmp.laporan.download-aset-tetap', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}" target="_blank" class="download-btn">
                     <div class="dl-icon" style="background:linear-gradient(135deg,#f97316,#ea580c)"><i class="fas fa-file-pdf"></i></div>
                     <div class="dl-info"><span class="dl-title">Laporan Aset Tetap (PDF)</span><span class="dl-desc">Rekapitulasi, perolehan, mutasi & peminjaman</span></div>
                 </a>

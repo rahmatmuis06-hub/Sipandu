@@ -364,13 +364,8 @@ class KepalaBPMPController extends Controller
             ],
         ];
 
-        try {
-            $pdf = Pdf::loadView('kepalabpmp.exports.laporan_asettetap', $data)->setPaper('a4', 'landscape');
-            return $pdf->download('Laporan-Aset-Tetap-' . now()->format('Y-m-d') . '.pdf');
-        } catch (\Throwable $e) {
-            \Log::error('Gagal generate PDF Aset Tetap: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            return back()->with('error', 'Gagal memproses Laporan Aset Tetap: ' . $e->getMessage());
-        }
+        // Return view cetak resmi berbasis browser (Solusi 1: Cepat, 0% membebani memori server, auto print & save PDF)
+        return view('kepalabpmp.exports.laporan_asettetap', $data);
     }
 
     /**

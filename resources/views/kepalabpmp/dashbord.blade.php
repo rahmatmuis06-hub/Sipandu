@@ -346,7 +346,7 @@
                         <div class="action-icon" style="background: linear-gradient(135deg,#4338ca,#8b5cf6);"><i class="fas fa-file-alt"></i></div>
                         <div class="action-label">Lihat Laporan</div>
                     </a>
-                    <a href="{{ route('kepalabpmp.laporan.download-aset-tetap') }}" class="action-btn">
+                    <a href="{{ route('kepalabpmp.laporan.download-aset-tetap') }}" target="_blank" class="action-btn">
                         <div class="action-icon" style="background: linear-gradient(135deg,#f97316,#ea580c);"><i class="fas fa-warehouse"></i></div>
                         <div class="action-label">Lap. Aset Tetap</div>
                     </a>
