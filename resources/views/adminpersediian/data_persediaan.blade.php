@@ -358,7 +358,6 @@
             <th>Kategori</th>
             <th>Nama Barang</th>
             <th>Tanggal Perolehan</th>
-            <th>Harga Satuan</th>
             <th>Harga Total</th>
             <th>Jumlah</th>
             <th>Satuan</th>
@@ -407,34 +406,6 @@
             <td>{{ $item->kategori }}</td>
             <td>{{ Str::limit($item->nama_barang, 30) }}</td>
             <td>{{ $item->tanggal_masuk->format('d/m/Y') }}</td>
-            <td class="font-mono">
-              <div>{{ $item->harga_satuan_format }}</div>
-              @if(!empty($fifoEnabled))
-                @if($distinctActivePrices > 1)
-                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat daftar variasi harga barang ini"
-                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #C7D2FE; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); color:#4338CA; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;">
-                    🏷️ {{ $distinctActivePrices }} Harga • Lihat
-                  </button>
-                @elseif($distinctAllPrices > 1 || $totalBatchesCount > 1)
-                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat riwayat batch harga masuk"
-                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #E2E8F0; background:#F8FAFC; color:#475569; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s;">
-                    📋 {{ $totalBatchesCount }} Batch • Lihat
-                  </button>
-                @endif
-              @else
-                @if($distinctAllPrices > 1)
-                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat daftar harga barang ini"
-                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #C7D2FE; background:linear-gradient(135deg,#EEF2FF,#E0E7FF); color:#4338CA; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s;">
-                    🏷️ {{ $distinctAllPrices }} Harga • Lihat
-                  </button>
-                @elseif($totalBatchesCount > 1)
-                  <button type="button" onclick="openDetail({{ $item->id }})" title="Klik untuk melihat riwayat harga masuk"
-                    style="margin-top:5px; display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:999px; border:1px solid #E2E8F0; background:#F8FAFC; color:#475569; font-family:'Plus Jakarta Sans',sans-serif; font-size:10.5px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all .15s;">
-                    📋 {{ $totalBatchesCount }} Riwayat • Lihat
-                  </button>
-                @endif
-              @endif
-            </td>
             <td class="font-mono font-semibold text-green-600">{{ $item->harga_total_format }}</td>
             <td><strong class="text-lg">{{ number_format($item->jumlah) }}</strong></td>
             <td>{{ $item->satuan }}</td>
@@ -458,7 +429,7 @@
           </tr>
           @empty
           <tr>
-            <td colspan="10" style="text-align: center; padding: 60px; color: var(--muted);">
+            <td colspan="9" style="text-align: center; padding: 60px; color: var(--muted);">
               <svg width="64" height="64" viewBox="0 0 24 24" fill="currentColor" style="margin: 0 auto 16px; opacity: 0.5;">
                 <path d="M7 18c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2V8H7v10zm2-8h6v6h-6v-6zm0-2V4h6v4h-6zM5 8V5h2V3H5V1H3v2H1v1.99L3 8h2zm16 6V8c0-1.1-.9-2-2-2h-1v2h1v2h1v1h-1v2h1c1.1 0 2-.9 2-2z"/>
               </svg>
