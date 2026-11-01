@@ -1048,11 +1048,11 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-navy-900">Peran: Admin Sarpras</h3>
-              <p class="text-slate-600 text-sm mt-1">Mengelola data gedung &amp; etalase fasilitas beranda, pencatatan serta tindak lanjut kerusakan sarana prasarana, hingga sinkronisasi layanan ULT.</p>
+              <p class="text-slate-600 text-sm mt-1">Mengelola data gedung &amp; etalase fasilitas beranda, serta pencatatan, tindak lanjut perbaikan, dan pelaporan kerusakan sarana prasarana.</p>
             </div>
           </div>
 
-          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          <div class="grid sm:grid-cols-3 gap-3 text-xs">
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
               <strong class="text-navy-900 block mb-1">Data Gedung &amp; Etalase</strong>
               <span class="text-slate-500 leading-relaxed">Kelola master gedung, aula, ruang kelas, asrama/mess, spesifikasi kapasitas, serta galeri fasilitas di beranda.</span>
@@ -1064,10 +1064,6 @@
             <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
               <strong class="text-navy-900 block mb-1">Laporan Kerusakan</strong>
               <span class="text-slate-500 leading-relaxed">Rekapitulasi riwayat pemeliharaan dan pencetakan dokumen Laporan Kerusakan Sarpras (PDF).</span>
-            </div>
-            <div class="p-3.5 rounded-xl border border-slate-100 bg-slate-50">
-              <strong class="text-navy-900 block mb-1">Integrasi ULT</strong>
-              <span class="text-slate-500 leading-relaxed">Pemantauan dan integrasi informasi ketersediaan fasilitas bersama Unit Layanan Terpadu BPMP.</span>
             </div>
           </div>
         </div>
