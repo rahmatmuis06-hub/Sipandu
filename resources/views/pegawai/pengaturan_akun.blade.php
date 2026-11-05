@@ -336,17 +336,26 @@
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
   @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding: 70px 20px 40px !important; }
     .content-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
-    .main { margin-left: 0; padding: 0 16px 32px; padding-top: 60px; }
+    .main { margin-left: 0 !important; width: 100% !important; padding: 65px 14px 32px !important; }
     .form-grid-2 { grid-template-columns: 1fr; }
-    .topbar { flex-direction: column; align-items: flex-start; gap: 8px; }
-    .tabs-nav { flex-wrap: wrap; }
-    .tab-btn { font-size: 12px; padding: 8px 10px; }
+    .topbar { padding: 10px 0 16px; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .tabs-nav { flex-wrap: wrap; gap: 6px; }
+    .tab-btn { font-size: 12px; padding: 8px 12px; }
     .avatar-section { flex-direction: column; text-align: center; }
     .section-body { padding: 16px; }
     .section-header { padding: 16px; }
+    .danger-row { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .danger-row .btn-danger { width: 100%; justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .main { padding: 60px 10px 24px !important; }
+    .section-body { padding: 14px 12px; }
+    .section-header { padding: 14px 12px; }
+    .btn-submit { width: 100%; justify-content: center; }
   }
 </style>
 </head>

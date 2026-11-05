@@ -105,9 +105,34 @@
     .empty-sub { font-size: 13px; color: var(--text-secondary); }
     
     /* RESPONSIVE DESIGN */
-    @media (max-width: 1024px) { .content-grid { grid-template-columns: 1fr; gap: 24px; } .form-card { position: static; top: auto; } .main { padding: 0 24px 40px; margin-left: 260px; width: calc(100% - 260px); } }
-    @media (max-width: 768px) { .sidebar { width: 200px; padding: 16px 12px; } .main { margin-left: 200px; width: calc(100% - 200px); padding: 0 20px 40px; } .topbar { padding: 16px 0 20px; flex-direction: column; align-items: flex-start; gap: 12px; } }
-    @media (max-width: 480px) { .main { margin-left: 0; width: 100%; padding: 60px 16px 40px; } .input-row { grid-template-columns: 1fr; } .req-card-top { flex-direction: column; } .req-card-meta { grid-template-columns: 1fr; } .req-card-footer { flex-direction: column; } }
+    @media (max-width: 1024px) {
+      .main { margin-left: 0 !important; width: 100% !important; padding: 70px 20px 40px !important; }
+      .content-grid { grid-template-columns: 1fr; gap: 24px; }
+      .form-card { position: static; top: auto; }
+    }
+    @media (max-width: 768px) {
+      .main { padding: 65px 14px 32px !important; }
+      .topbar { padding: 10px 0 16px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .topbar-title { font-size: 19px; }
+      .form-card, .history-card { border-radius: 14px; }
+      .form-header { padding: 18px 16px; }
+      .form-body { padding: 16px; }
+      .input-row { grid-template-columns: 1fr; gap: 12px; }
+      .history-header { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .filter-tabs { width: 100%; overflow-x: auto; flex-wrap: nowrap; gap: 6px; -webkit-overflow-scrolling: touch; }
+      .filter-tab { font-size: 11px; padding: 6px 12px; white-space: nowrap; flex-shrink: 0; }
+      .req-list { padding: 12px 14px; gap: 12px; }
+      .req-card-top { padding: 12px 14px; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .req-card-meta { padding: 10px 14px; grid-template-columns: 1fr; gap: 8px; }
+      .req-card-footer { padding: 12px 14px; flex-direction: column; align-items: stretch; gap: 8px; }
+      .card-btn { width: 100%; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .main { padding: 60px 10px 24px !important; }
+      .topbar-title { font-size: 17px; }
+      .form-header { padding: 16px 14px; }
+      .form-body { padding: 14px 12px; }
+    }
     @media (min-width: 1440px) { .main { padding: 0 48px 40px; } .content-grid { gap: 32px; } }
   </style>
 </head>

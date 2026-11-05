@@ -698,6 +698,12 @@
     }
 
     @media (max-width: 1024px) {
+      .main {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 70px 20px 40px !important;
+      }
+
       .content-grid {
         grid-template-columns: 1fr;
         gap: 24px;
@@ -707,170 +713,46 @@
         position: static;
         top: auto;
       }
-
-      .main {
-        padding: 0 24px 40px;
-        margin-left: 260px;
-        width: calc(100% - 260px);
-      }
     }
 
     @media (max-width: 768px) {
-      .sidebar {
-        width: 200px;
-        padding: 16px 12px;
-      }
-
       .main {
-        margin-left: 200px;
-        width: calc(100% - 200px);
-        padding: 0 20px 40px;
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 65px 14px 32px !important;
       }
 
       .topbar {
-        padding: 16px 0 20px;
+        padding: 10px 0 16px;
+        position: static;
         flex-direction: column;
         align-items: flex-start;
-        gap: 12px;
-      }
-
-      .topbar-title {
-        font-size: 20px;
-      }
-
-      .topbar-left {
-        width: 100%;
-      }
-
-      .breadcrumb {
-        font-size: 12px;
-      }
-
-      .form-body {
-        padding: 20px 20px;
-      }
-
-      .form-group {
-        margin-bottom: 16px;
-      }
-
-      .form-label {
-        font-size: 11px;
-      }
-
-      .history-header {
-        padding: 18px 20px;
-      }
-
-      .req-list {
-        padding: 16px 20px;
-        gap: 14px;
-      }
-
-      .req-card-top {
-        padding: 14px 16px;
-      }
-
-      .req-card-meta {
-        padding: 10px 16px;
-        grid-template-columns: 1fr;
         gap: 8px;
-      }
-
-      .req-card-footer {
-        padding: 10px 16px;
-      }
-
-      .filter-tabs {
         width: 100%;
-        gap: 4px;
-      }
-
-      .filter-tab {
-        font-size: 10px;
-        padding: 4px 10px;
-        flex: 1;
-      }
-    }
-
-    @media (max-width: 480px) {
-      body {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 0;
-        padding: 0;
-        background: var(--sidebar-bg);
-        overflow: hidden;
-        transition: height .3s ease, padding .3s ease;
-        z-index: 999;
-      }
-
-      .sidebar.active {
-        height: 100%;
-        padding: 60px 16px 16px;
-      }
-
-      .sidebar-logo {
-        margin-bottom: 24px;
-      }
-
-      .sidebar-toggle {
-        display: flex;
-      }
-
-      .main {
-        margin-left: 0;
-        width: 100%;
-        padding: 0 16px 40px;
-        padding-top: 60px;
-      }
-
-      .topbar {
-        padding: 12px 0 16px;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        background: var(--bg);
-        border-bottom: 1px solid var(--border);
-        z-index: 100;
-        padding-left: 56px;
-        padding-right: 16px;
-      }
-
-      .topbar-left {
-        flex-direction: column;
-      }
-
-      .breadcrumb {
-        font-size: 11px;
-        display: none;
       }
 
       .topbar-title {
-        font-size: 18px;
-        margin-bottom: 4px;
+        font-size: 19px;
+      }
+
+      .topbar-left {
+        width: 100%;
       }
 
       .topbar-right {
-        position: absolute;
-        right: 16px;
-        top: 12px;
+        display: none;
+      }
+
+      .breadcrumb {
+        font-size: 11px;
       }
 
       .form-card {
-        border-radius: 12px;
+        border-radius: 14px;
       }
 
       .form-header {
-        padding: 20px 20px 16px;
+        padding: 18px 16px;
       }
 
       .form-header-title {
@@ -878,7 +760,7 @@
       }
 
       .form-body {
-        padding: 18px 16px;
+        padding: 16px;
       }
 
       .form-group {
@@ -889,13 +771,8 @@
       .form-select,
       .form-textarea {
         padding: 10px 12px;
-        font-size: 14px;
+        font-size: 13.5px;
         border-radius: 8px;
-      }
-
-      .form-label {
-        font-size: 10px;
-        margin-bottom: 6px;
       }
 
       .input-row {
@@ -903,18 +780,8 @@
         gap: 12px;
       }
 
-      .form-textarea {
-        min-height: 80px;
-      }
-
-      .submit-btn {
-        padding: 11px;
-        font-size: 13px;
-        margin-top: 6px;
-      }
-
       .history-card {
-        border-radius: 12px;
+        border-radius: 14px;
       }
 
       .history-header {
@@ -924,69 +791,75 @@
         gap: 12px;
       }
 
-      .history-title {
-        font-size: 15px;
-      }
-
       .filter-tabs {
         width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
         gap: 6px;
+        -webkit-overflow-scrolling: touch;
       }
 
       .filter-tab {
-        font-size: 10px;
-        padding: 5px 10px;
-        flex: 1;
+        font-size: 11px;
+        padding: 6px 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
       }
 
       .req-list {
-        padding: 12px 0;
+        padding: 12px 14px;
         gap: 12px;
       }
 
       .req-card {
-        border-radius: 10px;
+        border-radius: 12px;
       }
 
       .req-card-top {
         padding: 12px 14px;
         flex-direction: column;
-      }
-
-      .req-card-icon {
-        width: 38px;
-        height: 38px;
-        font-size: 15px;
+        align-items: flex-start;
+        gap: 10px;
       }
 
       .status-badge {
         align-self: flex-start;
-        margin-top: 8px;
       }
 
       .req-card-meta {
         padding: 10px 14px;
         grid-template-columns: 1fr;
-        gap: 6px;
+        gap: 8px;
       }
 
       .req-card-footer {
-        padding: 10px 14px;
-        gap: 6px;
+        padding: 12px 14px;
         flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
       }
 
       .card-btn {
-        font-size: 11px;
-        padding: 8px;
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main {
+        padding: 60px 10px 24px !important;
       }
 
-      #toast {
-        bottom: 16px;
-        right: 16px;
-        left: 16px;
-        padding: 12px 16px;
-        font-size: 12px;
+      .topbar-title {
+        font-size: 17px;
+      }
+
+      .form-header {
+        padding: 16px 14px;
+      }
+
+      .form-body {
+        padding: 14px 12px;
       }
     }
 

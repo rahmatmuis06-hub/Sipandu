@@ -909,6 +909,14 @@
         opacity: 1;
     }
 
+    @media (max-width: 1024px) {
+        .main, body .main, main.main {
+            margin-left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+    }
+
     @media (max-width: 768px) {
         .mobile-topbar {
             display: flex;
@@ -924,9 +932,12 @@
             transform: translateX(0);
         }
 
-        .main {
+        .main, body .main, main.main {
             margin-left: 0 !important;
-            padding-top: 60px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding-top: 65px !important;
+            box-sizing: border-box !important;
         }
     }
 </style>

@@ -23,10 +23,6 @@
   .select2-container--default.select2-container--focus .select2-selection--single { border-color: var(--primary) !important; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1) !important; }
   .select2-container--default .select2-search--dropdown .select2-search__field { border-radius: 6px !important; border: 1px solid var(--border) !important; padding: 8px 12px !important; }
 
-  /* RESPONSIVE */
-  @media (max-width: 1024px) { .main { margin-left: 0 !important; padding: 16px; } .content-grid { grid-template-columns: 1fr !important; gap: 20px; } }
-  @media (max-width: 768px) { .input-row { grid-template-columns: 1fr !important; } .history-header { flex-direction: column; gap: 12px; align-items: stretch; } }
-
   /* MAIN & TOPBAR */
   .main { margin-left: 260px; flex: 1; padding: 0 32px 40px; }
   .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 24px; position: sticky; top: 0; z-index: 50; background: var(--bg); border-bottom: 1px solid transparent; }
@@ -123,6 +119,41 @@
   /* TOAST */
   #toast { position:fixed; bottom:28px; right:28px; background:#0f172a; color:#fff; padding:14px 20px; border-radius:12px; font-size:13px; font-weight:600; display:flex; align-items:center; gap:10px; transform:translateY(80px); opacity:0; transition:all .35s cubic-bezier(.4,0,.2,1); z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,0.25); pointer-events:none; }
   #toast.show { transform:translateY(0); opacity:1; }
+
+  /* RESPONSIVE DESIGN */
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding: 70px 20px 40px !important; }
+    .content-grid { grid-template-columns: 1fr !important; gap: 24px; }
+    .form-card { position: static !important; top: auto; }
+  }
+
+  @media (max-width: 768px) {
+    .main { padding: 65px 14px 32px !important; }
+    .topbar { padding: 10px 0 16px; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .topbar-title { font-size: 19px; }
+    .form-card, .history-card { border-radius: 14px; }
+    .form-header { padding: 18px 16px; }
+    .form-header-title { font-size: 16px; }
+    .form-body { padding: 16px; }
+    .input-row { grid-template-columns: 1fr !important; gap: 12px; }
+    .history-header { padding: 14px 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .filter-tabs { width: 100%; overflow-x: auto; flex-wrap: nowrap; gap: 6px; -webkit-overflow-scrolling: touch; }
+    .filter-tab { font-size: 11px; padding: 6px 12px; white-space: nowrap; flex-shrink: 0; }
+    .req-list { padding: 12px 14px; gap: 12px; }
+    .req-card-top { padding: 12px 14px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .req-card-meta { padding: 10px 14px; grid-template-columns: 1fr; gap: 8px; }
+    .req-card-footer { padding: 12px 14px; flex-direction: column; align-items: stretch; gap: 8px; }
+    .card-btn { width: 100%; justify-content: center; }
+    #detailModal { padding: 12px; }
+    #detailModal .modal-content { max-width: 100%; border-radius: 14px; }
+  }
+
+  @media (max-width: 480px) {
+    .main { padding: 60px 10px 24px !important; }
+    .topbar-title { font-size: 17px; }
+    .form-header { padding: 16px 14px; }
+    .form-body { padding: 14px 12px; }
+  }
 </style>
 </head>
 <body>
