@@ -525,84 +525,92 @@
       </div>
 
       <!-- TAB: TANDA TANGAN -->
-      <div class="tab-panel" id="tab-ttd">
-        <div class="section-card animate d2">
-          <div class="section-header">
-            <div>
-              <div class="section-title"><i class="fas fa-signature"></i> Tanda Tangan Digital</div>
-              <div class="section-sub">Tanda tangan akan digunakan pada surat peminjaman gedung</div>
-            </div>
-          </div>
-          <div class="section-body">
-            <!-- Current Signature -->
-            <div style="margin-bottom:20px">
-              <div class="form-label"><i class="fas fa-image"></i> Tanda Tangan Saat Ini</div>
-              <div class="signature-zone" id="sigZone">
-                <div class="sig-icon"><i class="fas fa-pen-fancy"></i></div>
-                <div class="sig-text">Belum ada tanda tangan</div>
-                <div class="sig-sub">Upload file tanda tangan Anda di bawah</div>
+      <form method="POST" action="{{ route('profile.signature') }}" enctype="multipart/form-data" id="sigForm">
+        @csrf
+        <input type="hidden" name="signature_base64" id="sigBase64">
+        <div class="tab-panel" id="tab-ttd">
+          <div class="section-card animate d2">
+            <div class="section-header">
+              <div>
+                <div class="section-title"><i class="fas fa-signature"></i> Tanda Tangan Digital</div>
+                <div class="section-sub">Tanda tangan akan digunakan pada surat dan berkas digital</div>
               </div>
             </div>
-
-            <!-- Upload -->
-            <div style="margin-bottom:20px">
-              <div class="form-label"><i class="fas fa-upload"></i> Upload Tanda Tangan Baru</div>
-              <div style="
-                border: 1.5px dashed var(--border);
-                border-radius: 11px;
-                padding: 22px;
-                text-align: center;
-                cursor: pointer;
-                transition: all .2s;
-                background: #fafbff;
-              " onmouseover="this.style.borderColor='#2563eb';this.style.background='#f0f4ff'"
-                 onmouseout="this.style.borderColor='var(--border)';this.style.background='#fafbff'"
-                 onclick="document.getElementById('fileInput').click()">
-                <i class="fas fa-cloud-arrow-up" style="font-size:28px;color:#dde5f9;margin-bottom:8px;display:block"></i>
-                <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">Klik untuk upload atau drag & drop</div>
-                <div class="sig-formats" style="margin-top:8px">
-                  <span class="sig-fmt">JPG</span>
-                  <span class="sig-fmt">PNG</span>
-                  <span class="sig-fmt">GIF</span>
-                  <span class="sig-fmt">Maks. 2MB</span>
+            <div class="section-body">
+              <!-- Current Signature -->
+              <div style="margin-bottom:20px">
+                <div class="form-label"><i class="fas fa-image"></i> Tanda Tangan Saat Ini</div>
+                <div class="signature-zone" id="sigZone">
+                  @if(auth()->user()->signature)
+                    <img src="{{ asset('storage/' . auth()->user()->signature) }}" style="max-height:120px;max-width:100%;border-radius:8px;object-fit:contain" alt="Signature">
+                  @else
+                    <div class="sig-icon"><i class="fas fa-pen-fancy"></i></div>
+                    <div class="sig-text">Belum ada tanda tangan</div>
+                    <div class="sig-sub">Upload file atau buat tanda tangan di bawah</div>
+                  @endif
                 </div>
               </div>
-              <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.gif" style="display:none" onchange="previewSig(this)">
-            </div>
 
-            <!-- Canvas Signature -->
-            <div style="margin-bottom:20px">
-              <div class="form-label"><i class="fas fa-pen-to-square"></i> Atau Gambar Tanda Tangan</div>
-              <canvas id="sigCanvas" width="600" height="160" style="
-                border: 1.5px solid var(--border);
-                border-radius: 11px;
-                background: #fff;
-                cursor: crosshair;
-                display: block;
-                width: 100%;
-                max-width: 100%;
-                touch-action: none;
-              "></canvas>
-              <div style="display:flex;gap:8px;margin-top:8px">
-                <button onclick="clearCanvas()" style="
-                  padding:7px 14px;border-radius:7px;border:1.5px solid var(--border);
-                  background:transparent;font-size:12px;font-weight:600;cursor:pointer;
-                  color:var(--text-secondary);font-family:'Plus Jakarta Sans',sans-serif;
-                  display:flex;align-items:center;gap:6px;transition:all .2s;
-                " onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'"
-                   onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
-                  <i class="fas fa-eraser"></i> Hapus
-                </button>
+              <!-- Upload -->
+              <div style="margin-bottom:20px">
+                <div class="form-label"><i class="fas fa-upload"></i> Upload Tanda Tangan Baru</div>
+                <div style="
+                  border: 1.5px dashed var(--border);
+                  border-radius: 11px;
+                  padding: 22px;
+                  text-align: center;
+                  cursor: pointer;
+                  transition: all .2s;
+                  background: #fafbff;
+                " onmouseover="this.style.borderColor='#2563eb';this.style.background='#f0f4ff'"
+                   onmouseout="this.style.borderColor='var(--border)';this.style.background='#fafbff'"
+                   onclick="document.getElementById('fileInput').click()">
+                  <i class="fas fa-cloud-arrow-up" style="font-size:28px;color:#dde5f9;margin-bottom:8px;display:block"></i>
+                  <div style="font-size:13px;font-weight:600;color:var(--text-secondary)">Klik untuk upload gambar</div>
+                  <div class="sig-formats" style="margin-top:8px">
+                    <span class="sig-fmt">JPG</span>
+                    <span class="sig-fmt">PNG</span>
+                    <span class="sig-fmt">GIF</span>
+                    <span class="sig-fmt">Maks. 2MB</span>
+                  </div>
+                </div>
+                <input type="file" id="fileInput" name="signature" accept=".jpg,.jpeg,.png,.gif" style="display:none" onchange="previewSig(this)">
               </div>
-            </div>
 
-            <div class="btn-row">
-              <button class="cancel-btn">Batal</button>
-              <button class="save-btn" onclick="showToast('Tanda tangan berhasil disimpan!')"><i class="fas fa-floppy-disk"></i> Simpan Tanda Tangan</button>
+              <!-- Canvas Signature -->
+              <div style="margin-bottom:20px">
+                <div class="form-label"><i class="fas fa-pen-to-square"></i> Atau Gambar Tanda Tangan</div>
+                <canvas id="sigCanvas" width="600" height="160" style="
+                  border: 1.5px solid var(--border);
+                  border-radius: 11px;
+                  background: #fff;
+                  cursor: crosshair;
+                  display: block;
+                  width: 100%;
+                  max-width: 100%;
+                  touch-action: none;
+                "></canvas>
+                <div style="display:flex;gap:8px;margin-top:8px">
+                  <button type="button" onclick="clearCanvas()" style="
+                    padding:7px 14px;border-radius:7px;border:1.5px solid var(--border);
+                    background:transparent;font-size:12px;font-weight:600;cursor:pointer;
+                    color:var(--text-secondary);font-family:'Plus Jakarta Sans',sans-serif;
+                    display:flex;align-items:center;gap:6px;transition:all .2s;
+                  " onmouseover="this.style.borderColor='var(--danger)';this.style.color='var(--danger)'"
+                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)'">
+                    <i class="fas fa-eraser"></i> Hapus
+                  </button>
+                </div>
+              </div>
+
+              <div class="btn-row">
+                <button type="button" class="cancel-btn" onclick="clearCanvas()">Batal</button>
+                <button type="submit" class="save-btn"><i class="fas fa-floppy-disk"></i> Simpan Tanda Tangan</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
 
     <!-- RIGHT: INFO CARDS -->
@@ -726,21 +734,100 @@ function checkStrength(val) {
   lbl.style.color = labelColors[score] || '#ef4444';
 }
 
-// CANVAS SIGNATURE
+// CANVAS SIGNATURE (Mendukung Mouse & Touch Screen HP)
 const canvas = document.getElementById('sigCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 let drawing = false;
-canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
-canvas.addEventListener('mousemove', e => {
-  if (!drawing) return;
-  ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
-  ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke();
-});
-canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mouseleave', () => drawing = false);
+let hasDrawing = false; 
+
+if (canvas && ctx) {
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function startDrawing(e) {
+    if (e.cancelable) e.preventDefault();
+    drawing = true;
+    hasDrawing = true;
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    ctx.stroke();
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    if (e.cancelable) e.preventDefault();
+    const pos = getCanvasPos(e);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function stopDrawing(e) {
+    if (drawing) {
+      drawing = false;
+    }
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown', startDrawing);
+  canvas.addEventListener('mousemove', draw);
+  window.addEventListener('mouseup', stopDrawing);
+
+  // Touch events untuk HP / Layar Sentuh
+  canvas.addEventListener('touchstart', startDrawing, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
+  window.addEventListener('touchend', stopDrawing);
+  window.addEventListener('touchcancel', stopDrawing);
+}
 
 function clearCanvas() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (ctx && canvas) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  hasDrawing = false;
+  const sigInput = document.getElementById('sigBase64');
+  if (sigInput) sigInput.value = ""; 
+}
+
+// TANGKAP DATA SEBELUM FORM DIKIRIM
+const sigForm = document.getElementById('sigForm');
+if (sigForm) {
+  sigForm.addEventListener('submit', function(e) {
+    if (hasDrawing && canvas) {
+      const sigInput = document.getElementById('sigBase64');
+      if (sigInput) sigInput.value = canvas.toDataURL('image/png');
+    }
+  });
 }
 
 // FILE PREVIEW

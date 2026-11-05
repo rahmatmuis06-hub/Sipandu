@@ -732,34 +732,100 @@ function checkStrength(val) {
   lbl.textContent = labels[score] || 'Lemah';
   lbl.style.color = labelColors[score] || '#ef4444';
 }
-// CANVAS SIGNATURE
+// CANVAS SIGNATURE (Mendukung Mouse & Touch Screen HP)
 const canvas = document.getElementById('sigCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 let drawing = false;
 let hasDrawing = false; 
 
-canvas.addEventListener('mousedown', e => { drawing = true; hasDrawing = true; ctx.beginPath(); ctx.moveTo(e.offsetX, e.offsetY); });
-canvas.addEventListener('mousemove', e => {
-if (!drawing) return;
-ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.strokeStyle = '#0f172a';
-ctx.lineTo(e.offsetX, e.offsetY); ctx.stroke();
-});
-canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mouseleave', () => drawing = false);
+if (canvas && ctx) {
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else if (e.changedTouches && e.changedTouches.length > 0) {
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  }
+
+  function startDrawing(e) {
+    if (e.cancelable) e.preventDefault();
+    drawing = true;
+    hasDrawing = true;
+    const pos = getCanvasPos(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    ctx.stroke();
+  }
+
+  function draw(e) {
+    if (!drawing) return;
+    if (e.cancelable) e.preventDefault();
+    const pos = getCanvasPos(e);
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#0f172a';
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  }
+
+  function stopDrawing(e) {
+    if (drawing) {
+      drawing = false;
+    }
+  }
+
+  // Mouse events
+  canvas.addEventListener('mousedown', startDrawing);
+  canvas.addEventListener('mousemove', draw);
+  window.addEventListener('mouseup', stopDrawing);
+
+  // Touch events untuk HP / Layar Sentuh
+  canvas.addEventListener('touchstart', startDrawing, { passive: false });
+  canvas.addEventListener('touchmove', draw, { passive: false });
+  window.addEventListener('touchend', stopDrawing);
+  window.addEventListener('touchcancel', stopDrawing);
+}
 
 function clearCanvas() {
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-hasDrawing = false;
-document.getElementById('sigBase64').value = ""; 
+  if (ctx && canvas) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  hasDrawing = false;
+  const sigInput = document.getElementById('sigBase64');
+  if (sigInput) sigInput.value = ""; 
 }
 
 // TANGKAP DATA SEBELUM FORM DIKIRIM
-document.getElementById('sigForm').addEventListener('submit', function(e) {
-  if (hasDrawing) {
-      // Ambil coretan canvas jadikan Base64
+const sigForm = document.getElementById('sigForm');
+if (sigForm) {
+  sigForm.addEventListener('submit', function(e) {
+    if (hasDrawing && canvas) {
       document.getElementById('sigBase64').value = canvas.toDataURL('image/png');
-  }
-});
+    }
+  });
+}
 
 // FILE PREVIEW YANG DIPERBAIKI
 function previewSig(input) {
