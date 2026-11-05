@@ -2,31 +2,31 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<title>Surat Permintaan Persediaan</title>
+<title>Berita Acara Serah Terima Barang Habis Pakai</title>
 <style>
-    /* 1. PENGATURAN MARGIN KERTAS PDF */
+    /* 1. PENGATURAN MARGIN KERTAS PDF (A4 PORTRAIT) */
     @page {
         size: A4 portrait;
-        margin-top: 2cm;
-        margin-bottom: 2cm;
+        margin-top: 1.2cm;
+        margin-bottom: 1.2cm;
         margin-left: 2cm;
         margin-right: 2cm;
     }
 
-    /* 2. RESET BODY & PEMADATAN TYPOGRAPHY */
+    /* 2. BODY & FONT */
     body {
         margin: 0;
         padding: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 9.5pt;
-        line-height: 1.2;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 11pt;
+        line-height: 1.35;
         color: #000;
         background-color: transparent;
     }
 
     /* 3. KOP SURAT */
     .kop-surat {
-        margin-bottom: 8px;
+        margin-bottom: 14px;
         width: 100%;
     }
     .kop-surat img {
@@ -35,256 +35,241 @@
         display: block;
     }
 
-    /* 4. TIPOGRAFI & SPACING */
+    /* 4. TIPOGRAFI & UMUM */
     .text-center { text-align: center; }
     .text-justify { text-align: justify; }
     .font-bold { font-weight: bold; }
     
-    .mb-5 { margin-bottom: 4px; }
-    .mb-10 { margin-bottom: 8px; }
-
     .judul-surat {
-        font-size: 10.5pt;
-        margin-bottom: 2px;
-        text-decoration: underline;
+        font-size: 12pt;
         font-weight: bold;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
 
-    /* 5. TABEL IDENTITAS & BARANG */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 6px;
-    }
-    td {
-        vertical-align: top;
-        padding: 1px 0;
-    }
-    .td-label { width: 110px; }
-    .td-titikdua { width: 15px; text-align: center; }
-
-    .table-list-barang {
-        width: 100%;
-        border-collapse: collapse;
+    .nomor-surat {
+        font-size: 11pt;
+        font-weight: bold;
         margin-top: 4px;
-        margin-bottom: 6px;
-        font-size: 8.5pt;
     }
-    .table-list-barang th, .table-list-barang td {
-        border: 1px solid #333;
-        padding: 3px 5px;
+
+    /* 5. TABEL IDENTITAS */
+    .table-identitas {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+        margin-bottom: 12px;
+    }
+    .table-identitas td {
+        vertical-align: top;
+        padding: 2px 0;
+        font-size: 11pt;
+    }
+    .td-label {
+        width: 110px;
+    }
+    .td-colon {
+        width: 20px;
+        text-align: center;
+    }
+
+    /* 6. TABEL BARANG */
+    .table-barang {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        margin-bottom: 14px;
+        font-size: 10pt;
+    }
+    .table-barang th, .table-barang td {
+        border: 1px solid #000;
+        padding: 5px 6px;
         vertical-align: middle;
     }
-    .table-list-barang th {
-        background-color: #f1f5f9;
+    .table-barang th {
         font-weight: bold;
         text-align: center;
+        background-color: transparent;
     }
 
-    /* 6. TABEL TANDA TANGAN */
+    /* 7. TABEL TANDA TANGAN */
     .ttd-table {
         width: 100%;
-        text-align: center;
-        margin-top: 10px;
-        page-break-inside: avoid; 
+        border-collapse: collapse;
+        margin-top: 15px;
+        page-break-inside: avoid;
+        font-size: 11pt;
     }
     .ttd-table td {
-        width: 50%;
+        vertical-align: top;
         padding: 0;
-        vertical-align: bottom;
     }
-    .ttd-img-container {
-        height: 45px;
+    .ttd-space {
+        height: 60px;
         margin: 2px 0;
     }
-    .ttd-img-container img {
-        max-height: 45px;
-        max-width: 100px;
-    }
-    .ttd-nama {
-        font-weight: bold;
-        text-decoration: underline;
-        margin-bottom: 1px;
-    }
-
-    /* 7. FOOTER */
-    .footer {
-        position: fixed;
-        bottom: -1.2cm; 
-        left: 0;
-        right: 0;
-        font-size: 8pt; 
-        color: #555;
-        text-align: center;
-        border-top: 1px solid #ccc;
-        padding-top: 4px;
+    .ttd-space img {
+        max-height: 58px;
+        max-width: 120px;
     }
 </style>
 </head>
 <body>
 
+    @php
+        // NOMOR SURAT & PENANGGALAN
+        $tahun_surat = \Carbon\Carbon::parse($tanggalSurat ?? $permintaan->tanggal_penerimaan ?? $permintaan->created_at ?? now())->format('Y');
+        $nomor_urut = !empty($permintaan->nomor_surat) 
+            ? $permintaan->nomor_surat 
+            : (!empty($permintaan->id) ? str_pad($permintaan->id, 3, '0', STR_PAD_LEFT) : null);
+
+        $tgl = $tanggalSurat ?? $permintaan->tanggal_penerimaan ?? $permintaan->updated_at ?? $permintaan->created_at;
+        $tanggalTeks = $tgl ? (\Carbon\Carbon::parse($tgl)->locale('id')->isoFormat('D MMMM Y')) : '............';
+
+        $peminjam = $peminjam ?? $permintaan->user;
+        $admin = $admin ?? $permintaan->reviewedBy ?? \App\Models\User::where('role', 'adminpersediaan')->first();
+        $kasubag = $kasubag ?? $permintaan->approvedByKasubag ?? \App\Models\User::where('role', 'kasubag')->first();
+
+        $ttdPeminjam = $ttdPeminjam ?? $peminjam?->signature_base64;
+        $ttdAdmin = $ttdAdmin ?? $admin?->signature_base64;
+        $ttdKasubag = $ttdKasubag ?? $kasubag?->signature_base64;
+    @endphp
+
     {{-- KOP SURAT --}}
     <div class="kop-surat">
-        <img src="{{ storage_path('app/public/kop_surat.png') }}" alt="Kop Surat BPMP Provinsi Gorontalo"> 
+        <img src="{{ storage_path('app/public/kop_surat.png') }}" alt="Kop Surat">
     </div>
 
-    <!-- JUDUL -->
-    <div class="text-center mb-10">
-        <div class="judul-surat">SURAT PERMINTAAN PERSEDIAAN</div>
-        @php
-            // Format ID jadi 3 digit (contoh: 1 -> 001, 25 -> 025)
-            $nomor_urut = str_pad($permintaan->id, 3, '0', STR_PAD_LEFT);
-            
-            // Ambil tahun dari tanggal permintaan dibuat
-            $tahun_surat = \Carbon\Carbon::parse($tanggalSurat ?? $permintaan->tanggal_penerimaan ?? $permintaan->created_at)->format('Y');
-        @endphp
-        <div>No: {{ $nomor_urut }}/BA.PP/693228/2026{{ date('Y') }}</div>
+    {{-- JUDUL DAN NOMOR SURAT --}}
+    <div class="text-center" style="margin-top: 12px; margin-bottom: 18px;">
+        <div class="judul-surat">BERITA ACARA SERAH TERIMA BARANG HABIS PAKAI</div>
+        <div class="nomor-surat">
+            Nomor : &nbsp;&nbsp;&nbsp;&nbsp;{{ $nomor_urut ?? '        ' }}&nbsp;&nbsp;&nbsp;&nbsp;/BAST/693228/{{ $tahun_surat }}
+        </div>
     </div>
 
-    <!-- PEMBUKA -->
-    <div class="text-justify mb-5">
-        Yang bertanda tangan di bawah ini:
+    {{-- PEMBUKA --}}
+    <div style="margin-bottom: 8px;">
+        Yang bertanda tangan tangan dibawah ini :
     </div>
 
-    <!-- IDENTITAS PEMOHON (Ditarik dari relasi $permintaan->user) -->
-    <table>
+    {{-- IDENTITAS PEMOHON --}}
+    <table class="table-identitas">
         <tr>
             <td class="td-label">Nama</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjam->nama_lengkap ?? $peminjam->name ?? '-' }}</td>
+            <td class="td-colon">:</td>
+            <td>{{ $peminjam->nama_lengkap ?? $peminjam->name ?? '' }}</td>
         </tr>
         <tr>
-            <td>NIP</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjam->nip ?? '-' }}</td>
+            <td class="td-label">NIP</td>
+            <td class="td-colon">:</td>
+            <td>{{ $peminjam->nip ?? '' }}</td>
         </tr>
         <tr>
-            <td>Jabatan</td>
-            <td class="td-titikdua">:</td>
-            <td>{{ $peminjam->jabatan ?? '-' }}</td>
+            <td class="td-label">Jabatan</td>
+            <td class="td-colon">:</td>
+            <td>{{ $peminjam->jabatan ?? '' }}</td>
         </tr>
         <tr>
-            <td>Unit Kerja</td>
-            <td class="td-titikdua">:</td>
+            <td class="td-label">Unit Kerja</td>
+            <td class="td-colon">:</td>
             <td>Balai Penjaminan Mutu Pendidikan Provinsi Gorontalo</td>
         </tr>
     </table>
 
-    <!-- PARAGRAF TRANSISI -->
-    <div class="text-justify mb-5">
-        Dengan ini mengajukan permintaan persediaan dengan rincian sebagai berikut:
+    {{-- PARAGRAF PERNYATAAN --}}
+    <div class="text-justify" style="margin-bottom: 10px;">
+        Dengan ini telah mengajukan permintaan dan menerima barang habis pakai dengan rincian sebagai berikut :
     </div>
 
-    <!-- DATA BARANG (TABEL DAFTAR BARANG) -->
-    <table class="table-list-barang">
+    {{-- TABEL BARANG --}}
+    <table class="table-barang">
         <thead>
             <tr>
-                <th style="width: 25px;">No</th>
+                <th style="width: 32px;">No.</th>
                 <th>Nama Barang</th>
-                <th style="width: 110px;">Kode Barang</th>
-                <th style="width: 70px;">Satuan</th>
+                <th style="width: 85px;">Kode Barang</th>
+                <th style="width: 65px;">Satuan</th>
                 <th style="width: 70px;">Jumlah Diminta</th>
                 <th style="width: 70px;">Jumlah Disetujui</th>
+                <th style="width: 100px;">Peruntukan</th>
             </tr>
         </thead>
         <tbody>
             @if(isset($permintaan->items) && $permintaan->items->count() > 0)
                 @foreach($permintaan->items as $idx => $it)
                     <tr>
-                        <td class="text-center">{{ $idx + 1 }}</td>
-                        <td>{{ $it->nama_barang }}</td>
-                        <td class="text-center">{{ $it->kode_barang }}</td>
-                        <td class="text-center">{{ $it->satuan ?? ($it->persediaan->satuan ?? 'Unit') }}</td>
-                        <td class="text-center">{{ $it->jumlah_diminta }}</td>
-                        <td class="text-center">{{ $permintaan->status === 'pending' ? '-' : ($permintaan->jumlah_disetujui !== null ? $it->jumlah_diminta : '-') }}</td>
+                        <td style="text-align: center;">{{ $idx + 1 }}</td>
+                        <td>{{ $it->nama_barang ?? ($it->persediaan->nama_barang ?? '-') }}</td>
+                        <td style="text-align: center;">{{ $it->kode_barang ?? ($it->persediaan->kode_barang ?? '-') }}</td>
+                        <td style="text-align: center;">{{ $it->satuan ?? ($it->persediaan->satuan ?? 'buah') }}</td>
+                        <td style="text-align: center;">{{ $it->jumlah_diminta ?? '0' }}</td>
+                        <td style="text-align: center;">
+                            {{ $it->jumlah_disetujui !== null ? $it->jumlah_disetujui : (in_array($permintaan->status, ['disetujui', 'selesai']) ? $it->jumlah_diminta : '-') }}
+                        </td>
+                        <td>{{ $it->peruntukan ?? ($permintaan->tujuan_penggunaan ?? '-') }}</td>
                     </tr>
                 @endforeach
             @else
                 <tr>
-                    <td class="text-center">1</td>
+                    <td style="text-align: center;">1</td>
                     <td>{{ $permintaan->persediaan->nama_barang ?? $permintaan->nama_barang ?? '-' }}</td>
-                    <td class="text-center">{{ $permintaan->kode_barang ?? '-' }}</td>
-                    <td class="text-center">{{ $permintaan->persediaan->satuan ?? $permintaan->satuan ?? 'Unit' }}</td>
-                    <td class="text-center">{{ $permintaan->jumlah_diminta ?? '0' }}</td>
-                    <td class="text-center">{{ $permintaan->status === 'pending' ? '-' : ($permintaan->jumlah_disetujui ?? $permintaan->jumlah_diminta ?? '-') }}</td>
+                    <td style="text-align: center;">{{ $permintaan->kode_barang ?? '-' }}</td>
+                    <td style="text-align: center;">{{ $permintaan->persediaan->satuan ?? $permintaan->satuan ?? 'buah' }}</td>
+                    <td style="text-align: center;">{{ $permintaan->jumlah_diminta ?? '0' }}</td>
+                    <td style="text-align: center;">
+                        {{ $permintaan->jumlah_disetujui !== null ? $permintaan->jumlah_disetujui : (in_array($permintaan->status, ['disetujui', 'selesai']) ? $permintaan->jumlah_diminta : '-') }}
+                    </td>
+                    <td>{{ $permintaan->tujuan_penggunaan ?? '-' }}</td>
                 </tr>
             @endif
         </tbody>
     </table>
 
-    <table style="width: 100%; margin-bottom: 5px; font-size: 9pt;">
-        <tr>
-            <td style="width: 75px; font-weight: bold;">Peruntukan</td>
-            <td style="width: 15px; text-align: center;">:</td>
-            <td>{{ $permintaan->tujuan_penggunaan ?? '-' }}</td>
-        </tr>
-    </table>
-        
-    <div class="text-justify mb-5">
-        Persediaan tersebut diperlukan untuk keperluan operasional dan akan digunakan sesuai dengan peruntukannya.
+    {{-- PARAGRAF PENUTUP --}}
+    <div class="text-justify" style="margin-top: 12px; margin-bottom: 20px;">
+        Demikian Berita Acara ini dibuat dengan benar dan digunakan sebagaimana mestinya.
     </div>
 
-    <div class="text-justify mb-10">
-        Demikian permintaan ini kami sampaikan, atas perhatian dan persetujuan Bapak/Ibu, kami ucapkan terima kasih.
-    </div>
-
-    <!-- TANGGAL SURAT -->
-    @php
-        // Tanggal berita acara mengikuti tanggal penerimaan yang dipilih saat persetujuan.
-        // Data lama tetap memakai tanggal persetujuan/perubahan terakhir.
-        $tgl = $tanggalSurat ?? $permintaan->tanggal_penerimaan ?? $permintaan->updated_at ?? $permintaan->created_at ?? now();
-        $tanggal = \Carbon\Carbon::parse($tgl)->format('j');
-        $bulan = \Carbon\Carbon::parse($tgl)->locale('id')->translatedFormat('F');
-        $tahun = \Carbon\Carbon::parse($tgl)->format('Y');
-    @endphp
-    <div style="text-align: right; margin-bottom: 5px; margin-right: 15px;">
-        Gorontalo, {{ $tanggal }} {{ $bulan }} {{ $tahun }}
-    </div>
-
-    <!-- TANDA TANGAN -->
+    {{-- TANDA TANGAN --}}
     <table class="ttd-table">
         <tr>
-            <td>
-                <div>Pengadministrasi BMN,</div>
-                <div class="ttd-img-container">
+            <td style="width: 55%;">
+                <div>Pengelola Persediaan</div>
+                <div class="ttd-space">
                     @if(!empty($ttdAdmin))
-                        <img src="{{ $ttdAdmin }}" alt="TTD Admin">
+                        <img src="{{ $ttdAdmin }}" alt="TTD Pengelola Persediaan">
                     @endif
                 </div>
-                <div class="ttd-nama">{{ $admin->nama_lengkap ?? $admin->name ?? 'Admin Persediaan' }}</div>
-                <div>NIP. {{ $admin->nip ?? '-' }}</div>
+                <div>{{ !empty($admin->nama_lengkap) ? $admin->nama_lengkap : (!empty($admin->name) ? $admin->name : '......................') }}</div>
+                <div>NIP. {{ $admin->nip ?? '......................' }}</div>
             </td>
-            <td>
-                <div>Pemohon,</div>
-                <div class="ttd-img-container">
+            <td style="width: 45%;">
+                <div>Gorontalo, {{ $tanggalTeks }}</div>
+                <div>Pemohon</div>
+                <div class="ttd-space">
                     @if(!empty($ttdPeminjam))
                         <img src="{{ $ttdPeminjam }}" alt="TTD Pemohon">
                     @endif
                 </div>
-                <div class="ttd-nama">{{ $peminjam->nama_lengkap ?? $peminjam->name ?? '-' }}</div>
-                <div>NIP. {{ $peminjam->nip ?? '-' }}</div>
+                <div>{{ !empty($peminjam->nama_lengkap) ? $peminjam->nama_lengkap : (!empty($peminjam->name) ? $peminjam->name : '......................') }}</div>
+                <div>NIP. {{ $peminjam->nip ?? '......................' }}</div>
             </td>
         </tr>
         <tr>
-            <td colspan="2" style="padding-top: 15px;">
-                <div>Mengetahui,</div>
-                <div class="font-bold">Kapala Sub Bagian Umum</div>
-                <div class="ttd-img-container">
+            <td colspan="2" style="text-align: center; padding-top: 25px;">
+                <div>Mengetahui :</div>
+                <div>Kasubbag Umum</div>
+                <div class="ttd-space">
                     @if(!empty($ttdKasubag))
-                        <img src="{{ $ttdKasubag }}" alt="TTD Kasubag">
+                        <img src="{{ $ttdKasubag }}" alt="TTD Kasubbag Umum">
                     @endif
                 </div>
-                <div class="ttd-nama">{{ $kasubag->nama_lengkap ?? $kasubag->name ?? 'Kasubag Umum' }}</div>
-                <div>NIP. {{ $kasubag->nip ?? '-' }}</div>
+                <div>{{ !empty($kasubag->nama_lengkap) ? $kasubag->nama_lengkap : (!empty($kasubag->name) ? $kasubag->name : 'Ardin, S.E,M.E') }}</div>
+                <div>NIP. {{ $kasubag->nip ?? '197810242002121001' }}</div>
             </td>
         </tr>
     </table>
-
-    <!-- FOOTER -->
-    <div class="footer">
-        Dokumen ini digenerate secara otomatis oleh Sistem Inventaris BPMP Provinsi Gorontalo<br>
-        Dicetak pada: {{ $tanggalCetak ?? now()->translatedFormat('d F Y, H:i') }} WITA
-    </div>
 
 </body>
 </html>
