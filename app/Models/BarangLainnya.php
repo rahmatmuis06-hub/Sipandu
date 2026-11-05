@@ -32,6 +32,7 @@ class BarangLainnya extends Model
 
     public function units()
     {
-        return $this->hasMany(BarangLainnyaUnit::class, 'barang_lainnya_id')->orderBy('id', 'asc');
+        return $this->hasMany(BarangLainnyaUnit::class, 'barang_lainnya_id')
+            ->orderByRaw('LENGTH(kode_unit) ASC, kode_unit ASC');
     }
 }

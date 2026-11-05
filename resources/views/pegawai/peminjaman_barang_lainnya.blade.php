@@ -677,7 +677,12 @@
 
     function renderUnitChips(barangId, preserveOld = false) {
       const container = document.getElementById('unitChipsContainer');
-      const units = UNITS_BY_BARANG[barangId] || [];
+      const rawUnits = UNITS_BY_BARANG[barangId] || [];
+      const units = [...rawUnits].sort((a, b) => {
+        const codeA = String(a.kode_unit ?? '').trim();
+        const codeB = String(b.kode_unit ?? '').trim();
+        return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+      });
 
       if (!units.length) {
         container.innerHTML = '<div style="grid-column:1/-1; font-size:12px; color:#dc2626; padding:8px;">Belum ada kode unit terdaftar untuk barang ini.</div>';

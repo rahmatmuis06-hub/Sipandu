@@ -1122,7 +1122,7 @@ class PegawaiController extends Controller
             }
 
             foreach ($barangLainnya as $b) {
-                $unitsByBarangId[$b->id] = $b->units->map(function ($u) use ($pendingCountByUnitId) {
+                $mapped = $b->units->map(function ($u) use ($pendingCountByUnitId) {
                     return [
                         'id'            => $u->id,
                         'kode_unit'     => $u->kode_unit,
@@ -1130,6 +1130,11 @@ class PegawaiController extends Controller
                         'keterangan'    => $u->keterangan,
                         'pending_count' => $pendingCountByUnitId[$u->id] ?? 0,
                     ];
+                });
+
+                // Urutkan unit sesuai kode_unit secara natural sort (1, 2, 3 ... 9, 10 / A, B, C)
+                $unitsByBarangId[$b->id] = $mapped->sort(function ($a, $b) {
+                    return strnatcasecmp((string) ($a['kode_unit'] ?? ''), (string) ($b['kode_unit'] ?? ''));
                 })->values()->all();
             }
         }

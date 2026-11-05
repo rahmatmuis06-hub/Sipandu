@@ -791,11 +791,42 @@ function formatRupiah(num) {
   return new Intl.NumberFormat('id-ID').format(num || 0);
 }
 
+let currentDetailItem = null;
+let currentUnitSortAsc = true;
+
+function sortUnitsNatural(list, asc = true) {
+  return [...list].sort((a, b) => {
+    const codeA = String(a.kode_unit ?? '').trim();
+    const codeB = String(b.kode_unit ?? '').trim();
+    const res = codeA.localeCompare(codeB, undefined, {
+      numeric: true,
+      sensitivity: 'base'
+    });
+    return asc ? res : -res;
+  });
+}
+
+function toggleSortKodeUnit() {
+  currentUnitSortAsc = !currentUnitSortAsc;
+  if (currentDetailItem) {
+    renderDetailModal(currentDetailItem, false);
+  }
+}
+
 function openDetail(item) {
+  currentDetailItem = item;
+  currentUnitSortAsc = true;
+  renderDetailModal(item, true);
+}
+
+function renderDetailModal(item, showModal = true) {
   const body = document.getElementById('detailBody');
-  const units = UNITS_BY_BARANG[item.id] || [];
-  const tersediaCount = units.filter(u => u.status === 'tersedia').length;
-  const dipinjamCount = units.filter(u => u.status === 'dipinjam').length;
+  const rawUnits = UNITS_BY_BARANG[item.id] || [];
+
+  // Selalu urutkan unit secara alami sesuai kode unit (1, 2, 3 ... 9, 10 / A, B, C...)
+  const units = sortUnitsNatural(rawUnits, currentUnitSortAsc);
+  const tersediaCount = rawUnits.filter(u => u.status === 'tersedia').length;
+  const dipinjamCount = rawUnits.filter(u => u.status === 'dipinjam').length;
 
   const rowsHtml = units.length ? units.map((u, idx) => {
     const isBorrowed = u.status === 'dipinjam';
@@ -819,12 +850,12 @@ function openDetail(item) {
 
     return `
       <tr>
-        <td style="padding:8px 10px; font-size:12px; color:#64748B;">${idx + 1}</td>
+        <td style="padding:8px 10px; font-size:12px; color:#64748B; font-weight:700; text-align:center;">${idx + 1}</td>
         <td style="padding:8px 10px;" colspan="3">
           <form method="POST" action="/adminpersediaan/barang-lainnya/unit/${u.id}" style="display:grid; grid-template-columns: 115px 165px 1fr auto; gap:8px; align-items:center;">
             <input type="hidden" name="_token" value="${escHtml(CSRF_TOKEN)}">
             <input type="hidden" name="_method" value="PUT">
-            <input type="text" name="kode_unit" value="${escHtml(u.kode_unit)}" class="form-input" style="padding:6px 10px; font-weight:800; font-size:12.5px;" required title="Edit manual Kode Unit">
+            <input type="text" name="kode_unit" value="${escHtml(u.kode_unit)}" class="form-input" style="padding:6px 10px; font-weight:800; font-size:12.5px; background:#FEFCE8; border-color:#FDE047;" required title="Edit manual Kode Unit">
             <div>${statusControl}</div>
             <input type="text" name="keterangan" value="${escHtml(u.keterangan || '')}" class="form-input" style="padding:6px 10px; font-size:12px;" placeholder="Keterangan unit (opsional)">
             <div style="display:flex; gap:5px;">
@@ -877,13 +908,34 @@ function openDetail(item) {
         <button type="submit" class="btn btn-primary" style="padding:7px 14px; font-size:12px;">+ Tambah Kode Unit</button>
       </form>
 
+      <!-- Baris Header Indikator Urutan Kode Unit -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+        <div style="font-size:12px; font-weight:700; color:#334155; display:flex; align-items:center; gap:6px;">
+          <i class="fas fa-list-ol" style="color:#D97706;"></i>
+          <span>Daftar Unit Fisik (${units.length} unit)</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:11px; color:#059669; background:#ECFDF5; border:1px solid #A7F3D0; padding:2px 8px; border-radius:99px; font-weight:700;">
+            <i class="fas fa-check-circle"></i> Berurutan sesuai Kode Unit (${currentUnitSortAsc ? 'Menaik: 1, 2, 3...' : 'Menurun'})
+          </span>
+          <button type="button" onclick="toggleSortKodeUnit()" class="btn btn-secondary" style="padding:3px 8px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px;" title="Balik urutan Kode Unit">
+            <i class="fas fa-sort"></i> Balik Urutan
+          </button>
+        </div>
+      </div>
+
       <!-- Tabel Daftar Kode Unit -->
       <div style="border:1px solid #E2E8F0; border-radius:12px; overflow:hidden;">
         <table style="width:100%; border-collapse:collapse;">
           <thead>
             <tr style="background:#F8FAFC;">
-              <th style="padding:9px 10px; width:40px;">No</th>
-              <th style="padding:9px 10px; width:120px;">Kode Unit</th>
+              <th style="padding:9px 10px; width:45px; text-align:center;">No</th>
+              <th style="padding:9px 10px; width:130px; cursor:pointer; user-select:none;" onclick="toggleSortKodeUnit()" title="Klik untuk membalik urutan Kode Unit">
+                <div style="display:inline-flex; align-items:center; gap:5px; color:#92400E; font-weight:800;">
+                  <span>Kode Unit</span>
+                  <i class="fas ${currentUnitSortAsc ? 'fa-sort-numeric-down' : 'fa-sort-numeric-up'}" style="font-size:12px; color:#D97706;"></i>
+                </div>
+              </th>
               <th style="padding:9px 10px; width:170px;">Status Unit</th>
               <th style="padding:9px 10px;">Keterangan & Aksi</th>
             </tr>
@@ -900,7 +952,10 @@ function openDetail(item) {
       <input type="hidden" name="_method" value="DELETE">
     </form>
   `;
-  openModal('modalDetail');
+
+  if (showModal) {
+    openModal('modalDetail');
+  }
 }
 
 function hapusKodeUnit(unitId, kodeUnit) {
@@ -925,7 +980,8 @@ function openApprovePinjam(payload) {
     pilihanEl.innerHTML = `<span style="color:#64748B; font-size:12px;">Belum memilih kode spesifik</span>`;
   }
 
-  const units = UNITS_BY_BARANG[payload.barang_lainnya_id] || [];
+  const rawUnits = UNITS_BY_BARANG[payload.barang_lainnya_id] || [];
+  const units = sortUnitsNatural(rawUnits, true);
   const requestedIds = (payload.unit_ids || []).map(Number);
   const grid = document.getElementById('approveUnitGrid');
   const conflictAlert = document.getElementById('approveConflictAlert');

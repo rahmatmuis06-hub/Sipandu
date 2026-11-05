@@ -159,9 +159,7 @@ class AdminPersediaanController extends Controller
 
         $unitsByBarangId = [];
         if (Schema::hasTable('barang_lainnya_units')) {
-            $allUnits = BarangLainnyaUnit::with('peminjamanAktif.user')
-                ->orderBy('id', 'asc')
-                ->get();
+            $allUnits = BarangLainnyaUnit::with('peminjamanAktif.user')->get();
 
             foreach ($allUnits as $u) {
                 $unitsByBarangId[$u->barang_lainnya_id][] = [
@@ -172,6 +170,13 @@ class AdminPersediaanController extends Controller
                     'peminjam_nama' => $u->peminjamanAktif?->user?->name,
                     'pending_list'  => $pendingByUnitId[$u->id] ?? [],
                 ];
+            }
+
+            // Urutkan setiap daftar unit sesuai kode_unit secara alami (Natural Sort: 1, 2, 3 ... 9, 10 / A, B, C)
+            foreach ($unitsByBarangId as $bId => $uList) {
+                usort($unitsByBarangId[$bId], function ($a, $b) {
+                    return strnatcasecmp((string) ($a['kode_unit'] ?? ''), (string) ($b['kode_unit'] ?? ''));
+                });
             }
         }
 
