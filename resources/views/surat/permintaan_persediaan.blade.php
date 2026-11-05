@@ -103,6 +103,7 @@
     .ttd-table td {
         vertical-align: top;
         padding: 0;
+        text-align: center;
     }
     .ttd-space {
         height: 60px;
@@ -234,7 +235,7 @@
     {{-- TANDA TANGAN --}}
     <table class="ttd-table">
         <tr>
-            <td style="width: 55%;">
+            <td style="width: 50%; text-align: center;">
                 <div>Pengelola Persediaan</div>
                 <div class="ttd-space">
                     @if(!empty($ttdAdmin))
@@ -244,7 +245,7 @@
                 <div>{{ !empty($admin->nama_lengkap) ? $admin->nama_lengkap : (!empty($admin->name) ? $admin->name : '......................') }}</div>
                 <div>NIP. {{ $admin->nip ?? '......................' }}</div>
             </td>
-            <td style="width: 45%;">
+            <td style="width: 50%; text-align: center;">
                 <div>Gorontalo, {{ $tanggalTeks }}</div>
                 <div>Pemohon</div>
                 <div class="ttd-space">
