@@ -394,6 +394,14 @@
         .nice-scroll::-webkit-scrollbar { width: 4px; }
         .nice-scroll::-webkit-scrollbar-track { background: #F1F5F9; border-radius: 4px; }
         .nice-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+        @media (max-width: 768px) {
+            .lg\:ml-64 { padding-top: 60px; }
+            .header-bar > div { padding: 12px 14px; }
+            #filterForm { flex-wrap: wrap; width: 100%; }
+            .filter-input { flex: 1; min-width: 120px; }
+            main.p-6 { padding: 14px !important; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">

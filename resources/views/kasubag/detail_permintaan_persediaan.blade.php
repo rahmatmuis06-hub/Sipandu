@@ -52,6 +52,21 @@
   .btn-approve:hover { background: #059669; }
   .btn-reject { background: var(--red-light); color: var(--red); }
   .btn-reject:hover { background: #fecaca; }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
+    .topbar { left: 0 !important; }
+  }
+  @media (max-width: 768px) {
+    .topbar { display: none !important; }
+    .main { margin-left: 0 !important; margin-top: 0 !important; width: 100% !important; padding: 72px 14px 32px !important; }
+    .content-card { padding: 18px 16px; border-radius: 14px; }
+    .header-detail { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .header-detail h1 { font-size: 19px; }
+    .grid-detail { grid-template-columns: 1fr; gap: 14px; }
+    .action-box { flex-direction: column-reverse; align-items: stretch; }
+    .btn-action { width: 100%; justify-content: center; }
+  }
 </style>
 </head>
 <body>

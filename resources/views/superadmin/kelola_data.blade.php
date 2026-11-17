@@ -109,8 +109,22 @@
 
     @media (max-width: 992px) {
       .stats-grid, .category-grid, .delete-grid { grid-template-columns: 1fr; }
-      .main { margin-left: 0; padding: 16px; padding-top: 60px; }
-      .backup-banner, .reset-all-box { flex-direction: column; align-items: flex-start; }
+      .main { margin-left: 0 !important; width: 100% !important; padding: 70px 16px 32px !important; }
+      .backup-banner, .reset-all-box { flex-direction: column; align-items: flex-start; gap: 14px; }
+    }
+    @media (max-width: 768px) {
+      .main { padding: 65px 14px 28px !important; }
+      .topbar { padding: 10px 0 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .card-header { padding: 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+      .card-body { padding: 16px; }
+      .btn-backup, .btn-reset-all { width: 100%; justify-content: center; }
+      .modal-header, .modal-body, .modal-footer { padding: 16px; }
+      .modal-footer { flex-direction: column-reverse; }
+      .modal-footer button { width: 100%; justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .main { padding: 60px 10px 24px !important; }
+      .topbar-title { font-size: 18px; }
     }
   </style>
 </head>

@@ -157,6 +157,21 @@
   }
   .status-diterima { background: #DCFCE7; color: #15803D; }
   .status-pending { background: #FEF3C7; color: #B45309; }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px !important; }
+    .page-top { flex-direction: column; align-items: stretch; gap: 12px; }
+    .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+    .filter-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    th, td { padding: 10px 12px; font-size: 12.5px; white-space: nowrap; }
+  }
 </style>
 </head>
 <body>

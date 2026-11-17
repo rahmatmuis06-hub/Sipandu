@@ -216,6 +216,25 @@
     .print-header { display: block !important; margin-bottom: 20px; text-align: center; }
   }
   .print-header { display: none; }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px; }
+    .page-top h1 { font-size: 20px; }
+    .header-actions { width: 100%; }
+    .header-actions .btn-action { flex: 1; justify-content: center; }
+    .tabs-group { width: 100%; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    .tab-btn { white-space: nowrap; flex-shrink: 0; font-size: 12px; }
+    .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+    .filter-row { flex-direction: column; align-items: stretch; }
+    .filter-group { width: 100%; flex-wrap: wrap; }
+    .filter-group input, .filter-group select { flex: 1; min-width: 0; }
+    .table-footer { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+  }
 </style>
 </head>
 <body>

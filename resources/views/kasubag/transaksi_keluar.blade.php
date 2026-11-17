@@ -196,6 +196,26 @@
   .detail-row { display: flex; padding: 8px 0; border-bottom: 1px dashed #f1f5f9; font-size: 13px; }
   .detail-label { width: 150px; color: var(--text-muted); font-weight: 600; }
   .detail-value { flex: 1; color: var(--text); font-weight: 500; }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px; }
+    .page-top h1 { font-size: 20px; }
+    .source-tabs { width: 100%; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+    .source-tab { white-space: nowrap; flex-shrink: 0; font-size: 12px; }
+    .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+    .filter-row { flex-direction: column; align-items: stretch; }
+    .filter-group { width: 100%; flex-wrap: wrap; }
+    .filter-input { flex: 1; min-width: 0; }
+    .table-footer { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+    .modal-card { width: 95%; padding: 18px 16px; }
+    .detail-row { flex-direction: column; gap: 4px; }
+    .detail-label { width: 100%; }
+  }
 </style>
 </head>
 <body>

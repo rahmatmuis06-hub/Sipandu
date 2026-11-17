@@ -67,6 +67,22 @@
   .detail-row { display: flex; flex-direction: column; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--gray-200); }
   .detail-label { font-size: 11px; color: var(--gray-400); font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
   .detail-value { font-size: 14px; font-weight: 600; color: var(--gray-800); }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+    .topbar { left: 0 !important; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .topbar { display: none !important; }
+    .main { margin-left: 0 !important; margin-top: 0 !important; width: 100% !important; padding: 72px 14px 32px !important; }
+    .page-header h1 { font-size: 20px; }
+    .stats-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+    .req-card { flex-direction: column; align-items: stretch; padding: 16px; }
+    .req-meta { grid-template-columns: 1fr; gap: 6px; }
+    .req-actions { flex-direction: column; align-items: stretch; width: 100%; }
+    .modal-box { width: 95% !important; max-width: 95vw !important; padding: 18px 16px; max-height: 90vh; overflow-y: auto; }
+  }
 </style>
 </head>
 <body>

@@ -205,6 +205,24 @@
     font-family: inherit; font-size: 13px; outline: none;
   }
   .form-control:focus { border-color: var(--primary); }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px !important; }
+    .page-top { flex-direction: column; align-items: stretch; gap: 12px; }
+    .btn-tambah { width: 100%; justify-content: center; }
+    .stats-grid { grid-template-columns: 1fr; gap: 12px; }
+    .table-toolbar { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+    .table-card > div[style*="overflow"], .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .form-row { grid-template-columns: 1fr; gap: 10px; }
+    .modal-overlay { padding: 12px; }
+    .modal { max-width: 96vw !important; max-height: 92vh; overflow-y: auto; border-radius: 14px; }
+    .approve-unit-grid { grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)); }
+  }
 </style>
 </head>
 <body>

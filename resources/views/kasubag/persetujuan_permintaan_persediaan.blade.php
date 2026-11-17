@@ -404,6 +404,23 @@
             fill: none;
             stroke-width: 2.5;
         }
+
+        @media (max-width: 1024px) {
+            .main { margin-left: 0 !important; width: 100% !important; }
+            .topbar { left: 0 !important; }
+            .summary-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .topbar { display: none !important; }
+            .main { margin-left: 0 !important; margin-top: 0 !important; width: 100% !important; padding: 72px 14px 32px !important; }
+            .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .page-header-text h1 { font-size: 20px; }
+            .summary-grid { grid-template-columns: 1fr; gap: 12px; margin-bottom: 20px; }
+            .req-card { flex-direction: column; align-items: stretch; padding: 16px; gap: 14px; }
+            .req-meta { grid-template-columns: 1fr; gap: 6px; }
+            .req-actions { width: 100%; min-width: 100%; }
+            .modal-box { width: 95% !important; max-width: 95vw !important; padding: 18px 16px; max-height: 90vh; overflow-y: auto; }
+        }
     </style>
 </head>
 

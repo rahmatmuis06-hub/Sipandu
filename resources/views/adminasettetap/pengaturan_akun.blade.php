@@ -331,6 +331,32 @@
   ::-webkit-scrollbar { width: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+  /* RESPONSIVE DESIGN */
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding: 70px 20px 40px !important; }
+    .content-grid { grid-template-columns: 1fr !important; gap: 20px; }
+    .content-grid > aside { width: 100% !important; max-width: 100% !important; }
+  }
+  @media (max-width: 768px) {
+    .main { padding: 65px 14px 32px !important; }
+    .topbar { padding: 10px 0 16px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .topbar-right { width: 100%; justify-content: space-between; }
+    .topbar-title { font-size: 19px; }
+    .tabs-nav { flex-wrap: wrap; gap: 6px; padding: 6px; }
+    .tab-btn { font-size: 12px; padding: 8px 10px; flex: 1 1 auto; }
+    .section-header, .section-body, .avatar-section { padding: 16px; }
+    .avatar-section { flex-direction: column; text-align: center; gap: 14px; }
+    .form-grid-2 { grid-template-columns: 1fr; gap: 12px; }
+    .btn-row { flex-direction: column-reverse; align-items: stretch; }
+    .save-btn, .cancel-btn { width: 100%; justify-content: center; }
+  }
+  @media (max-width: 480px) {
+    .main { padding: 60px 10px 24px !important; }
+    .topbar-title { font-size: 17px; }
+    .section-header, .section-body, .avatar-section { padding: 14px 12px; }
+    .signature-zone { padding: 24px 14px; }
+  }
 </style>
 </head>
 <body>

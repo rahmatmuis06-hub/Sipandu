@@ -261,6 +261,20 @@
         .detail-table td.colon-col {
             width: 10px;
         }
+
+        @media (max-width: 1024px) {
+            .main { margin-left: 0 !important; width: 100% !important; }
+        }
+        @media (max-width: 768px) {
+            .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+            .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+            .content { padding: 16px 14px !important; }
+            .table-toolbar { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+            .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            th, td { padding: 10px 12px; font-size: 12.5px; white-space: nowrap; }
+            .modal-box { width: 95% !important; max-width: 95vw !important; padding: 18px 16px; max-height: 90vh; overflow-y: auto; }
+            .detail-table td.label-col { width: 110px; }
+        }
     </style>
 </head>
 

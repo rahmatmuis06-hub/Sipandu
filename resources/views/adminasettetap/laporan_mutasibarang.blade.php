@@ -372,6 +372,22 @@ body {
   /* ─── SCROLLBAR ─── */
   .progress-bar { background: #F1F5F9; border-radius: 20px; height: 8px; margin-top: 10px; overflow: hidden; }
   .progress-fill { height: 100%; border-radius: 20px; }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+    .stats-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .charts-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px !important; }
+    .page-top { flex-direction: column; align-items: stretch; gap: 12px; }
+    .stats-grid-4, .stats-grid-3, .charts-row { grid-template-columns: 1fr; gap: 12px; }
+    .table-card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .pagination { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+    th, td { padding: 10px 12px; font-size: 12px; white-space: nowrap; }
+  }
 </style>
 </head>
 <body>

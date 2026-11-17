@@ -154,6 +154,22 @@
   .detail-table td { padding: 8px 0; border: none; font-size: 13.5px; vertical-align: top; }
   .detail-table td.label-col { font-weight: 600; width: 150px; color: var(--text-primary); }
   .detail-table td.colon-col { width: 15px; }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px !important; }
+    .table-toolbar { flex-direction: column; align-items: stretch; padding: 14px; gap: 10px; }
+    .table-footer { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+    .form-row { grid-template-columns: 1fr; }
+    .modal, .modal.modal-lg { width: 95vw !important; max-width: 95vw !important; padding: 18px 16px; max-height: 90vh; overflow-y: auto; }
+    .modal-footer { flex-direction: column-reverse; }
+    .modal-footer button { width: 100%; }
+    .detail-table td.label-col { width: 110px; }
+  }
 </style>
 </head>
 <body>

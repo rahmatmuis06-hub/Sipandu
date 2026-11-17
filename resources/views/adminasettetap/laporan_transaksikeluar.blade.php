@@ -155,6 +155,21 @@
     border-top: 1px solid var(--border);
     font-size: 13px; color: var(--muted);
   }
+
+  @media (max-width: 1024px) {
+    .main { margin-left: 0 !important; width: 100% !important; }
+  }
+  @media (max-width: 768px) {
+    .main { margin-left: 0 !important; width: 100% !important; padding-top: 65px !important; }
+    .topbar { padding: 10px 16px; height: auto; flex-wrap: wrap; gap: 8px; }
+    .content { padding: 16px 14px !important; }
+    .page-top { flex-direction: column; align-items: stretch; gap: 12px; }
+    .filter-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .filter-group { width: 100%; flex-wrap: wrap; }
+    .filter-input { flex: 1; min-width: 0; }
+    .table-footer { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; }
+    th, td { padding: 10px 12px; font-size: 12.5px; }
+  }
 </style>
 </head>
 <body>
