@@ -170,7 +170,7 @@ class KepalaBPMPController extends Controller
             'permintaan_ditolak' => PermintaanPersediaan::whereIn('status', ['ditolak', 'ditolak_kasubag'])->count(),
             'recent_masuk' => TransaksiMasukPersediaan::latest('tanggal_input')->limit(5)->get(),
             'recent_keluar' => TransaksiKeluarPersediaan::latest('tanggal_input')->limit(5)->get(),
-            'recent_permintaan' => PermintaanPersediaan::with(['user', 'persediaan'])->latest()->limit(5)->get(),
+            'recent_permintaan' => PermintaanPersediaan::with(['user', 'persediaan', 'items.persediaan'])->latest()->limit(5)->get(),
         ];
 
         // ══════════════════════════════════════════════════
@@ -290,7 +290,7 @@ class KepalaBPMPController extends Controller
                 ->orderBy('tanggal_input', 'desc')->get(),
             'transaksi_keluar' => TransaksiKeluarPersediaan::whereBetween('tanggal_input', [$startDate, $endDate])
                 ->orderBy('tanggal_input', 'desc')->get(),
-            'permintaan' => PermintaanPersediaan::with(['user', 'persediaan'])
+            'permintaan' => PermintaanPersediaan::with(['user', 'persediaan', 'items.persediaan'])
                 ->whereBetween('created_at', [$startDate, $endDate])
                 ->orderBy('created_at', 'desc')->get(),
             'stats' => [

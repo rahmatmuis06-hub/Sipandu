@@ -206,7 +206,7 @@
                         <td style="text-align: center;">{{ $it->satuan ?? ($it->persediaan->satuan ?? 'buah') }}</td>
                         <td style="text-align: center;">{{ $it->jumlah_diminta ?? '0' }}</td>
                         <td style="text-align: center;">
-                            {{ $it->jumlah_disetujui !== null ? $it->jumlah_disetujui : (in_array($permintaan->status, ['disetujui', 'selesai']) ? $it->jumlah_diminta : '-') }}
+                            {{ $permintaan->status === 'pending' ? '-' : ($it->jumlah_disetujui !== null ? $it->jumlah_disetujui : (in_array($permintaan->status, ['disetujui', 'disetujui_kasubag', 'selesai']) ? $it->jumlah_diminta : '-')) }}
                         </td>
                         <td>{{ $it->peruntukan ?? ($permintaan->tujuan_penggunaan ?? '-') }}</td>
                     </tr>

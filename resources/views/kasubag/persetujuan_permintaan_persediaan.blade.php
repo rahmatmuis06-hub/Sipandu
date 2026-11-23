@@ -517,15 +517,34 @@
                         @endif
                     </div>
 
+                    @php
+                        $dItems = $item->items ?? collect();
+                        $isMulti = $dItems->count() > 1;
+                    @endphp
                     <div class="req-name">
-                        {{ $item->persediaan->nama_barang ?? $item->nama_barang }}
-                        <span style="color: var(--gray-600); font-weight: 500;">({{ $item->jumlah_diminta }}
-                            Unit)</span>
+                        @if($isMulti)
+                            {{ $dItems->count() }} Macam Barang Persediaan
+                            <span style="color: var(--gray-600); font-weight: 500;">(Total {{ $dItems->sum('jumlah_diminta') }} Item)</span>
+                        @else
+                            {{ $dItems->first()->nama_barang ?? ($item->nama_barang ?: ($item->persediaan->nama_barang ?? '-')) }}
+                            <span style="color: var(--gray-600); font-weight: 500;">({{ $dItems->first()->jumlah_diminta ?? $item->jumlah_diminta }}
+                                {{ $dItems->first()->satuan ?? ($item->satuan ?? 'Unit') }})</span>
+                        @endif
                     </div>
 
+                    @if($isMulti)
+                        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+                            @foreach($dItems as $det)
+                                <span style="background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:3px 9px; border-radius:6px; font-size:12px; font-weight:600;">
+                                    {{ $det->nama_barang }}: <strong>{{ $det->jumlah_diminta }} {{ $det->satuan ?? 'Unit' }}</strong>
+                                </span>
+                            @endforeach
+                        </div>
+                    @endif
+
                     <div class="req-meta">
-                        <span>Pemohon: <strong>{{ $item->nama_lengkap }}</strong></span>
-                        <span>Kode Barang: <strong>{{ $item->kode_barang }}</strong></span>
+                        <span>Pemohon: <strong>{{ $item->nama_lengkap ?? ($item->user->name ?? '-') }}</strong></span>
+                        <span>Kode Barang: <strong>{{ $isMulti ? 'Multi-Item (' . $dItems->count() . ')' : ($dItems->first()->kode_barang ?? $item->kode_barang) }}</strong></span>
                         <span>Tanggal Permintaan:
                             <strong>{{ \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d M Y') }}</strong></span>
                         <span>Tanggal Dibutuhkan:

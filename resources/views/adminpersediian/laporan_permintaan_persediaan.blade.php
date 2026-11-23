@@ -286,10 +286,20 @@
             </thead>
             <tbody>
                 @forelse($permintaan as $item)
+                @php $dItems = $item->items ?? collect(); @endphp
                 <tr>
                 <td><span class="id-badge">REQ-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}</span></td>
-                <td><strong>{{ $item->nama_lengkap }}</strong></td>
-                <td style="font-size:12.5px">{{ $item->persediaan->nama_barang ?? $item->nama_barang }} ({{ $item->jumlah_diminta }} Unit)</td>
+                <td><strong>{{ $item->nama_lengkap ?? ($item->user->name ?? '-') }}</strong></td>
+                <td style="font-size:12.5px">
+                  @if($dItems->count() > 1)
+                    <strong>{{ $dItems->count() }} Macam Barang</strong> (Total {{ $dItems->sum('jumlah_diminta') }} item):
+                    <div style="font-size:11.5px; color:#475569; margin-top:2px;">
+                      {{ $dItems->map(fn($d) => $d->nama_barang . ' (' . $d->jumlah_diminta . ' ' . ($d->satuan ?? 'Unit') . ')')->join(', ') }}
+                    </div>
+                  @else
+                    {{ $dItems->first()->nama_barang ?? ($item->nama_barang ?: ($item->persediaan->nama_barang ?? '-')) }} ({{ $dItems->first()->jumlah_diminta ?? $item->jumlah_diminta }} {{ $dItems->first()->satuan ?? ($item->satuan ?? 'Unit') }})
+                  @endif
+                </td>
                 <td>{{ \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d M Y') }}</td>
                 <td>
                     @php 

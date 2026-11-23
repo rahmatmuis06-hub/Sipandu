@@ -1383,13 +1383,17 @@ class AdminPersediaanController extends Controller
     //PERMINTAAN PERSEDIAAN
     public function permintaanPersediaan(Request $request)
     {
-        $query = PermintaanPersediaan::with(['user', 'persediaan', 'reviewedBy'])
+        $query = PermintaanPersediaan::with(['user', 'persediaan', 'items.persediaan', 'reviewedBy'])
             ->latest();
 
         if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->whereHas('persediaan', fn($x) => $x->where('nama_barang', 'like', '%' . $request->search . '%'))
-                    ->orWhere('nama_lengkap', 'like', '%' . $request->search . '%');
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_barang', 'like', '%' . $search . '%')
+                    ->orWhere('nama_lengkap', 'like', '%' . $search . '%')
+                    ->orWhereHas('user', fn($u) => $u->where('name', 'like', '%' . $search . '%'))
+                    ->orWhereHas('persediaan', fn($x) => $x->where('nama_barang', 'like', '%' . $search . '%'))
+                    ->orWhereHas('items', fn($it) => $it->where('nama_barang', 'like', '%' . $search . '%'));
             });
         }
 
@@ -1397,17 +1401,13 @@ class AdminPersediaanController extends Controller
             $query->where('status', $request->status);
         }
 
-        $permintaan = PermintaanPersediaan::with(['user', 'persediaan'])
-            ->latest()
-            ->get();
-
-        $permintaan = $query->paginate(10);
+        $permintaan = $query->paginate(10)->appends($request->query());
         return view('adminpersediian.permintaan_persediaan', compact('permintaan'));
     }
 
     public function showPermintaan($id)
     {
-        $permintaan = PermintaanPersediaan::with(['persediaan', 'user', 'reviewedBy', 'approvedByKasubag'])
+        $permintaan = PermintaanPersediaan::with(['persediaan', 'items.persediaan', 'user', 'reviewedBy', 'approvedByKasubag'])
             ->findOrFail($id);
 
         return view('adminpersediian.detail_permintaan', compact('permintaan'));
@@ -1415,7 +1415,7 @@ class AdminPersediaanController extends Controller
 
     public function reviewPermintaan(Request $request, $id)
     {
-        $permintaan = PermintaanPersediaan::findOrFail($id);
+        $permintaan = PermintaanPersediaan::with(['items.persediaan', 'persediaan'])->findOrFail($id);
 
         // Pastikan hanya permintaan berstatus pending yang bisa direview admin
         if (!in_array($permintaan->status, ['pending'])) {
@@ -1427,7 +1427,110 @@ class AdminPersediaanController extends Controller
             if ($request->action === 'teruskan' || $request->action === 'setuju') {
                 DB::beginTransaction();
 
-                // 1. Cari data persediaan master
+                if ($permintaan->items && $permintaan->items->count() > 0) {
+                    $itemsDisetujui = $request->input('items_disetujui', []);
+
+                    // Fallback kompatibilitas jika hanya 1 item dan form mengirim jumlah_disetujui tunggal
+                    if (empty($itemsDisetujui) && $permintaan->items->count() === 1 && $request->filled('jumlah_disetujui')) {
+                        $onlyItem = $permintaan->items->first();
+                        $itemsDisetujui = [$onlyItem->id => (int)$request->jumlah_disetujui];
+                    }
+
+                    $approvedPlan = [];
+                    $totalDisetujui = 0;
+
+                    foreach ($permintaan->items as $detail) {
+                        $qty = isset($itemsDisetujui[$detail->id])
+                            ? (int)$itemsDisetujui[$detail->id]
+                            : (int)$detail->jumlah_diminta;
+
+                        if ($qty < 0) {
+                            DB::rollBack();
+                            return redirect()->route('adminpersediaan.permintaan-persediaan')
+                                ->with('error', "Jumlah disetujui untuk '{$detail->nama_barang}' tidak boleh kurang dari 0.");
+                        }
+
+                        $pers = $detail->persediaan ?? Persediaan::find($detail->persediaan_id);
+                        if (!$pers && $detail->kode_barang) {
+                            $pers = Persediaan::where('kode_barang', $detail->kode_barang)->first();
+                        }
+
+                        if ($qty > 0 && $pers && $pers->jumlah < $qty) {
+                            DB::rollBack();
+                            return redirect()->route('adminpersediaan.permintaan-persediaan')
+                                ->with('error', "Gagal! Sisa stok barang '{$pers->nama_barang}' ({$pers->jumlah}) tidak mencukupi untuk disetujui ({$qty}).");
+                        }
+
+                        $totalDisetujui += $qty;
+                        $approvedPlan[] = [
+                            'detail' => $detail,
+                            'persediaan' => $pers,
+                            'qty' => $qty,
+                        ];
+                    }
+
+                    if ($totalDisetujui < 1) {
+                        DB::rollBack();
+                        return redirect()->route('adminpersediaan.permintaan-persediaan')
+                            ->with('error', 'Gagal! Total jumlah barang yang disetujui minimal 1 unit.');
+                    }
+
+                    $updateData = [
+                        'status' => 'disetujui',
+                        'reviewed_by_adminpersediaan_id' => Auth::id(),
+                        'approved_by_kasubag_id' => Auth::id(),
+                        'jumlah_disetujui' => $totalDisetujui,
+                    ];
+                    if (\Illuminate\Support\Facades\Schema::hasColumn('permintaan_persediaan', 'tanggal_penerimaan')) {
+                        $updateData['tanggal_penerimaan'] = now()->toDateString();
+                    }
+                    $permintaan->update($updateData);
+
+                    $hasPersediaanIdCol = \Illuminate\Support\Facades\Schema::hasColumn('transaksi_keluar_persediaan', 'persediaan_id');
+                    $hasBatchAlokasiCol = \Illuminate\Support\Facades\Schema::hasColumn('transaksi_keluar_persediaan', 'batch_alokasi');
+
+                    foreach ($approvedPlan as $plan) {
+                        $detail = $plan['detail'];
+                        $pers = $plan['persediaan'];
+                        $qty = $plan['qty'];
+
+                        $detail->update(['jumlah_disetujui' => $qty]);
+
+                        if ($qty > 0 && $pers) {
+                            $fifo = PersediaanBatchService::deductFifo($pers, $qty);
+
+                            $transaksiData = [
+                                'tanggal_input' => now()->toDateString(),
+                                'kode_kategori' => $pers->kode_kategori ?? '-',
+                                'kategori'      => $pers->kategori ?? '-',
+                                'kode_barang'   => $pers->kode_barang ?? ($detail->kode_barang ?? '-'),
+                                'nama_barang'   => $pers->nama_barang ?? ($detail->nama_barang ?? '-'),
+                                'jumlah_keluar' => $qty,
+                                'harga'         => $fifo['harga_satuan'],
+                                'total'         => $fifo['total_nilai'],
+                                'satuan'        => $pers->satuan ?? ($detail->satuan ?? 'Unit'),
+                                'user_id'       => Auth::id() ?? $permintaan->user_id,
+                                'created_at'    => now(),
+                                'updated_at'    => now(),
+                            ];
+
+                            if ($hasPersediaanIdCol) {
+                                $transaksiData['persediaan_id'] = $pers->id;
+                            }
+                            if ($hasBatchAlokasiCol) {
+                                $transaksiData['batch_alokasi'] = json_encode($fifo['alokasi']);
+                            }
+
+                            DB::table('transaksi_keluar_persediaan')->insert($transaksiData);
+                        }
+                    }
+
+                    DB::commit();
+                    return redirect()->route('adminpersediaan.permintaan-persediaan')
+                        ->with('success', 'Permintaan (' . count($approvedPlan) . ' item) berhasil disetujui dan stok masing-masing barang telah diperbarui!');
+                }
+
+                // Fallback data lama tanpa detail_permintaan_persediaan
                 $persediaan = $permintaan->persediaan;
                 if (!$persediaan && $permintaan->persediaan_id) {
                     $persediaan = Persediaan::find($permintaan->persediaan_id);
@@ -1437,7 +1540,7 @@ class AdminPersediaanController extends Controller
                 }
 
                 $maxStok = $persediaan ? (int)$persediaan->jumlah : 999999;
-                
+
                 $request->validate([
                     'jumlah_disetujui' => 'required|integer|min:1|max:' . $maxStok
                 ], [
@@ -1449,14 +1552,12 @@ class AdminPersediaanController extends Controller
 
                 $jumlahDisetujui = (int)$request->jumlah_disetujui;
 
-                // Cek ketersediaan stok fisik
                 if ($persediaan && $persediaan->jumlah < $jumlahDisetujui) {
                     DB::rollBack();
                     return redirect()->route('adminpersediaan.permintaan-persediaan')
                         ->with('error', "Gagal! Sisa stok barang '{$persediaan->nama_barang}' ({$persediaan->jumlah}) tidak mencukupi untuk disetujui ({$jumlahDisetujui}).");
                 }
 
-                // 2. Update status permintaan persediaan
                 $updateData = [
                     'status' => 'disetujui',
                     'reviewed_by_adminpersediaan_id' => Auth::id(),
@@ -1470,7 +1571,6 @@ class AdminPersediaanController extends Controller
 
                 $permintaan->update($updateData);
 
-                // 3. Potong stok (FIFO) dan catat transaksi keluar jika data master persediaan ditemukan
                 if ($persediaan) {
                     $fifo = PersediaanBatchService::deductFifo($persediaan, $jumlahDisetujui);
 
@@ -1605,8 +1705,8 @@ class AdminPersediaanController extends Controller
 
     public function laporanPermintaanPersediaan()
     {
-        // 1. Ambil SEMUA data permintaan
-        $permintaan = PermintaanPersediaan::with(['user', 'persediaan'])->latest()->get();
+        // 1. Ambil SEMUA data permintaan beserta rincian items
+        $permintaan = PermintaanPersediaan::with(['user', 'persediaan', 'items.persediaan'])->latest()->get();
 
         // 2. Statistik Keseluruhan
         $stats = [
@@ -1898,7 +1998,7 @@ class AdminPersediaanController extends Controller
     public function downloadLaporanPermintaan(Request $request)
     {
         // Gunakan eager loading untuk efisiensi query
-        $query = \App\Models\PermintaanPersediaan::with(['user', 'persediaan']);
+        $query = \App\Models\PermintaanPersediaan::with(['user', 'persediaan', 'items.persediaan']);
 
         // Terapkan filter yang sama dengan tampilan web jika diperlukan
         if ($request->filled('status') && $request->status !== 'semua') {

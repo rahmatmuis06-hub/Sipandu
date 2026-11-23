@@ -582,7 +582,7 @@ class KasubagController extends Controller
             'total' => PermintaanPersediaan::whereIn('status', ['disetujui', 'disetujui_kasubag', 'ditolak', 'ditolak_kasubag'])->count()
         ];
 
-        $permintaan = PermintaanPersediaan::with(['user', 'persediaan'])
+        $permintaan = PermintaanPersediaan::with(['user', 'persediaan', 'items.persediaan'])
             ->whereIn('status', ['diteruskan_kasubag', 'disetujui', 'disetujui_kasubag', 'ditolak', 'ditolak_kasubag'])
             ->orderByRaw("CASE WHEN status = 'diteruskan_kasubag' THEN 1 ELSE 2 END")
             ->latest()
@@ -634,9 +634,13 @@ class KasubagController extends Controller
 
                 // POTONG STOK (FIFO) & CATAT TRANSAKSI KELUAR UNTUK TIAP ITEM
                 foreach ($permintaan->items as $detail) {
+                    $qtyApprove = $detail->jumlah_disetujui !== null ? (int) $detail->jumlah_disetujui : (int) $detail->jumlah_diminta;
+                    if ($qtyApprove <= 0) {
+                        continue;
+                    }
                     $pers = $detail->persediaan ?? Persediaan::find($detail->persediaan_id);
                     if ($pers) {
-                        $fifo = \App\Services\PersediaanBatchService::deductFifo($pers, (int) $detail->jumlah_diminta);
+                        $fifo = \App\Services\PersediaanBatchService::deductFifo($pers, $qtyApprove);
 
                         $trxKeluar = new TransaksiKeluarPersediaan([
                             'persediaan_id' => $pers->id,
@@ -645,7 +649,7 @@ class KasubagController extends Controller
                             'kategori'      => $pers->kategori,
                             'kode_barang'   => $pers->kode_barang,
                             'nama_barang'   => $pers->nama_barang,
-                            'jumlah_keluar' => $detail->jumlah_diminta,
+                            'jumlah_keluar' => $qtyApprove,
                             'harga'         => $fifo['harga_satuan'],
                             'total'         => $fifo['total_nilai'],
                             'batch_alokasi' => $fifo['alokasi'],
@@ -765,7 +769,7 @@ class KasubagController extends Controller
 
     public function showPermintaan($id)
     {
-        $permintaan = PermintaanPersediaan::with(['persediaan', 'user', 'reviewedBy', 'approvedByKasubag'])
+        $permintaan = PermintaanPersediaan::with(['persediaan', 'items.persediaan', 'user', 'reviewedBy', 'approvedByKasubag'])
             ->findOrFail($id);
 
         return view('kasubag.detail_permintaan_persediaan', compact('permintaan'));

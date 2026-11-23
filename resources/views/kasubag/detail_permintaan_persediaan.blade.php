@@ -106,17 +106,33 @@
         <div class="detail-label">Akun User</div>
         <div class="detail-value">{{ $permintaan->user->name ?? '-' }}</div>
       </div>
+      @php
+        $dItems = $permintaan->items ?? collect();
+        $isMulti = $dItems->count() > 1;
+      @endphp
       <div class="detail-item">
         <div class="detail-label">Nama Barang</div>
-        <div class="detail-value">{{ $permintaan->persediaan->nama_barang ?? $permintaan->nama_barang }}</div>
+        <div class="detail-value">
+          @if($isMulti)
+            {{ $dItems->count() }} Macam Barang Persediaan
+          @else
+            {{ $dItems->first()->nama_barang ?? ($permintaan->nama_barang ?: ($permintaan->persediaan->nama_barang ?? '-')) }}
+          @endif
+        </div>
       </div>
       <div class="detail-item">
         <div class="detail-label">Kode Barang</div>
-        <div class="detail-value">{{ $permintaan->kode_barang }}</div>
+        <div class="detail-value">{{ $isMulti ? 'Multi-Item (' . $dItems->count() . ' barang)' : ($dItems->first()->kode_barang ?? $permintaan->kode_barang) }}</div>
       </div>
       <div class="detail-item">
         <div class="detail-label">Jumlah Diminta</div>
-        <div class="detail-value highlight">{{ $permintaan->jumlah_diminta }} Unit</div>
+        <div class="detail-value highlight">
+          @if($isMulti)
+            Total {{ $dItems->sum('jumlah_diminta') }} Item ({{ $dItems->count() }} Jenis)
+          @else
+            {{ $dItems->first()->jumlah_diminta ?? $permintaan->jumlah_diminta }} {{ $dItems->first()->satuan ?? ($permintaan->satuan ?? 'Unit') }}
+          @endif
+        </div>
       </div>
       <div class="detail-item">
         <div class="detail-label">Tanggal Dibutuhkan</div>

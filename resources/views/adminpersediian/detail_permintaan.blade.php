@@ -133,22 +133,44 @@ body {
         <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">Akun: {{ $permintaan->user->name ?? '-' }}</div>
       </div>
 
+      @php
+        $detailItems = $permintaan->items ?? collect();
+        $isMulti = $detailItems->count() > 1;
+      @endphp
       <!-- Info Barang -->
       <div class="detail-box">
         <div class="label"><i class="fas fa-box" style="color: var(--info); margin-right: 4px;"></i> Nama Barang</div>
-        <div class="value">{{ $permintaan->persediaan->nama_barang ?? $permintaan->nama_barang }}</div>
+        <div class="value">
+          @if($isMulti)
+            {{ $detailItems->count() }} Macam Barang Persediaan
+          @else
+            {{ $detailItems->first()->nama_barang ?? ($permintaan->nama_barang ?: ($permintaan->persediaan->nama_barang ?? '-')) }}
+          @endif
+        </div>
         <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-          Kode: <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">{{ $permintaan->kode_barang }}</code>
+          @if($isMulti)
+            Lihat rincian per item pada tabel di bawah
+          @else
+            Kode: <code style="background: #e2e8f0; padding: 2px 6px; border-radius: 4px;">{{ $detailItems->first()->kode_barang ?? $permintaan->kode_barang }}</code>
+          @endif
         </div>
       </div>
 
       <!-- Info Jumlah & Jadwal -->
       <div class="detail-box">
         <div class="label"><i class="fas fa-hashtag" style="color: var(--success); margin-right: 4px;"></i> Jumlah Diminta</div>
-        <div class="value" style="font-size: 24px; color: var(--primary);">{{ $permintaan->jumlah_diminta }} Unit</div>
-        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-          Sisa Stok Gudang: <strong>{{ $permintaan->persediaan->jumlah ?? 0 }} Unit</strong>
+        <div class="value" style="font-size: 24px; color: var(--primary);">
+          @if($isMulti)
+            Total {{ $detailItems->sum('jumlah_diminta') }} Item ({{ $detailItems->count() }} Barang)
+          @else
+            {{ $detailItems->first()->jumlah_diminta ?? $permintaan->jumlah_diminta }} {{ $detailItems->first()->satuan ?? ($permintaan->satuan ?? 'Unit') }}
+          @endif
         </div>
+        @if(!$isMulti)
+        <div style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
+          Sisa Stok Gudang: <strong>{{ $detailItems->first()->persediaan->jumlah ?? ($permintaan->persediaan->jumlah ?? 0) }} {{ $detailItems->first()->satuan ?? 'Unit' }}</strong>
+        </div>
+        @endif
       </div>
 
       <div class="detail-box">

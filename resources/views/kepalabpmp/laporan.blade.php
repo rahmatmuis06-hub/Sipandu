@@ -313,12 +313,20 @@
                     <thead><tr><th>Tanggal</th><th>ID Request</th><th>Pemohon</th><th>Barang Diminta</th><th>Jml Minta</th><th>Disetujui</th><th>Status</th></tr></thead>
                     <tbody>
                     @forelse($persediaan['recent_permintaan'] ?? [] as $item)
+                        @php $dItems = $item->items ?? collect(); @endphp
                         <tr>
                             <td>{{ $item->tanggal_permintaan ? \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d/m/y') : ($item->created_at ? $item->created_at->format('d/m/y') : '-') }}</td>
                             <td class="font-weight-bold text-blue">REQ-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}</td>
                             <td>{{ $item->user->name ?? $item->nama_lengkap ?? '-' }}</td>
-                            <td><b>{{ $item->persediaan->nama_barang ?? $item->nama_barang ?? '-' }}</b></td>
-                            <td class="text-center">{{ $item->jumlah_diminta }}</td>
+                            <td>
+                                @if($dItems->count() > 1)
+                                    <b>{{ $dItems->count() }} Macam Barang</b>
+                                    <div style="font-size:11px; color:#64748b;">{{ Str::limit($dItems->map(fn($d) => $d->nama_barang . ' (' . $d->jumlah_diminta . ')')->join(', '), 60) }}</div>
+                                @else
+                                    <b>{{ $dItems->first()->nama_barang ?? ($item->nama_barang ?: ($item->persediaan->nama_barang ?? '-')) }}</b>
+                                @endif
+                            </td>
+                            <td class="text-center">{{ $dItems->count() > 0 ? $dItems->sum('jumlah_diminta') : $item->jumlah_diminta }}</td>
                             <td class="text-center font-weight-bold text-success">{{ $item->jumlah_disetujui ?? 0 }}</td>
                             <td>
                                 @php

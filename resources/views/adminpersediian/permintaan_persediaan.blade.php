@@ -290,28 +290,57 @@ tr:hover { background: #f8faff; }
           </thead>
           <tbody>
             @forelse($permintaan as $index => $item)
+              @php
+                $detailItems = $item->items ?? collect();
+                $isMulti = $detailItems->count() > 1;
+                $totalDimintaShow = $detailItems->count() > 0 ? $detailItems->sum('jumlah_diminta') : $item->jumlah_diminta;
+              @endphp
               <tr>
                 <td><strong>{{ ($permintaan->currentPage() - 1) * $permintaan->perPage() + $index + 1 }}</strong></td>
                 <td>
-                  <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--primary);">
-                    {{ $item->persediaan->kode_barang ?? $item->kode_barang ?? '-' }}
-                  </code>
+                  @if($isMulti)
+                    <span style="background: #eef2ff; color: #4338ca; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; white-space: nowrap;">
+                      Multi-Item ({{ $detailItems->count() }})
+                    </span>
+                  @else
+                    <code style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--primary);">
+                      {{ $detailItems->first()->kode_barang ?? ($item->persediaan->kode_barang ?? $item->kode_barang ?? '-') }}
+                    </code>
+                  @endif
                 </td>
                 <td>
-                  {{-- PERBAIKAN NAMA PEMOHON DI SINI --}}
-                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 2px;">
+                  {{-- PERBAIKAN NAMA PEMOHON & MULTI-ITEM --}}
+                  <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
                     {{ $item->user->name ?? $item->user->nama_lengkap ?? $item->nama_lengkap ?? 'Tanpa Nama' }}
                   </div>
-                  <div style="font-size: 12.5px; color: var(--text-secondary);">
-                    <i class="fas fa-box" style="margin-right: 4px; font-size: 10px;"></i>
-                    {{ $item->persediaan->nama_barang ?? $item->nama_barang }}
-                  </div>
+                  @if($detailItems->count() > 0)
+                    <div style="display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--text-secondary);">
+                      @foreach($detailItems as $det)
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                          <i class="fas fa-box" style="font-size: 10px; color: var(--primary);"></i>
+                          <span><strong>{{ $det->nama_barang }}</strong> ({{ $det->jumlah_diminta }} {{ $det->satuan ?? ($det->persediaan->satuan ?? 'Unit') }})</span>
+                        </div>
+                      @endforeach
+                    </div>
+                  @else
+                    <div style="font-size: 12.5px; color: var(--text-secondary);">
+                      <i class="fas fa-box" style="margin-right: 4px; font-size: 10px;"></i>
+                      {{ $item->nama_barang ?: ($item->persediaan->nama_barang ?? '-') }}
+                    </div>
+                  @endif
                 </td>
                 <td>
-                  <strong style="color: var(--primary); font-size: 16px;">{{ $item->jumlah_diminta }}</strong>
-                  <br><small style="color: var(--text-secondary);">Stok: {{ $item->persediaan->jumlah ?? 0 }}</small>
+                  <strong style="color: var(--primary); font-size: 16px;">{{ $totalDimintaShow }}</strong>
+                  @if($isMulti)
+                    <br><small style="color: var(--text-secondary);">Total {{ $detailItems->count() }} barang</small>
+                  @else
+                    @php
+                      $singleStok = $detailItems->first()->persediaan->jumlah ?? ($item->persediaan->jumlah ?? 0);
+                    @endphp
+                    <br><small style="color: var(--text-secondary);">Stok: {{ $singleStok }}</small>
+                  @endif
                 </td>
-                <td>{{ $item->persediaan->satuan }}</td>
+                <td>{{ $isMulti ? 'Beragam' : ($detailItems->first()->satuan ?? ($item->persediaan->satuan ?? ($item->satuan ?? 'Unit'))) }}</td>
                 <td>{{ \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d M Y') }}</td>
                 <td>
                   <strong style="color: var(--warning);">{{ \Carbon\Carbon::parse($item->tanggal_dibutuhkan)->format('d M Y') }}</strong>
@@ -356,28 +385,50 @@ tr:hover { background: #f8faff; }
                     </button>
 
                     @if($item->status === 'pending')
-                     {{-- Tombol Teruskan --}}
-                      <form action="{{ route('adminpersediaan.review-permintaan', $item->id) }}" method="POST" style="margin:0;">
+                     {{-- Form Persetujuan Per-Item --}}
+                      <form action="{{ route('adminpersediaan.review-permintaan', $item->id) }}" method="POST" style="margin:0; min-width: 240px;">
                         @csrf
-                        <div class="form-group">
-                            <label>Jumlah Diminta Pegawai:</label>
-                            <input type="text" class="form-control" value="{{ $item->jumlah_diminta }}" readonly>
-                        </div>
+                        @if($detailItems->count() > 0)
+                          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                            @foreach($detailItems as $det)
+                              @php $detStok = $det->persediaan->jumlah ?? 0; @endphp
+                              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;">
+                                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+                                  {{ $det->nama_barang }}
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">
+                                  <span>Diminta: <strong>{{ $det->jumlah_diminta }}</strong> {{ $det->satuan ?? ($det->persediaan->satuan ?? '') }}</span>
+                                  <span>Stok: <strong>{{ $detStok }}</strong></span>
+                                </div>
+                                <input type="number" name="items_disetujui[{{ $det->id }}]" class="form-control"
+                                  value="{{ old('items_disetujui.' . $det->id, min($det->jumlah_diminta, $detStok)) }}"
+                                  min="0" max="{{ $detStok }}" required
+                                  style="padding: 5px 8px; font-size: 12.5px; width: 100%;"
+                                  title="Jumlah disetujui untuk {{ $det->nama_barang }}">
+                              </div>
+                            @endforeach
+                          </div>
+                        @else
+                          <div class="form-group">
+                              <label>Jumlah Diminta Pegawai:</label>
+                              <input type="text" class="form-control" value="{{ $item->jumlah_diminta }}" readonly>
+                          </div>
 
-                        <div class="form-group">
-                            <label>Jumlah Disetujui (Revisi Admin): <span class="text-danger">*</span></label>
-                            <input type="number" name="jumlah_disetujui" class="form-control" 
-                                  value="{{ old('jumlah_disetujui', $item->jumlah_diminta) }}" 
-                                  min="1" max="{{ $item->persediaan->jumlah ?? 0 }}" required>
-                            <small class="text-muted">Stok fisik tersedia: {{ $item->persediaan->jumlah ?? 0 }}</small>
-                        </div>
+                          <div class="form-group">
+                              <label>Jumlah Disetujui (Revisi Admin): <span class="text-danger">*</span></label>
+                              <input type="number" name="jumlah_disetujui" class="form-control" 
+                                    value="{{ old('jumlah_disetujui', $item->jumlah_diminta) }}" 
+                                    min="1" max="{{ $item->persediaan->jumlah ?? 0 }}" required>
+                              <small class="text-muted">Stok fisik tersedia: {{ $item->persediaan->jumlah ?? 0 }}</small>
+                          </div>
+                        @endif
 
-                        <div class="form-group" style="margin-top: 10px;">
+                        <div class="form-group" style="margin-top: 8px;">
                             <label>Catatan / Alasan (Opsional):</label>
                             <textarea name="komentar" class="form-control" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
                         </div>
 
-                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <div style="margin-top: 12px; display: flex; gap: 10px;">
                             <button type="submit" name="action" value="setuju" class="btn btn-primary style-btn" style="background: #10b981; border-color: #10b981; color: white;">
                                 <i class="fas fa-check"></i> Setujui
                             </button>

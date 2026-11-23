@@ -168,16 +168,26 @@
             </thead>
             <tbody>
             @forelse($permintaan as $i => $item)
+                @php $dItems = $item->items ?? collect(); @endphp
                 <tr>
                     <td class="text-center">{{ $i+1 }}</td>
                     <td class="text-center">{{ $item->tanggal_permintaan ? \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d/m/Y') : ($item->created_at ? $item->created_at->format('d/m/Y') : '-') }}</td>
                     <td>{{ $item->user->name ?? $item->nama_lengkap ?? '-' }}</td>
                     <td>
-                        {{ $item->persediaan->nama_barang ?? $item->nama_barang }}
-                        <br><span style="font-size: 8px; color: #64748b;">Kode: {{ $item->persediaan->kode_unik_barang ?? (($item->kode_kategori ?? '').'-'.($item->kode_barang ?? '')) }}</span>
+                        @if($dItems->count() > 1)
+                            <strong>{{ $dItems->count() }} Macam Barang</strong>
+                            <br><span style="font-size: 8px; color: #334155;">
+                                @foreach($dItems as $d)
+                                    &bull; {{ $d->nama_barang }} ({{ $d->jumlah_diminta }} {{ $d->satuan ?? 'Unit' }})@if(!$loop->last)<br>@endif
+                                @endforeach
+                            </span>
+                        @else
+                            {{ $dItems->first()->nama_barang ?? ($item->nama_barang ?: ($item->persediaan->nama_barang ?? '-')) }}
+                            <br><span style="font-size: 8px; color: #64748b;">Kode: {{ $dItems->first()->kode_barang ?? ($item->persediaan->kode_unik_barang ?? (($item->kode_kategori ?? '').'-'.($item->kode_barang ?? ''))) }}</span>
+                        @endif
                     </td>
-                    <td class="text-center">{{ $item->jumlah_diminta }}</td>
-                    <td class="text-center"><strong>{{ $item->jumlah_disetujui ?? 0 }}</strong></td>
+                    <td class="text-center">{{ $dItems->count() > 0 ? $dItems->sum('jumlah_diminta') : $item->jumlah_diminta }}</td>
+                    <td class="text-center"><strong>{{ $dItems->count() > 0 && $dItems->sum('jumlah_disetujui') > 0 ? $dItems->sum('jumlah_disetujui') : ($item->jumlah_disetujui ?? 0) }}</strong></td>
                     <td class="text-center">
                         <span class="badge">
                             {{ str_replace('_', ' ', $item->status) }}

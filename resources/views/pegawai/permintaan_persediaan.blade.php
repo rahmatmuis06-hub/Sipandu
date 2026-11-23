@@ -332,14 +332,23 @@
                 }
             @endphp
             
+            @php
+              $detailItems = $item->items ?? collect();
+              $isMultiItem = $detailItems->count() > 1;
+              $displayTitle = $isMultiItem
+                  ? $detailItems->count() . ' Barang Persediaan'
+                  : ($detailItems->first()->nama_barang ?? ($item->nama_barang ?: ($item->persediaan->nama_barang ?? '-')));
+              $displayQty = $detailItems->count() > 0 ? $detailItems->sum('jumlah_diminta') : $item->jumlah_diminta;
+              $displaySatuan = $isMultiItem ? 'Total Item' : ($detailItems->first()->satuan ?? ($item->satuan ?? ($item->persediaan->satuan ?? 'Unit')));
+            @endphp
             <div class="req-card" data-status="{{ $badgeClass }}">
               <div class="req-card-top">
                 <div style="display:flex;align-items:center;gap:12px">
                   <div class="req-card-icon" style="background:rgba(37,99,235,0.1);color:#2563eb">
-                    <i class="fas fa-box"></i>
+                    <i class="fas {{ $isMultiItem ? 'fa-boxes-stacked' : 'fa-box' }}"></i>
                   </div>
                   <div>
-                    <div class="req-card-name">{{ $item->persediaan->nama_barang ?? $item->nama_barang }}</div>
+                    <div class="req-card-name">{{ $displayTitle }}</div>
                     <div class="req-card-code">REQ-{{ str_pad($item->id, 4, '0', STR_PAD_LEFT) }}</div>
                   </div>
                 </div>
@@ -350,15 +359,38 @@
                 </div>
               </div>
 
+              @if($isMultiItem)
+              <div style="padding: 8px 16px 4px; display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px dashed #eef1ff;">
+                @foreach($detailItems as $det)
+                  <span style="display: inline-flex; align-items: center; gap: 5px; background: #f0f4ff; border: 1px solid #dbeafe; color: #1e40af; padding: 3px 9px; border-radius: 7px; font-size: 11.5px; font-weight: 600;">
+                    <span>{{ $det->nama_barang }}</span>
+                    <strong style="background: #2563eb; color: #fff; padding: 1px 6px; border-radius: 5px; font-size: 10.5px;">{{ $det->jumlah_diminta }} {{ $det->satuan ?? ($det->persediaan->satuan ?? 'Unit') }}</strong>
+                  </span>
+                @endforeach
+              </div>
+              @endif
+
               <div class="req-card-meta">
                 <div class="meta-item">
                   <div class="meta-label">Jumlah Diminta</div>
-                  <div class="meta-value">{{ $item->jumlah_diminta }} {{ $item->satuan ?? 'Unit' }}</div>
+                  <div class="meta-value">
+                    @if($isMultiItem)
+                      {{ $displayQty }} Total ({{ $detailItems->count() }} Jenis Barang)
+                    @else
+                      {{ $displayQty }} {{ $displaySatuan }}
+                    @endif
+                  </div>
                 </div>
                 @if($item->jumlah_disetujui !== null)
                 <div class="meta-item">
                     <div class="meta-label" style="color: var(--success);">Jumlah Disetujui</div>
-                    <div class="meta-value" style="color: var(--success); font-weight: 800;">{{ $item->jumlah_disetujui }} {{ $item->satuan ?? 'Unit' }}</div>
+                    <div class="meta-value" style="color: var(--success); font-weight: 800;">
+                      @if($isMultiItem)
+                        {{ $detailItems->sum('jumlah_disetujui') ?: $item->jumlah_disetujui }} Total
+                      @else
+                        {{ $item->jumlah_disetujui }} {{ $displaySatuan }}
+                      @endif
+                    </div>
                 </div>
                 @endif
                 <div class="meta-item">
@@ -1012,25 +1044,44 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('detailNama').textContent = userName;
     document.getElementById('detailNipNik').textContent = userNik;
     
-    document.getElementById('detailFasilitas').textContent = data.persediaan?.nama_barang || data.nama_barang || '-';
-    document.getElementById('detailKodeBarang').textContent = data.kode_barang || '-';
-    document.getElementById('detailKategori').textContent = data.persediaan?.kategori || 'Umum';
-    document.getElementById('detailJumlah').textContent = data.jumlah_diminta + ' ' + (data.satuan || 'Unit');
+    const hasItems = Array.isArray(data.items) && data.items.length > 0;
+    const isMulti = Array.isArray(data.items) && data.items.length > 1;
+    if (isMulti) {
+      const totalQty = data.items.reduce((acc, it) => acc + (parseInt(it.jumlah_diminta, 10) || 0), 0);
+      document.getElementById('detailFasilitas').textContent = `${data.items.length} Macam Barang Persediaan`;
+      document.getElementById('detailKodeBarang').textContent = 'Multi-Item';
+      document.getElementById('detailKategori').textContent = 'Beragam';
+      document.getElementById('detailJumlah').textContent = `Total ${totalQty} item (${data.items.length} barang)`;
+    } else if (hasItems) {
+      const single = data.items[0];
+      document.getElementById('detailFasilitas').textContent = single.nama_barang || data.nama_barang || '-';
+      document.getElementById('detailKodeBarang').textContent = single.kode_barang || data.kode_barang || '-';
+      document.getElementById('detailKategori').textContent = single.persediaan?.kategori || data.persediaan?.kategori || 'Umum';
+      document.getElementById('detailJumlah').textContent = `${single.jumlah_diminta} ${single.satuan || data.satuan || 'Unit'}`;
+    } else {
+      document.getElementById('detailFasilitas').textContent = data.nama_barang || data.persediaan?.nama_barang || '-';
+      document.getElementById('detailKodeBarang').textContent = data.kode_barang || '-';
+      document.getElementById('detailKategori').textContent = data.persediaan?.kategori || 'Umum';
+      document.getElementById('detailJumlah').textContent = data.jumlah_diminta + ' ' + (data.satuan || 'Unit');
+    }
     
     // Multi-item persediaan rincian
     const multiWrap = document.getElementById('detailMultiItemsWrapper');
     const multiBody = document.getElementById('detailMultiItemsBody');
     if (multiWrap && multiBody) {
-      if (data.items && data.items.length > 0) {
+      if (hasItems) {
         let mRows = '';
         data.items.forEach((it, idx) => {
+          const disetujuiInfo = it.jumlah_disetujui !== null && it.jumlah_disetujui !== undefined
+            ? ` <span style="color:#16a34a;font-size:11px;">(Disetujui: ${it.jumlah_disetujui})</span>`
+            : '';
           mRows += `
             <tr style="border-bottom: 1px solid #eef1ff;">
               <td style="padding: 6px 10px;">${idx + 1}</td>
               <td style="padding: 6px 10px; font-weight: 600;">${it.nama_barang}</td>
-              <td style="padding: 6px 10px; font-family: monospace;">${it.kode_barang}</td>
+              <td style="padding: 6px 10px; font-family: monospace;">${it.kode_barang || '-'}</td>
               <td style="padding: 6px 10px;">${it.satuan || '-'}</td>
-              <td style="padding: 6px 10px; font-weight: 700; color: var(--primary);">${it.jumlah_diminta}</td>
+              <td style="padding: 6px 10px; font-weight: 700; color: var(--primary);">${it.jumlah_diminta}${disetujuiInfo}</td>
             </tr>
           `;
         });

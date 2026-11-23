@@ -101,11 +101,21 @@
                 <td>
                     <b>{{ $item->user->name ?? $item->nama_lengkap }}</b>
                 </td>
+                @php $dItems = $item->items ?? collect(); @endphp
                 <td>
-                    {{ $item->persediaan->nama_barang ?? $item->nama_barang }}<br>
-                    <span style="font-size: 9px; color: #555;">Kode: {{ $item->persediaan->kode_unik_barang ?? (($item->kode_kategori ?? '').'-'.($item->kode_barang ?? '')) }}</span>
+                    @if($dItems->count() > 1)
+                        <b>{{ $dItems->count() }} Macam Barang</b><br>
+                        <span style="font-size: 9px; color: #333;">
+                            @foreach($dItems as $d)
+                                &bull; {{ $d->nama_barang }} ({{ $d->jumlah_diminta }} {{ $d->satuan ?? 'Unit' }})@if(!$loop->last)<br>@endif
+                            @endforeach
+                        </span>
+                    @else
+                        {{ $dItems->first()->nama_barang ?? ($item->nama_barang ?: ($item->persediaan->nama_barang ?? '-')) }}<br>
+                        <span style="font-size: 9px; color: #555;">Kode: {{ $dItems->first()->kode_barang ?? ($item->persediaan->kode_unik_barang ?? (($item->kode_kategori ?? '').'-'.($item->kode_barang ?? ''))) }}</span>
+                    @endif
                 </td>
-                <td class="text-center"><b>{{ $item->jumlah_diminta }}</b> Unit</td>
+                <td class="text-center"><b>{{ $dItems->count() > 0 ? $dItems->sum('jumlah_diminta') : $item->jumlah_diminta }}</b> {{ $dItems->count() > 1 ? 'Item' : ($dItems->first()->satuan ?? 'Unit') }}</td>
                 <td class="text-center">{{ \Carbon\Carbon::parse($item->tanggal_permintaan)->format('d/m/Y') }}</td>
                 <td>{{ $item->tujuan_penggunaan }}</td>
                 <td class="text-center status-badge">

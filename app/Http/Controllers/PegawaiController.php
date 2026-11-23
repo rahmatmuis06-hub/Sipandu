@@ -553,9 +553,9 @@ class PegawaiController extends Controller
             ->get();
 
         $riwayat = PermintaanPersediaan::where('user_id', Auth::id())
-            ->with('persediaan')
+            ->with(['persediaan', 'items.persediaan'])
             ->latest()
-            ->limit(5)
+            ->limit(10)
             ->get();
 
         return view('pegawai.permintaan_persediaan', compact('persediaan', 'riwayat'));
@@ -586,15 +586,16 @@ class PegawaiController extends Controller
                 }
 
                 $jumlahSedangDiproses = PermintaanPersediaan::where('persediaan_id', $persediaan->id)
-                    ->whereIn('status', ['pending', 'dalam_review'])
+                    ->whereDoesntHave('items')
+                    ->whereIn('status', ['pending', 'dalam_review', 'diteruskan_kasubag'])
                     ->sum('jumlah_diminta');
 
                 $detailSedangDiproses = DetailPermintaanPersediaan::where('persediaan_id', $persediaan->id)
                     ->whereHas('permintaanPersediaan', function($q) {
-                        $q->whereIn('status', ['pending', 'dalam_review']);
+                        $q->whereIn('status', ['pending', 'dalam_review', 'diteruskan_kasubag']);
                     })->sum('jumlah_diminta');
 
-                $totalAntrean = max($jumlahSedangDiproses, $detailSedangDiproses);
+                $totalAntrean = $jumlahSedangDiproses + $detailSedangDiproses;
                 $sisaStokRiil = $persediaan->jumlah - $totalAntrean;
 
                 if ((int)$it['jumlah_diminta'] > $sisaStokRiil) {
@@ -682,14 +683,20 @@ class PegawaiController extends Controller
         }
 
         $jumlahSedangDiproses = PermintaanPersediaan::where('persediaan_id', $persediaan->id)
-            ->whereIn('status', ['pending', 'dalam_review'])
+            ->whereDoesntHave('items')
+            ->whereIn('status', ['pending', 'dalam_review', 'diteruskan_kasubag'])
             ->sum('jumlah_diminta');
 
-        $sisaStokRiil = $persediaan->jumlah - $jumlahSedangDiproses;
+        $detailSedangDiproses = DetailPermintaanPersediaan::where('persediaan_id', $persediaan->id)
+            ->whereHas('permintaanPersediaan', function($q) {
+                $q->whereIn('status', ['pending', 'dalam_review', 'diteruskan_kasubag']);
+            })->sum('jumlah_diminta');
+
+        $sisaStokRiil = $persediaan->jumlah - ($jumlahSedangDiproses + $detailSedangDiproses);
 
         if ($request->jumlah_diminta > $sisaStokRiil) {
             return back()->withErrors([
-                'persediaan_id' => "Maaf, sisa stok yang bisa diminta saat ini hanya {$sisaStokRiil} unit. (Terdapat {$jumlahSedangDiproses} unit yang sedang dalam antrean pengajuan oleh pegawai lain)."
+                'persediaan_id' => "Maaf, sisa stok yang bisa diminta saat ini hanya {$sisaStokRiil} unit. (Terdapat " . ($jumlahSedangDiproses + $detailSedangDiproses) . " unit yang sedang dalam antrean pengajuan oleh pegawai lain)."
             ])->withInput();
         }
 
@@ -774,7 +781,7 @@ class PegawaiController extends Controller
 
     public function showPermintaanPersediaanJson($id)
     {
-        $permintaan = PermintaanPersediaan::with(['persediaan', 'user'])
+        $permintaan = PermintaanPersediaan::with(['persediaan', 'items.persediaan', 'user', 'reviewedBy', 'approvedByKasubag'])
             ->where('user_id', Auth::id())
             ->find($id);
 
