@@ -1446,7 +1446,7 @@ class AdminPersediaanController extends Controller
 
                         if ($qty < 0) {
                             DB::rollBack();
-                            return redirect()->route('adminpersediaan.permintaan-persediaan')
+                            return back()->withInput()
                                 ->with('error', "Jumlah disetujui untuk '{$detail->nama_barang}' tidak boleh kurang dari 0.");
                         }
 
@@ -1457,7 +1457,7 @@ class AdminPersediaanController extends Controller
 
                         if ($qty > 0 && $pers && $pers->jumlah < $qty) {
                             DB::rollBack();
-                            return redirect()->route('adminpersediaan.permintaan-persediaan')
+                            return back()->withInput()
                                 ->with('error', "Gagal! Sisa stok barang '{$pers->nama_barang}' ({$pers->jumlah}) tidak mencukupi untuk disetujui ({$qty}).");
                         }
 
@@ -1471,7 +1471,7 @@ class AdminPersediaanController extends Controller
 
                     if ($totalDisetujui < 1) {
                         DB::rollBack();
-                        return redirect()->route('adminpersediaan.permintaan-persediaan')
+                        return back()->withInput()
                             ->with('error', 'Gagal! Total jumlah barang yang disetujui minimal 1 unit.');
                     }
 

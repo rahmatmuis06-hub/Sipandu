@@ -109,6 +109,21 @@ body {
       <i class="fas fa-arrow-left"></i> Kembali ke Daftar Permintaan
     </a>
 
+    @if(session('error'))
+      <div style="background:#fef2f2; color:#b91c1c; padding:12px 16px; border-radius:10px; margin-bottom:20px; border:1px solid #fecaca; font-size:13.5px; font-weight:600;">
+        <i class="fas fa-exclamation-circle" style="margin-right:6px;"></i> {{ session('error') }}
+      </div>
+    @endif
+    @if($errors->any())
+      <div style="background:#fef2f2; color:#b91c1c; padding:12px 16px; border-radius:10px; margin-bottom:20px; border:1px solid #fecaca; font-size:13.5px;">
+        <ul style="margin:0; padding-left:18px;">
+          @foreach($errors->all() as $err)
+            <li>{{ $err }}</li>
+          @endforeach
+        </ul>
+      </div>
+    @endif
+
     <div class="page-header">
       <div>
         <h1>REQ-{{ str_pad($permintaan->id, 4, '0', STR_PAD_LEFT) }}</h1>
@@ -181,7 +196,86 @@ body {
         </div>
       </div>
 
-      @if($permintaan->items && $permintaan->items->count() > 0)
+      @if($permintaan->status === 'pending')
+      <div class="detail-box full-width" style="background: #fff; border: 1.5px solid #bfdbfe;">
+        <form action="{{ route('adminpersediaan.review-permintaan', $permintaan->id) }}" method="POST">
+          @csrf
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+            <div class="label" style="margin-bottom:0; color: var(--primary);">
+              <i class="fas fa-sliders" style="margin-right: 4px;"></i> Atur / Kurangi Jumlah Barang Disetujui
+            </div>
+            <span style="font-size:12px; color:var(--text-secondary);">Ubah angka pada kolom <strong>Disetujui</strong> (isi <code>0</code> jika barang tidak diberikan).</span>
+          </div>
+
+          @if($permintaan->items && $permintaan->items->count() > 0)
+            <div style="overflow-x: auto; margin-bottom: 16px;">
+              <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                <thead>
+                  <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left;">
+                    <th style="padding: 9px 10px;">No</th>
+                    <th style="padding: 9px 10px;">Nama Barang</th>
+                    <th style="padding: 9px 10px;">Kode Barang</th>
+                    <th style="padding: 9px 10px;">Satuan</th>
+                    <th style="padding: 9px 10px;">Diminta</th>
+                    <th style="padding: 9px 10px;">Stok Gudang</th>
+                    <th style="padding: 9px 10px; width: 150px;">Jumlah Disetujui</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach($permintaan->items as $idx => $it)
+                  @php $itStok = $it->persediaan->jumlah ?? 0; @endphp
+                  <tr style="border-bottom: 1px solid #edf2f7;">
+                    <td style="padding: 9px 10px;">{{ $idx + 1 }}</td>
+                    <td style="padding: 9px 10px; font-weight: 600;">{{ $it->nama_barang }}</td>
+                    <td style="padding: 9px 10px; font-family: monospace;">{{ $it->kode_barang }}</td>
+                    <td style="padding: 9px 10px;">{{ $it->satuan ?? ($it->persediaan->satuan ?? '-') }}</td>
+                    <td style="padding: 9px 10px; font-weight: 700; color: var(--primary);">{{ $it->jumlah_diminta }}</td>
+                    <td style="padding: 9px 10px;">
+                      <span style="font-weight: 600; color: {{ $itStok < $it->jumlah_diminta ? 'var(--danger)' : 'var(--success)' }};">{{ $itStok }}</span>
+                    </td>
+                    <td style="padding: 9px 10px;">
+                      <input type="number" name="items_disetujui[{{ $it->id }}]"
+                        value="{{ old('items_disetujui.' . $it->id, min($it->jumlah_diminta, $itStok)) }}"
+                        min="0" max="{{ $itStok }}" required
+                        style="width: 110px; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 13.5px; color: var(--text-primary);">
+                    </td>
+                  </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          @else
+            <div style="margin-bottom: 16px; max-width: 340px;">
+              <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--text-primary);">
+                Jumlah Disetujui (Maks. Stok: {{ $permintaan->persediaan->jumlah ?? 0 }})
+              </label>
+              <input type="number" name="jumlah_disetujui"
+                value="{{ old('jumlah_disetujui', min($permintaan->jumlah_diminta, $permintaan->persediaan->jumlah ?? $permintaan->jumlah_diminta)) }}"
+                min="1" max="{{ $permintaan->persediaan->jumlah ?? 999999 }}" required
+                style="width:100%; padding:9px 12px; border:1.5px solid #cbd5e1; border-radius:8px; font-weight:700; font-size:14px;">
+            </div>
+          @endif
+
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size:12.5px; font-weight:700; margin-bottom:6px; color:var(--text-secondary);">Catatan / Alasan (Opsional)</label>
+            <textarea name="komentar" rows="2" placeholder="Tambahkan catatan penyesuaian jumlah atau keterangan lain..."
+              style="width:100%; padding:10px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px;">{{ old('komentar') }}</textarea>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="submit" name="action" value="setuju"
+              style="padding: 10px 20px; border-radius: 9px; border: none; background: var(--success); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+              <i class="fas fa-check"></i> Simpan &amp; Setujui Permintaan
+            </button>
+            <button type="submit" name="action" value="tolak"
+              onclick="return confirm('Yakin ingin menolak permintaan ini?')"
+              style="padding: 10px 20px; border-radius: 9px; border: none; background: var(--danger); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px;">
+              <i class="fas fa-times"></i> Tolak Permintaan
+            </button>
+          </div>
+        </form>
+      </div>
+      @elseif($permintaan->items && $permintaan->items->count() > 0)
       <div class="detail-box full-width" style="background: #fff;">
         <div class="label" style="margin-bottom: 12px;"><i class="fas fa-list-check" style="color: var(--primary); margin-right: 4px;"></i> Rincian Barang Diminta (Multi-Item)</div>
         <div style="overflow-x: auto;">
@@ -193,6 +287,7 @@ body {
                 <th style="padding: 8px 10px;">Kode Barang</th>
                 <th style="padding: 8px 10px;">Satuan</th>
                 <th style="padding: 8px 10px;">Jumlah Diminta</th>
+                <th style="padding: 8px 10px;">Jumlah Disetujui</th>
                 <th style="padding: 8px 10px;">Stok Gudang</th>
               </tr>
             </thead>
@@ -204,6 +299,7 @@ body {
                 <td style="padding: 8px 10px; font-family: monospace;">{{ $it->kode_barang }}</td>
                 <td style="padding: 8px 10px;">{{ $it->satuan ?? ($it->persediaan->satuan ?? '-') }}</td>
                 <td style="padding: 8px 10px; font-weight: 700; color: var(--primary);">{{ $it->jumlah_diminta }}</td>
+                <td style="padding: 8px 10px; font-weight: 700; color: var(--success);">{{ $it->jumlah_disetujui !== null ? $it->jumlah_disetujui : '-' }}</td>
                 <td style="padding: 8px 10px;">{{ $it->persediaan->jumlah ?? '-' }}</td>
               </tr>
               @endforeach

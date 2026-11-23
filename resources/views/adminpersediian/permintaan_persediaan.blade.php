@@ -313,14 +313,19 @@ tr:hover { background: #f8faff; }
                   <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
                     {{ $item->user->name ?? $item->user->nama_lengkap ?? $item->nama_lengkap ?? 'Tanpa Nama' }}
                   </div>
-                  @if($detailItems->count() > 0)
-                    <div style="display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--text-secondary);">
-                      @foreach($detailItems as $det)
-                        <div style="display: flex; align-items: center; gap: 5px;">
-                          <i class="fas fa-box" style="font-size: 10px; color: var(--primary);"></i>
-                          <span><strong>{{ $det->nama_barang }}</strong> ({{ $det->jumlah_diminta }} {{ $det->satuan ?? ($det->persediaan->satuan ?? 'Unit') }})</span>
-                        </div>
-                      @endforeach
+                  @if($detailItems->count() > 1)
+                    <div style="font-size: 12.5px; color: var(--text-primary); font-weight: 600;">
+                      <i class="fas fa-boxes-stacked" style="margin-right: 4px; font-size: 11px; color: var(--primary);"></i>
+                      {{ $detailItems->count() }} Macam Barang
+                    </div>
+                    <div style="font-size: 11.5px; color: var(--text-secondary); margin-top: 2px;" title="{{ $detailItems->map(fn($d) => $d->nama_barang . ' (' . $d->jumlah_diminta . ' ' . ($d->satuan ?? 'Unit') . ')')->join(', ') }}">
+                      {{ \Illuminate\Support\Str::limit($detailItems->map(fn($d) => $d->nama_barang . ' (' . $d->jumlah_diminta . ')')->join(', '), 55) }}
+                    </div>
+                  @elseif($detailItems->count() === 1)
+                    @php $onlyDet = $detailItems->first(); @endphp
+                    <div style="font-size: 12.5px; color: var(--text-secondary);">
+                      <i class="fas fa-box" style="margin-right: 4px; font-size: 10px;"></i>
+                      {{ $onlyDet->nama_barang }}
                     </div>
                   @else
                     <div style="font-size: 12.5px; color: var(--text-secondary);">
@@ -375,67 +380,32 @@ tr:hover { background: #f8faff; }
                 
                 <td>
                   <div class="action-group">
-                    {{-- Tombol Detail --}}
-                    <button class="btn-outline btn-detail" onclick="showDetail({{ $item->id }})">
+                    {{-- Tombol Detail (Sekaligus Ubah / Kurangi Barang per Item) --}}
+                    <button class="btn-outline btn-detail" onclick="showDetail({{ $item->id }})" title="Lihat rincian & atur jumlah barang disetujui">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
                       </svg>
-                      <span>Detail</span>
+                      <span>{{ $item->status === 'pending' ? 'Detail / Ubah' : 'Detail' }}</span>
                     </button>
 
                     @if($item->status === 'pending')
-                     {{-- Form Persetujuan Per-Item --}}
-                      <form action="{{ route('adminpersediaan.review-permintaan', $item->id) }}" method="POST" style="margin:0; min-width: 240px;">
+                      {{-- Tombol Cepat Setujui / Tolak (Tanpa Memperbesar Tabel) --}}
+                      <form action="{{ route('adminpersediaan.review-permintaan', $item->id) }}" method="POST" style="margin:0; display:inline-flex; gap:6px; align-items:center;">
                         @csrf
-                        @if($detailItems->count() > 0)
-                          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
-                            @foreach($detailItems as $det)
-                              @php $detStok = $det->persediaan->jumlah ?? 0; @endphp
-                              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;">
-                                <div style="font-size: 12px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
-                                  {{ $det->nama_barang }}
-                                </div>
-                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--text-secondary); margin-bottom: 4px;">
-                                  <span>Diminta: <strong>{{ $det->jumlah_diminta }}</strong> {{ $det->satuan ?? ($det->persediaan->satuan ?? '') }}</span>
-                                  <span>Stok: <strong>{{ $detStok }}</strong></span>
-                                </div>
-                                <input type="number" name="items_disetujui[{{ $det->id }}]" class="form-control"
-                                  value="{{ old('items_disetujui.' . $det->id, min($det->jumlah_diminta, $detStok)) }}"
-                                  min="0" max="{{ $detStok }}" required
-                                  style="padding: 5px 8px; font-size: 12.5px; width: 100%;"
-                                  title="Jumlah disetujui untuk {{ $det->nama_barang }}">
-                              </div>
-                            @endforeach
-                          </div>
-                        @else
-                          <div class="form-group">
-                              <label>Jumlah Diminta Pegawai:</label>
-                              <input type="text" class="form-control" value="{{ $item->jumlah_diminta }}" readonly>
-                          </div>
-
-                          <div class="form-group">
-                              <label>Jumlah Disetujui (Revisi Admin): <span class="text-danger">*</span></label>
-                              <input type="number" name="jumlah_disetujui" class="form-control" 
-                                    value="{{ old('jumlah_disetujui', $item->jumlah_diminta) }}" 
-                                    min="1" max="{{ $item->persediaan->jumlah ?? 0 }}" required>
-                              <small class="text-muted">Stok fisik tersedia: {{ $item->persediaan->jumlah ?? 0 }}</small>
-                          </div>
+                        @if($detailItems->count() === 0)
+                          <input type="hidden" name="jumlah_disetujui" value="{{ $item->jumlah_diminta }}">
                         @endif
-
-                        <div class="form-group" style="margin-top: 8px;">
-                            <label>Catatan / Alasan (Opsional):</label>
-                            <textarea name="komentar" class="form-control" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
-                        </div>
-
-                        <div style="margin-top: 12px; display: flex; gap: 10px;">
-                            <button type="submit" name="action" value="setuju" class="btn btn-primary style-btn" style="background: #10b981; border-color: #10b981; color: white;">
-                                <i class="fas fa-check"></i> Setujui
-                            </button>
-                            <button type="submit" name="action" value="tolak" class="btn btn-danger style-btn">
-                                <i class="fas fa-times"></i> Tolak
-                            </button>
-                        </div>
+                        <button type="submit" name="action" value="setuju" class="btn-outline" style="background: #ecfdf5; color: #059669; border-color: #a7f3d0;"
+                          onclick="return confirm('Setujui semua permintaan ({{ $isMulti ? $detailItems->count() . ' barang' : $totalDimintaShow . ' unit' }})? Untuk mengubah/mengurangi jumlah, klik Detail / Ubah.')">
+                          <i class="fas fa-check"></i>
+                          <span>Setujui</span>
+                        </button>
+                        <button type="submit" name="action" value="tolak" class="btn-outline" style="background: #fef2f2; color: #dc2626; border-color: #fecaca;"
+                          onclick="return confirm('Yakin ingin menolak permintaan ini?')">
+                          <i class="fas fa-times"></i>
+                          <span>Tolak</span>
+                        </button>
                       </form>
 
                     @elseif(in_array($item->status, ['diteruskan_kasubag', 'disetujui_kasubag', 'disetujui']))
