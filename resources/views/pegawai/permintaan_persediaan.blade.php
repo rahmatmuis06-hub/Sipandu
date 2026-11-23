@@ -246,7 +246,7 @@
               <span style="font-size: 11px; color: var(--muted); font-weight: 400;">Bisa meminta banyak barang persediaan sekaligus</span>
             </div>
 
-            <div style="border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #FFF;">
+            <div style="border: 1px solid var(--border); border-radius: 10px; overflow-x: auto; background: #FFF;">
               <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;" id="tabelBarangPermintaan">
                 <thead>
                   <tr style="background: #F8FAFC; border-bottom: 1px solid var(--border); text-align: left;">
@@ -254,7 +254,7 @@
                     <th style="padding: 9px 12px; font-weight: 700; color: #475569;">Nama Barang</th>
                     <th style="padding: 9px 12px; font-weight: 700; color: #475569;">Kode</th>
                     <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 80px;">Satuan</th>
-                    <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 70px;">Jumlah</th>
+                    <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 130px;">Jumlah</th>
                     <th style="padding: 9px 12px; font-weight: 700; color: #475569; width: 45px; text-align: center;">Aksi</th>
                   </tr>
                 </thead>
@@ -650,6 +650,7 @@ function tambahItemKeDaftarPermintaan() {
   if (existingIdx !== -1) {
     if (confirm(`Barang "${nama}" sudah ada di daftar. Apakah Anda ingin memperbarui jumlahnya menjadi ${jumlah} ${satuan}?`)) {
       daftarPermintaan[existingIdx].jumlah_diminta = jumlah;
+      daftarPermintaan[existingIdx].stok = stok;
       renderTabelPermintaan();
     }
     return;
@@ -660,6 +661,7 @@ function tambahItemKeDaftarPermintaan() {
     kode_barang: kode,
     nama_barang: nama,
     satuan: satuan,
+    stok: stok,
     jumlah_diminta: jumlah
   });
 
@@ -668,6 +670,48 @@ function tambahItemKeDaftarPermintaan() {
   // Reset form pilihan barang
   $('#persediaanSelect').val('').trigger('change');
   jumlahInput.value = 1;
+}
+
+function ubahJumlahItemPermintaan(idx, delta) {
+  const item = daftarPermintaan[idx];
+  if (!item) return;
+  const maxStok = item.stok > 0 ? item.stok : 999999;
+  let nextQty = (parseInt(item.jumlah_diminta, 10) || 1) + delta;
+  if (nextQty < 1) nextQty = 1;
+  if (nextQty > maxStok) {
+    alert(`Jumlah melebihi stok yang tersedia (${maxStok} ${item.satuan})!`);
+    nextQty = maxStok;
+  }
+  item.jumlah_diminta = nextQty;
+  renderTabelPermintaan();
+}
+
+function syncJumlahItemPermintaan(idx, inputEl) {
+  const item = daftarPermintaan[idx];
+  if (!item) return;
+  let val = parseInt(inputEl.value, 10);
+  if (isNaN(val)) return;
+  const maxStok = item.stok > 0 ? item.stok : 999999;
+  if (val > maxStok) val = maxStok;
+  if (val < 1) val = 1;
+  item.jumlah_diminta = val;
+  const hidden = document.getElementById(`hiddenQtyPermintaan_${idx}`);
+  if (hidden) hidden.value = val;
+}
+
+function setJumlahItemPermintaan(idx, rawVal) {
+  const item = daftarPermintaan[idx];
+  if (!item) return;
+  const maxStok = item.stok > 0 ? item.stok : 999999;
+  let val = parseInt(rawVal, 10);
+  if (isNaN(val) || val < 1) {
+    val = 1;
+  } else if (val > maxStok) {
+    alert(`Jumlah melebihi stok yang tersedia (${maxStok} ${item.satuan})!`);
+    val = maxStok;
+  }
+  item.jumlah_diminta = val;
+  renderTabelPermintaan();
 }
 
 function hapusItemPermintaan(idx) {
@@ -695,6 +739,7 @@ function renderTabelPermintaan() {
 
   let html = '';
   daftarPermintaan.forEach((item, i) => {
+    const maxStok = item.stok > 0 ? item.stok : 999999;
     html += `
       <tr style="border-bottom: 1px solid var(--border);">
         <td style="padding: 10px 12px; font-weight: 700; color: var(--muted);">${i + 1}</td>
@@ -704,11 +749,28 @@ function renderTabelPermintaan() {
           <input type="hidden" name="items[${i}][kode_barang]" value="${item.kode_barang}">
           <input type="hidden" name="items[${i}][nama_barang]" value="${item.nama_barang}">
           <input type="hidden" name="items[${i}][satuan]" value="${item.satuan}">
-          <input type="hidden" name="items[${i}][jumlah_diminta]" value="${item.jumlah_diminta}">
+          <input type="hidden" name="items[${i}][jumlah_diminta]" id="hiddenQtyPermintaan_${i}" value="${item.jumlah_diminta}">
         </td>
         <td style="padding: 10px 12px; font-family: monospace; font-size: 11.5px; color: #1E293B;">${item.kode_barang}</td>
         <td style="padding: 10px 12px; color: var(--primary); font-weight: 600;">${item.satuan}</td>
-        <td style="padding: 10px 12px; font-weight: 700; color: #10B981;">${item.jumlah_diminta}</td>
+        <td style="padding: 8px 10px;">
+          <div style="display: inline-flex; align-items: center; gap: 4px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 2px 4px;">
+            <button type="button" onclick="ubahJumlahItemPermintaan(${i}, -1)"
+              style="width: 24px; height: 24px; border: none; background: #e2e8f0; color: #334155; border-radius: 6px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+              title="Kurangi jumlah">−</button>
+            <input type="number"
+              value="${item.jumlah_diminta}"
+              min="1"
+              max="${maxStok}"
+              oninput="syncJumlahItemPermintaan(${i}, this)"
+              onchange="setJumlahItemPermintaan(${i}, this.value)"
+              style="width: 46px; text-align: center; border: none; background: transparent; font-weight: 700; color: #059669; font-size: 13px; outline: none;">
+            <button type="button" onclick="ubahJumlahItemPermintaan(${i}, 1)"
+              style="width: 24px; height: 24px; border: none; background: #dbeafe; color: #1d4ed8; border-radius: 6px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;"
+              title="Tambah jumlah">+</button>
+          </div>
+          ${item.stok > 0 ? `<div style="font-size: 10px; color: #64748b; margin-top: 2px;">Stok: ${item.stok}</div>` : ''}
+        </td>
         <td style="padding: 10px 12px; text-align: center;">
           <button type="button" onclick="hapusItemPermintaan(${i})" style="background: #FEE2E2; color: #DC2626; border: none; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;" title="Hapus dari daftar">
             <i class="fas fa-trash-alt" style="font-size: 11px;"></i>
