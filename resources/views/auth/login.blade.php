@@ -167,7 +167,7 @@
             <div class="mb-5">
               <div class="flex justify-between items-center mb-2">
                 <label for="loginPassword" class="text-sm font-semibold text-navy-800">Password</label>
-                <button type="button" class="text-xs text-navy-500 hover:text-navy-700 font-medium transition">Lupa password?</button>
+                <button type="button" onclick="openForgotModal()" class="text-xs text-navy-500 hover:text-navy-700 font-medium transition cursor-pointer underline-offset-2 hover:underline">Lupa password?</button>
               </div>
               <div class="relative">
                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
@@ -240,10 +240,202 @@
   </div>
 </div>
 
+<!-- Modal Lupa Password -->
+@php
+  $waPhone = $operatorPhone ?? '6281313266661';
+  $displayPhone = str_starts_with($waPhone, '62') ? '0' . substr($waPhone, 2) : $waPhone;
+@endphp
+<div id="forgotModal" class="hidden fixed inset-0 z-[250] items-center justify-center p-4 bg-navy-950/70 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="forgotModalTitle" onclick="if (event.target === this) closeForgotModal()">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100">
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-navy-800 to-navy-600 px-6 py-4 flex items-center justify-between text-white">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
+          <i data-lucide="key-round" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 id="forgotModalTitle" class="text-base font-bold leading-tight">Lupa Password Akun</h3>
+          <p class="text-xs text-blue-100/90">Ajukan reset password ke Operator Sistem</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeForgotModal()" class="text-white/75 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer" aria-label="Tutup modal">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="p-6 space-y-4">
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 text-xs text-navy-800 leading-relaxed flex gap-2.5">
+        <i data-lucide="shield-check" class="w-4 h-4 text-navy-600 flex-shrink-0 mt-0.5"></i>
+        <span>Demi keamanan akun BMN, reset password dilakukan oleh <strong>Operator / Super Admin</strong> melalui menu <strong>Kelola Pengguna</strong>. Isi data Anda di bawah untuk mengirim permintaan resmi.</span>
+      </div>
+
+      <div id="forgotFeedback" class="hidden rounded-xl p-3 text-xs font-medium flex items-start gap-2"></div>
+
+      <div class="space-y-3">
+        <div>
+          <label for="forgotName" class="block text-xs font-semibold text-navy-800 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
+          <input id="forgotName" type="text" placeholder="Masukkan nama lengkap Anda" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-navy-900 placeholder-gray-400 focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-500/20">
+        </div>
+
+        <div>
+          <label for="forgotUsername" class="block text-xs font-semibold text-navy-800 mb-1">Username Akun <span class="text-red-500">*</span></label>
+          <input id="forgotUsername" type="text" placeholder="Masukkan username login Anda" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-navy-900 placeholder-gray-400 focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-500/20">
+        </div>
+
+        <div>
+          <label for="forgotNip" class="block text-xs font-semibold text-navy-800 mb-1">NIP / NIK <span class="text-gray-400 font-normal">(opsional, membantu verifikasi)</span></label>
+          <input id="forgotNip" type="text" placeholder="Masukkan NIP atau NIK" class="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm text-navy-900 placeholder-gray-400 focus:outline-none focus:border-navy-500 focus:ring-2 focus:ring-navy-500/20">
+        </div>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+        <button type="button" onclick="sendForgotWhatsApp()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl shadow-sm transition flex items-center justify-center gap-2 cursor-pointer">
+          <i data-lucide="message-circle" class="w-4 h-4"></i>
+          <span>Kirim WhatsApp</span>
+        </button>
+        <button type="button" onclick="copyForgotMessage()" class="w-full py-2.5 px-4 bg-navy-50 hover:bg-navy-100 text-navy-800 border border-navy-200 text-sm font-semibold rounded-xl transition flex items-center justify-center gap-2 cursor-pointer">
+          <i data-lucide="copy" class="w-4 h-4"></i>
+          <span>Salin Pesan</span>
+        </button>
+      </div>
+
+      <!-- Kontak Resmi Alternatif -->
+      <div class="pt-3 border-t border-gray-100 text-xs text-gray-500 space-y-1">
+        <p class="font-semibold text-gray-700">Kontak Bantuan Resmi (BPMP Gorontalo):</p>
+        <p class="flex items-center gap-1.5">
+          <i data-lucide="phone" class="w-3.5 h-3.5 text-navy-500"></i>
+          <span>Hotline / WA: <a href="https://wa.me/{{ $waPhone }}" target="_blank" rel="noopener noreferrer" class="text-navy-700 font-semibold hover:underline">{{ $displayPhone }}</a></span>
+        </p>
+        <p class="flex items-center gap-1.5">
+          <i data-lucide="mail" class="w-3.5 h-3.5 text-navy-500"></i>
+          <span>Email: <a href="mailto:bpmpgorontalo@kemdikdasmen.go.id?subject=Permintaan%20Reset%20Password%20SIBMN" class="text-navy-700 font-semibold hover:underline">bpmpgorontalo@kemdikdasmen.go.id</a></span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast container -->
 <div id="toastContainer" class="fixed top-4 right-4 z-[300] space-y-2 pointer-events-none"></div>
 
 <script>
+  const operatorWaPhone = @json($waPhone);
+
+  function openForgotModal() {
+    const modal = document.getElementById('forgotModal');
+    const loginUser = document.getElementById('loginUsername')?.value?.trim() || '';
+    const forgotUser = document.getElementById('forgotUsername');
+    const feedback = document.getElementById('forgotFeedback');
+
+    if (feedback) {
+      feedback.classList.add('hidden');
+      feedback.textContent = '';
+    }
+    if (forgotUser && loginUser) {
+      forgotUser.value = loginUser;
+    }
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    lucide.createIcons();
+
+    setTimeout(() => {
+      const nameInput = document.getElementById('forgotName');
+      if (nameInput && !nameInput.value.trim()) {
+        nameInput.focus();
+      } else if (forgotUser) {
+        forgotUser.focus();
+      }
+    }, 50);
+  }
+
+  function closeForgotModal() {
+    const modal = document.getElementById('forgotModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  function showForgotFeedback(type, message) {
+    const box = document.getElementById('forgotFeedback');
+    if (!box) return;
+    const isError = type === 'error';
+    box.className = isError
+      ? 'rounded-xl p-3 text-xs font-medium flex items-start gap-2 bg-red-50 border border-red-200 text-red-700'
+      : 'rounded-xl p-3 text-xs font-medium flex items-start gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700';
+    box.textContent = message;
+    box.classList.remove('hidden');
+  }
+
+  function buildForgotMessage() {
+    const nama = document.getElementById('forgotName')?.value?.trim() || '';
+    const username = document.getElementById('forgotUsername')?.value?.trim() || '';
+    const nip = document.getElementById('forgotNip')?.value?.trim() || '';
+
+    if (!nama || !username) {
+      showForgotFeedback('error', 'Mohon isi Nama Lengkap dan Username Akun terlebih dahulu.');
+      if (!nama) {
+        document.getElementById('forgotName')?.focus();
+      } else {
+        document.getElementById('forgotUsername')?.focus();
+      }
+      return null;
+    }
+
+    const lines = [
+      'Halo Operator SIBMN BPMP Provinsi Gorontalo,',
+      'Saya mengajukan permintaan reset password akun dengan data berikut:',
+      `- Nama: ${nama}`,
+      `- Username: ${username}`,
+    ];
+    if (nip) {
+      lines.push(`- NIP/NIK: ${nip}`);
+    }
+    lines.push('', 'Mohon bantuannya untuk mereset password akun tersebut. Terima kasih.');
+    return lines.join('\n');
+  }
+
+  function sendForgotWhatsApp() {
+    const msg = buildForgotMessage();
+    if (!msg) return;
+    const url = `https://wa.me/${operatorWaPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+    showForgotFeedback('success', 'Mengarahkan ke WhatsApp Operator. Silakan kirim pesan yang sudah disiapkan.');
+  }
+
+  async function copyForgotMessage() {
+    const msg = buildForgotMessage();
+    if (!msg) return;
+
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(msg);
+      } else {
+        const tmp = document.createElement('textarea');
+        tmp.value = msg;
+        tmp.style.position = 'fixed';
+        tmp.style.left = '-9999px';
+        document.body.appendChild(tmp);
+        tmp.select();
+        document.execCommand('copy');
+        document.body.removeChild(tmp);
+      }
+      showForgotFeedback('success', 'Pesan permintaan reset password berhasil disalin.');
+    } catch (e) {
+      showForgotFeedback('error', 'Gagal menyalin pesan otomatis. Silakan hubungi nomor hotline atau email resmi di bawah.');
+    }
+  }
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      const modal = document.getElementById('forgotModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        closeForgotModal();
+      }
+    }
+  });
+
   // Auto-fill dari tombol "Login Cepat" di landing page
   (function() {
     const u = sessionStorage.getItem('prefill_u');

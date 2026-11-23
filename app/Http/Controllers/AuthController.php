@@ -41,12 +41,37 @@ class AuthController extends Controller
         // 4. Hitung jumlah Peran/Role yang saat ini terpakai di sistem
         $peranTersedia = User::distinct('role')->count('role');
 
+        // 5. Nomor WhatsApp Operator/Superadmin untuk bantuan lupa password
+        $operatorPhone = '6281313266661';
+        try {
+            $rawPhone = User::where('role', 'superadmin')
+                ->where('is_active', true)
+                ->whereNotNull('nomor_telepon')
+                ->where('nomor_telepon', '!=', '')
+                ->value('nomor_telepon');
+
+            if ($rawPhone) {
+                $digits = preg_replace('/\D+/', '', (string) $rawPhone);
+                if (str_starts_with($digits, '0')) {
+                    $digits = '62' . substr($digits, 1);
+                } elseif (! str_starts_with($digits, '62') && strlen($digits) >= 9) {
+                    $digits = '62' . $digits;
+                }
+                if (strlen($digits) >= 10) {
+                    $operatorPhone = $digits;
+                }
+            }
+        } catch (\Throwable) {
+            // Gunakan nomor hotline default BPMP Gorontalo
+        }
+
         return view('auth.login', [
             'alreadyLoggedIn' => false,
             'totalAset' => $totalAset,
             'persentaseBaik' => $persentaseBaik,
             'penggunaAktif' => $penggunaAktif,
             'peranTersedia' => $peranTersedia,
+            'operatorPhone' => $operatorPhone,
         ]);
     }
 
