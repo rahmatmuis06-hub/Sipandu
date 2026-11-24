@@ -190,6 +190,7 @@ Route::middleware('auth')->group(function () {
             Route::put('/barang-lainnya/unit/{unitId}', [AdminPersediaanController::class, 'updateUnitBarangLainnya'])->name('barang-lainnya.unit.update');
             Route::post('/barang-lainnya/unit/{unitId}/release', [AdminPersediaanController::class, 'releaseUnitBarangLainnya'])->name('barang-lainnya.unit.release');
             Route::delete('/barang-lainnya/unit/{unitId}', [AdminPersediaanController::class, 'destroyUnitBarangLainnya'])->name('barang-lainnya.unit.destroy');
+            Route::put('/barang-lainnya/peminjaman/{id}/kode-unit', [AdminPersediaanController::class, 'updatePeminjamanBarangLainnyaUnits'])->name('barang-lainnya.peminjaman.update-units');
             Route::post('/barang-lainnya/peminjaman/{id}/approve', [AdminPersediaanController::class, 'approvePeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.approve');
             Route::post('/barang-lainnya/peminjaman/{id}/reject', [AdminPersediaanController::class, 'rejectPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.reject');
             Route::post('/barang-lainnya/peminjaman/{id}/return', [AdminPersediaanController::class, 'returnPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.return');
@@ -479,6 +480,7 @@ Route::middleware('auth')->group(function () {
             //PEMINJAMAN BARANG LAINNYA
             Route::get('/peminjaman-barang-lainnya', [PegawaiController::class, 'peminjamanBarangLainnya'])->name('peminjaman-barang-lainnya');
             Route::post('/peminjaman-barang-lainnya', [PegawaiController::class, 'storePeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.store');
+            Route::put('/peminjaman-barang-lainnya/{id}', [PegawaiController::class, 'updatePeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.update');
             Route::post('/peminjaman-barang-lainnya/{id}/cancel', [PegawaiController::class, 'cancelPeminjamanBarangLainnya'])->name('peminjaman-barang-lainnya.cancel');
 
             //PENGEMBALIAN BARANG LAINNYA

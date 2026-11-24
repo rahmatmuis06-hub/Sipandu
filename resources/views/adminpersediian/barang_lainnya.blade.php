@@ -181,7 +181,7 @@
 
   .approve-unit-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
     gap: 8px;
     margin-top: 8px;
   }
@@ -455,6 +455,7 @@
                 'unit_ids'          => is_array($p->unit_ids) ? $p->unit_ids : [],
                 'kode_unit'         => $p->kode_unit,
                 'keperluan'         => $p->keperluan,
+                'catatan_admin'     => $p->catatan_admin,
                 'pemohon'           => $p->user?->name ?? 'Pegawai',
               ];
             @endphp
@@ -495,13 +496,20 @@
                 @endif
               </td>
               <td>
-                <div style="display: flex; gap: 6px;">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                   @if($p->status === 'pending')
+                    <button type="button"
+                            class="btn-action"
+                            style="background: #EFF6FF; color: #2563EB; border-color: #BFDBFE; width: auto; padding: 0 10px; gap: 5px; font-size: 11.5px; font-weight: 700;"
+                            title="Edit Kode Unit sebelum disetujui"
+                            onclick='openPinjamUnitModal(@json($approvePayload), "edit")'>
+                      <i class="fas fa-pen"></i> Edit Kode
+                    </button>
                     <button type="button"
                             class="btn-action"
                             style="background: #ecfdf5; color: #059669; border-color: #a7f3d0; width: auto; padding: 0 10px; gap: 5px; font-size: 11.5px; font-weight: 700;"
                             title="Verifikasi Kode Unit & Setujui Peminjaman"
-                            onclick='openApprovePinjam(@json($approvePayload))'>
+                            onclick='openPinjamUnitModal(@json($approvePayload), "approve")'>
                       <i class="fas fa-check"></i> Setujui
                     </button>
                     <button type="button" class="btn-action" style="background: #fef2f2; color: #dc2626; border-color: #fecaca;" title="Tolak Peminjaman" onclick="openRejectPinjam({{ $p->id }}, '{{ addslashes($p->nama_barang) }}', '{{ addslashes($p->user?->name ?? 'Pegawai') }}')">
@@ -746,17 +754,17 @@
   </div>
 </div>
 
-{{-- MODAL SETUJUI & KONFIRMASI KODE UNIT (OPSI 3 HYBRID) --}}
+{{-- MODAL EDIT KODE & SETUJUI PEMINJAMAN (OPSI 3 HYBRID) --}}
 <div id="modalApprovePinjam" class="modal-overlay">
-  <div class="modal" style="max-width: 620px;">
-    <div style="padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #ECFDF5;">
+  <div class="modal" style="max-width: 650px;">
+    <div id="pinjamModalHeader" style="padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #ECFDF5;">
       <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="width: 38px; height: 38px; border-radius: 10px; background: #D1FAE5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-          <i class="fas fa-check-circle"></i>
+        <div id="pinjamModalIconBox" style="width: 38px; height: 38px; border-radius: 10px; background: #D1FAE5; color: #059669; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+          <i id="pinjamModalIcon" class="fas fa-check-circle"></i>
         </div>
         <div>
-          <div style="font-size: 16px; font-weight: 800; color: #065F46;">Setujui & Verifikasi Kode Unit</div>
-          <div style="font-size: 12px; color: #047857;">Konfirmasi kode unit pilihan pegawai atau sesuaikan dengan fisik di gudang</div>
+          <div style="font-size: 16px; font-weight: 800; color: #065F46;" id="pinjamModalTitle">Setujui & Verifikasi Kode Unit</div>
+          <div style="font-size: 12px; color: #047857;" id="pinjamModalSub">Konfirmasi kode unit pilihan pegawai atau sesuaikan dengan kode cokrol di gudang</div>
         </div>
       </div>
       <button type="button" onclick="closeModal('modalApprovePinjam')" class="btn-action">✕</button>
@@ -764,6 +772,7 @@
 
     <form method="POST" id="formApprovePinjam" action="" onsubmit="return validateApproveUnits()">
       @csrf
+      <input type="hidden" name="_method" id="pinjamModalMethod" value="POST">
       <div style="padding: 20px 24px; max-height: 72vh; overflow-y: auto;">
         <div style="background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
@@ -776,7 +785,7 @@
               <div style="font-weight: 800; color: #b45309;" id="appBarang">-</div>
             </div>
             <div>
-              <span style="color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700;">Kode Unit Pilihan Pegawai</span>
+              <span style="color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700;">Kode Unit Pengajuan Saat Ini</span>
               <div style="margin-top: 2px;" id="appPilihanPegawai">-</div>
             </div>
             <div>
@@ -792,21 +801,31 @@
 
         <div class="form-group">
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-            <label class="form-label" style="margin-bottom: 0;">Pilih / Pastikan Kode Unit yang Diserahkan <span style="color: var(--danger);">*</span></label>
+            <label class="form-label" style="margin-bottom: 0;" id="pinjamGridLabel">Pilih / Edit Kode Unit yang Dipinjam <span style="color: var(--danger);">*</span></label>
             <span id="approveSelectedSummary" style="font-size: 11.5px; font-weight: 800; background: #ECFDF5; color: #059669; border: 1px solid #A7F3D0; padding: 2px 10px; border-radius: 99px;">0 unit dipilih</span>
+          </div>
+          <div style="font-size: 11.5px; color: var(--muted); margin-top: 4px;">
+            Centang unit yang dipinjam. Anda juga dapat mengedit langsung nama kode unit di dalam kartu sesuai kode cokrol fisik.
           </div>
           <div class="approve-unit-grid" id="approveUnitGrid"></div>
         </div>
 
+        <div class="form-group" style="background:#FFFBEB; border:1px dashed #FCD34D; border-radius:10px; padding:10px 12px;">
+          <label class="form-label" style="color:#92400E; margin-bottom:4px; font-size:12px;">
+            <i class="fas fa-plus-circle"></i> Atau Tambah Kode Unit Cokrol Baru &amp; Pilih Otomatis <span style="color:var(--muted); font-weight:400;">(Opsional)</span>
+          </label>
+          <input type="text" name="new_kode_unit" id="pinjamNewKodeUnit" class="form-input" style="padding:7px 10px; font-size:12.5px;" placeholder="Misal: CKR-09 (kosongkan jika memilih dari kartu di atas)" oninput="updateApproveSelectedSummary()">
+        </div>
+
         <div class="form-group" style="margin-bottom: 0;">
           <label class="form-label">Catatan Admin <span style="color: var(--muted); font-weight: 400;">(Opsional, misal jika kode unit diganti)</span></label>
-          <input type="text" name="catatan_admin" class="form-input" placeholder="Contoh: Diserahkan Kode C karena Kode B sedang dipakai di ruang rapat...">
+          <input type="text" name="catatan_admin" id="pinjamCatatanAdmin" class="form-input" placeholder="Contoh: Disesuaikan menjadi Kode CKR-02...">
         </div>
       </div>
 
       <div style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: #F8FAFC;">
         <button type="button" onclick="closeModal('modalApprovePinjam')" class="btn btn-secondary">Batal</button>
-        <button type="submit" class="btn btn-primary" style="background: #059669;"><i class="fas fa-check"></i> Setujui & Serahkan Unit</button>
+        <button type="submit" id="pinjamModalSubmitBtn" class="btn btn-primary" style="background: #059669;"><i class="fas fa-check"></i> Setujui & Serahkan Unit</button>
       </div>
     </form>
   </div>
@@ -1037,11 +1056,59 @@ function kembalikanKodeUnit(unitId) {
   }
 }
 
+let currentPinjamModalMode = 'approve';
+
 function openApprovePinjam(payload) {
-  document.getElementById('formApprovePinjam').action = `/adminpersediaan/barang-lainnya/peminjaman/${payload.id}/approve`;
+  openPinjamUnitModal(payload, 'approve');
+}
+
+function openPinjamUnitModal(payload, mode = 'approve') {
+  currentPinjamModalMode = mode === 'edit' ? 'edit' : 'approve';
+  const isEditMode = currentPinjamModalMode === 'edit';
+
+  const form = document.getElementById('formApprovePinjam');
+  const methodInput = document.getElementById('pinjamModalMethod');
+  const header = document.getElementById('pinjamModalHeader');
+  const iconBox = document.getElementById('pinjamModalIconBox');
+  const iconEl = document.getElementById('pinjamModalIcon');
+  const titleEl = document.getElementById('pinjamModalTitle');
+  const subEl = document.getElementById('pinjamModalSub');
+  const gridLabelEl = document.getElementById('pinjamGridLabel');
+  const submitBtn = document.getElementById('pinjamModalSubmitBtn');
+
+  if (isEditMode) {
+    form.action = `/adminpersediaan/barang-lainnya/peminjaman/${payload.id}/kode-unit`;
+    methodInput.value = 'PUT';
+    header.style.background = '#EFF6FF';
+    iconBox.style.background = '#DBEAFE';
+    iconBox.style.color = '#2563EB';
+    iconEl.className = 'fas fa-pen';
+    titleEl.style.color = '#1E40AF';
+    titleEl.textContent = 'Edit Kode Unit Peminjaman (Pending)';
+    subEl.textContent = 'Sesuaikan kode unit cokrol sebelum permohonan disetujui';
+    gridLabelEl.innerHTML = 'Pilih / Edit Kode Unit Pengajuan <span style="color: var(--danger);">*</span>';
+    submitBtn.style.background = '#2563EB';
+    submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Perubahan Kode';
+  } else {
+    form.action = `/adminpersediaan/barang-lainnya/peminjaman/${payload.id}/approve`;
+    methodInput.value = 'POST';
+    header.style.background = '#ECFDF5';
+    iconBox.style.background = '#D1FAE5';
+    iconBox.style.color = '#059669';
+    iconEl.className = 'fas fa-check-circle';
+    titleEl.style.color = '#065F46';
+    titleEl.textContent = 'Setujui & Verifikasi Kode Unit';
+    subEl.textContent = 'Konfirmasi kode unit pilihan pegawai atau sesuaikan dengan kode cokrol di gudang';
+    gridLabelEl.innerHTML = 'Pilih / Pastikan Kode Unit yang Diserahkan <span style="color: var(--danger);">*</span>';
+    submitBtn.style.background = '#059669';
+    submitBtn.innerHTML = '<i class="fas fa-check"></i> Setujui & Serahkan Unit';
+  }
+
   document.getElementById('appPemohon').textContent = payload.pemohon || 'Pegawai';
   document.getElementById('appBarang').textContent = `${payload.nama_barang} (${payload.jumlah} ${payload.satuan || 'unit'})`;
   document.getElementById('appKeperluan').textContent = payload.keperluan || '-';
+  document.getElementById('pinjamNewKodeUnit').value = '';
+  document.getElementById('pinjamCatatanAdmin').value = payload.catatan_admin || '';
 
   const pilihanEl = document.getElementById('appPilihanPegawai');
   if (payload.kode_unit) {
@@ -1073,7 +1140,7 @@ function openApprovePinjam(payload) {
   conflictAlert.style.display = hasConflict ? 'block' : 'none';
 
   if (!units.length) {
-    grid.innerHTML = '<div style="grid-column:1/-1; color:#DC2626; font-size:12.5px;">Tidak ada data unit untuk barang ini.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1; color:#DC2626; font-size:12.5px;">Belum ada unit terdaftar. Tambahkan kode unit baru pada kotak di bawah.</div>';
   } else {
     grid.innerHTML = units.map(u => {
       const uid = Number(u.id);
@@ -1086,7 +1153,7 @@ function openApprovePinjam(payload) {
         const label = u.status === 'dipinjam' ? `Dipinjam (${escHtml(u.peminjam_nama || 'Pegawai')})` : escHtml(u.status.toUpperCase());
         badgeHtml = `<span style="font-size:10px; background:#FEE2E2; color:#B91C1C; padding:1px 6px; border-radius:99px; font-weight:700; margin-top:3px;">${label}</span>`;
       } else if (isRequestedByThis) {
-        badgeHtml = `<span style="font-size:10px; background:#FEF3C7; color:#B45309; padding:1px 6px; border-radius:99px; font-weight:800; margin-top:3px;">Pilihan Pegawai</span>`;
+        badgeHtml = `<span style="font-size:10px; background:#FEF3C7; color:#B45309; padding:1px 6px; border-radius:99px; font-weight:800; margin-top:3px;">Pilihan Saat Ini</span>`;
       } else {
         const otherPending = (u.pending_list || []).filter(p => Number(p.peminjaman_id) !== Number(payload.id));
         if (otherPending.length > 0) {
@@ -1097,26 +1164,59 @@ function openApprovePinjam(payload) {
       }
 
       return `
-        <label class="approve-unit-card ${isAvailable ? '' : 'disabled'} ${isPreselected ? 'selected' : ''}">
+        <div class="approve-unit-card ${isAvailable ? '' : 'disabled'} ${isPreselected ? 'selected' : ''}"
+             onclick="toggleApproveUnitCard(event, ${uid}, ${isAvailable ? 'true' : 'false'})">
           <input type="checkbox"
+                 id="approveUnitCb_${uid}"
                  name="unit_ids[]"
                  value="${uid}"
                  data-kode="${escHtml(u.kode_unit)}"
                  ${isAvailable ? '' : 'disabled'}
                  ${isPreselected ? 'checked' : ''}
                  onchange="onApproveUnitToggle(this)">
-          <div style="font-size:13px; font-weight:800; color:${isAvailable ? '#0F172A' : '#94A3B8'}; display:flex; align-items:center; gap:5px;">
+          <div style="font-size:13px; font-weight:800; color:${isAvailable ? '#0F172A' : '#94A3B8'}; display:flex; align-items:center; justify-content:center; gap:5px; width:100%;">
             <i class="fas ${isPreselected ? 'fa-check-circle' : (isAvailable ? 'fa-tag' : 'fa-lock')}" style="font-size:11px; color:${isPreselected ? '#059669' : 'inherit'};"></i>
-            <span>Kode ${escHtml(u.kode_unit)}</span>
+            ${isAvailable ? `
+              <input type="text"
+                     name="unit_codes[${uid}]"
+                     value="${escHtml(u.kode_unit)}"
+                     data-unit-id="${uid}"
+                     maxlength="50"
+                     title="Edit nama kode unit fisik (opsional)"
+                     onclick="event.stopPropagation()"
+                     oninput="onUnitInlineCodeInput(this)"
+                     style="width:74px; text-align:center; padding:2px 5px; font-size:12px; font-weight:800; border:1px dashed #CBD5E1; border-radius:6px; background:#FFFFFF; color:#0F172A;">
+            ` : `<span>Kode ${escHtml(u.kode_unit)}</span>`}
           </div>
           ${badgeHtml}
-        </label>
+        </div>
       `;
     }).join('');
   }
 
   updateApproveSelectedSummary();
   openModal('modalApprovePinjam');
+}
+
+function toggleApproveUnitCard(event, uid, isAvailable) {
+  if (!isAvailable) return;
+  if (event.target && event.target.tagName === 'INPUT' && event.target.type === 'text') {
+    return;
+  }
+  const cb = document.getElementById(`approveUnitCb_${uid}`);
+  if (cb && !cb.disabled) {
+    cb.checked = !cb.checked;
+    onApproveUnitToggle(cb);
+  }
+}
+
+function onUnitInlineCodeInput(inputEl) {
+  const uid = inputEl.dataset.unitId;
+  const cb = document.getElementById(`approveUnitCb_${uid}`);
+  if (cb) {
+    cb.dataset.kode = inputEl.value.trim() || cb.dataset.kode;
+  }
+  updateApproveSelectedSummary();
 }
 
 function onApproveUnitToggle(cb) {
@@ -1140,8 +1240,9 @@ function onApproveUnitToggle(cb) {
 
 function updateApproveSelectedSummary() {
   const checked = Array.from(document.querySelectorAll('#approveUnitGrid input[type="checkbox"]:checked'));
+  const newCode = (document.getElementById('pinjamNewKodeUnit')?.value || '').trim();
   const el = document.getElementById('approveSelectedSummary');
-  if (!checked.length) {
+  if (!checked.length && !newCode) {
     el.textContent = 'Belum ada unit dipilih';
     el.style.background = '#FEF2F2';
     el.style.color = '#DC2626';
@@ -1149,7 +1250,11 @@ function updateApproveSelectedSummary() {
     return;
   }
   const codes = checked.map(c => c.dataset.kode);
-  el.textContent = `Diserahkan (${codes.length}): Kode ${codes.join(', ')}`;
+  if (newCode) {
+    codes.push(newCode + ' (Baru)');
+  }
+  const prefix = currentPinjamModalMode === 'edit' ? 'Dipilih' : 'Diserahkan';
+  el.textContent = `${prefix} (${codes.length}): Kode ${codes.join(', ')}`;
   el.style.background = '#ECFDF5';
   el.style.color = '#059669';
   el.style.borderColor = '#A7F3D0';
@@ -1157,8 +1262,9 @@ function updateApproveSelectedSummary() {
 
 function validateApproveUnits() {
   const checked = document.querySelectorAll('#approveUnitGrid input[type="checkbox"]:checked');
-  if (!checked.length) {
-    alert('Silakan pilih minimal 1 Kode Unit yang akan diserahkan kepada pegawai!');
+  const newCode = (document.getElementById('pinjamNewKodeUnit')?.value || '').trim();
+  if (!checked.length && !newCode) {
+    alert('Silakan pilih minimal 1 Kode Unit atau masukkan Kode Unit baru!');
     return false;
   }
   return true;

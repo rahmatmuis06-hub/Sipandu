@@ -412,6 +412,47 @@ class AdminPersediaanController extends Controller
     }
 
     /**
+     * ⚡ EDIT KODE UNIT PENGAJUAN PEMINJAMAN SEBELUM DISETUJUI (STATUS PENDING)
+     */
+    public function updatePeminjamanBarangLainnyaUnits(Request $request, $id)
+    {
+        $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
+
+        $pinjam = PeminjamanBarangLainnya::findOrFail($id);
+
+        if ($pinjam->status !== 'pending') {
+            return back()->with('error', 'Kode unit pengajuan hanya dapat diedit sebelum disetujui (status masih Pending).');
+        }
+
+        $validated = $request->validate([
+            'unit_ids'      => 'nullable|array',
+            'unit_ids.*'    => 'integer',
+            'unit_codes'    => 'nullable|array',
+            'unit_codes.*'  => 'nullable|string|max:50',
+            'new_kode_unit' => 'nullable|string|max:50',
+            'catatan_admin' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $updated = BarangLainnyaUnitService::updatePendingLoanUnits(
+                $pinjam,
+                (array) ($validated['unit_ids'] ?? []),
+                $request->has('catatan_admin') ? ($validated['catatan_admin'] ?? null) : null,
+                [],
+                (array) ($validated['unit_codes'] ?? []),
+                $validated['new_kode_unit'] ?? null
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $unitInfo = $updated->kode_unit ? " menjadi Kode Unit: {$updated->kode_unit}" : '';
+        return redirect()->route('adminpersediaan.barang-lainnya', ['tab' => 'pinjam'])
+            ->with('success', "Kode unit pengajuan '{$updated->nama_barang}' oleh {$updated->user?->name} berhasil diperbarui{$unitInfo}!");
+    }
+
+    /**
      * ⚡ SETUJUI PEMINJAMAN BARANG LAINNYA (OPSI 3: KONFIRMASI / PENYESUAIAN KODE UNIT OLEH ADMIN)
      */
     public function approvePeminjamanBarangLainnya(Request $request, $id)
@@ -425,13 +466,24 @@ class AdminPersediaanController extends Controller
             return back()->with('error', 'Status peminjaman sudah tidak dapat diubah.');
         }
 
+        $request->validate([
+            'unit_ids'      => 'nullable|array',
+            'unit_ids.*'    => 'integer',
+            'unit_codes'    => 'nullable|array',
+            'unit_codes.*'  => 'nullable|string|max:50',
+            'new_kode_unit' => 'nullable|string|max:50',
+            'catatan_admin' => 'nullable|string|max:500',
+        ]);
+
         try {
             $requestedUnitIds = (array) $request->input('unit_ids', []);
             BarangLainnyaUnitService::assignUnitsOnApproval(
                 $pinjam,
                 $requestedUnitIds,
                 Auth::id(),
-                $request->input('catatan_admin')
+                $request->input('catatan_admin'),
+                (array) $request->input('unit_codes', []),
+                $request->input('new_kode_unit')
             );
             $pinjam->refresh();
         } catch (\RuntimeException $e) {

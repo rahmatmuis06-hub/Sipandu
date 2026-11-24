@@ -1154,7 +1154,83 @@ class PegawaiController extends Controller
                 ->get();
         }
 
+        if (Schema::hasTable('barang_lainnya') && $riwayat->isNotEmpty()) {
+            $missingBarangIds = $riwayat->pluck('barang_lainnya_id')
+                ->filter()
+                ->unique()
+                ->diff(array_keys($unitsByBarangId))
+                ->values()
+                ->all();
+
+            if (!empty($missingBarangIds)) {
+                $extraBarangs = BarangLainnya::with('units')->whereIn('id', $missingBarangIds)->get();
+                foreach ($extraBarangs as $eb) {
+                    $mapped = $eb->units->map(function ($u) use ($pendingCountByUnitId) {
+                        return [
+                            'id'            => $u->id,
+                            'kode_unit'     => $u->kode_unit,
+                            'status'        => $u->status,
+                            'keterangan'    => $u->keterangan,
+                            'pending_count' => $pendingCountByUnitId[$u->id] ?? 0,
+                        ];
+                    });
+                    $unitsByBarangId[$eb->id] = $mapped->sort(function ($a, $b) {
+                        return strnatcasecmp((string) ($a['kode_unit'] ?? ''), (string) ($b['kode_unit'] ?? ''));
+                    })->values()->all();
+                }
+            }
+        }
+
         return view('pegawai.peminjaman_barang_lainnya', compact('barangLainnya', 'riwayat', 'unitsByBarangId'));
+    }
+
+    public function updatePeminjamanBarangLainnya(Request $request, $id)
+    {
+        $this->ensureBarangLainnyaTable();
+        BarangLainnyaUnitService::syncAllUnindexed();
+
+        $pinjam = PeminjamanBarangLainnya::where('user_id', Auth::id())->findOrFail($id);
+
+        if ($pinjam->status !== 'pending') {
+            return back()->with('error', 'Peminjaman yang sudah diproses admin tidak dapat diubah lagi.');
+        }
+
+        $validated = $request->validate([
+            'unit_ids'        => 'required|array|min:1',
+            'unit_ids.*'      => 'integer',
+            'tanggal_pinjam'  => 'nullable|date',
+            'tanggal_kembali' => 'nullable|date|after_or_equal:tanggal_pinjam',
+            'keperluan'       => 'nullable|string|max:1000',
+        ], [
+            'unit_ids.required'              => 'Silakan pilih minimal 1 Kode Unit barang.',
+            'unit_ids.min'                   => 'Silakan pilih minimal 1 Kode Unit barang.',
+            'tanggal_kembali.after_or_equal' => 'Tanggal pengembalian harus sama atau setelah tanggal pinjam.',
+        ]);
+
+        $extraFields = [];
+        if (!empty($validated['tanggal_pinjam'])) {
+            $extraFields['tanggal_pinjam'] = $validated['tanggal_pinjam'];
+        }
+        if ($request->has('tanggal_kembali')) {
+            $extraFields['tanggal_kembali'] = $validated['tanggal_kembali'] ?: null;
+        }
+        if (!empty($validated['keperluan'])) {
+            $extraFields['keperluan'] = $validated['keperluan'];
+        }
+
+        try {
+            $updated = BarangLainnyaUnitService::updatePendingLoanUnits(
+                $pinjam,
+                (array) $validated['unit_ids'],
+                null,
+                $extraFields
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('pegawai.peminjaman-barang-lainnya')
+            ->with('success', "Kode unit pengajuan '{$updated->nama_barang}' berhasil diubah menjadi Kode Unit: {$updated->kode_unit} (menunggu persetujuan Admin Persediaan).");
     }
 
     public function storePeminjamanBarangLainnya(Request $request)

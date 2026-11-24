@@ -399,15 +399,9 @@ class BarangLainnyaUnitService
 
         $unit->save();
 
-        // Jika kode_unit diganti saat sedang dipinjam atau ada di pengajuan pending, perbarui label kode_unit pada peminjaman aktifnya
-        if ($oldCode !== $cleanCode && $unit->peminjaman_aktif_id) {
-            $loan = PeminjamanBarangLainnya::find($unit->peminjaman_aktif_id);
-            if ($loan && is_array($loan->unit_ids) && !empty($loan->unit_ids)) {
-                $codes = BarangLainnyaUnit::whereIn('id', $loan->unit_ids)->orderBy('id', 'asc')->pluck('kode_unit')->all();
-                if (!empty($codes)) {
-                    $loan->update(['kode_unit' => implode(', ', $codes)]);
-                }
-            }
+        // Jika kode_unit diganti, perbarui label kode_unit pada peminjaman aktif maupun pengajuan pending yang memilih unit ini
+        if ($oldCode !== $cleanCode) {
+            self::syncUnitCodeToLoans($unit);
         }
 
         $barang = BarangLainnya::find($unit->barang_lainnya_id);
@@ -416,6 +410,163 @@ class BarangLainnyaUnitService
         }
 
         return $unit;
+    }
+
+    /**
+     * Sinkronkan label kode_unit ke peminjaman aktif dan semua pengajuan pending yang memuat unit terkait
+     */
+    protected static function syncUnitCodeToLoans(BarangLainnyaUnit $unit): void
+    {
+        if (!Schema::hasTable('peminjaman_barang_lainnya')) {
+            return;
+        }
+
+        $refreshLoanCodes = function (PeminjamanBarangLainnya $loan): void {
+            if (!is_array($loan->unit_ids) || empty($loan->unit_ids)) {
+                return;
+            }
+            $codes = BarangLainnyaUnit::whereIn('id', $loan->unit_ids)
+                ->pluck('kode_unit')
+                ->all();
+            usort($codes, fn($a, $b) => strnatcasecmp((string) $a, (string) $b));
+            if (!empty($codes)) {
+                $loan->update(['kode_unit' => implode(', ', $codes)]);
+            }
+        };
+
+        if ($unit->peminjaman_aktif_id) {
+            $activeLoan = PeminjamanBarangLainnya::find($unit->peminjaman_aktif_id);
+            if ($activeLoan) {
+                $refreshLoanCodes($activeLoan);
+            }
+        }
+
+        $pendingLoans = PeminjamanBarangLainnya::where('barang_lainnya_id', $unit->barang_lainnya_id)
+            ->where('status', 'pending')
+            ->get();
+
+        foreach ($pendingLoans as $pendingLoan) {
+            $ids = is_array($pendingLoan->unit_ids) ? array_map('intval', $pendingLoan->unit_ids) : [];
+            if (in_array((int) $unit->id, $ids, true)) {
+                $refreshLoanCodes($pendingLoan);
+            }
+        }
+    }
+
+    /**
+     * Terapkan perubahan label kode unit (jika ada) dan pembuatan unit baru opsional dalam 1 transaksi
+     *
+     * @return int[]
+     */
+    protected static function applyUnitRenamesAndNewUnit(BarangLainnya $barang, array $requestedUnitIds, array $unitCodes = [], ?string $newKodeUnit = null): array
+    {
+        $unitIds = array_values(array_unique(array_map('intval', array_filter($requestedUnitIds))));
+
+        foreach ($unitCodes as $rawUnitId => $rawCode) {
+            $uid = (int) $rawUnitId;
+            $cleanCode = trim((string) $rawCode);
+            if ($uid <= 0 || $cleanCode === '') {
+                continue;
+            }
+
+            $unit = BarangLainnyaUnit::where('barang_lainnya_id', $barang->id)
+                ->lockForUpdate()
+                ->find($uid);
+
+            if (!$unit || $unit->kode_unit === $cleanCode) {
+                continue;
+            }
+
+            if (mb_strlen($cleanCode) > 50) {
+                throw new \RuntimeException('Kode unit maksimal 50 karakter.');
+            }
+
+            $duplicate = BarangLainnyaUnit::where('barang_lainnya_id', $barang->id)
+                ->where('id', '!=', $unit->id)
+                ->whereRaw('UPPER(kode_unit) = ?', [mb_strtoupper($cleanCode)])
+                ->exists();
+
+            if ($duplicate) {
+                throw new \RuntimeException("Kode unit '{$cleanCode}' sudah dipakai oleh unit lain pada barang ini.");
+            }
+
+            $unit->update(['kode_unit' => $cleanCode]);
+            self::syncUnitCodeToLoans($unit);
+        }
+
+        $trimmedNew = trim((string) $newKodeUnit);
+        if ($trimmedNew !== '') {
+            if (mb_strlen($trimmedNew) > 50) {
+                throw new \RuntimeException('Kode unit baru maksimal 50 karakter.');
+            }
+            $newUnit = self::addSingleUnit($barang, $trimmedNew);
+            $unitIds[] = (int) $newUnit->id;
+            $unitIds = array_values(array_unique($unitIds));
+        }
+
+        return $unitIds;
+    }
+
+    /**
+     * Perbarui pilihan kode unit / data pengajuan peminjaman yang masih berstatus 'pending' (sebelum disetujui Admin)
+     */
+    public static function updatePendingLoanUnits(
+        PeminjamanBarangLainnya $pinjam,
+        array $selectedUnitIds,
+        ?string $catatanAdmin = null,
+        array $extraFields = [],
+        array $unitCodes = [],
+        ?string $newKodeUnit = null
+    ): PeminjamanBarangLainnya {
+        self::ensureSchema();
+
+        return DB::transaction(function () use ($pinjam, $selectedUnitIds, $catatanAdmin, $extraFields, $unitCodes, $newKodeUnit) {
+            $lockedPinjam = PeminjamanBarangLainnya::lockForUpdate()->findOrFail($pinjam->id);
+            if ($lockedPinjam->status !== 'pending') {
+                throw new \RuntimeException('Hanya pengajuan berstatus pending yang dapat diedit kodenya sebelum disetujui.');
+            }
+
+            $barang = $lockedPinjam->barang_lainnya_id
+                ? BarangLainnya::lockForUpdate()->find($lockedPinjam->barang_lainnya_id)
+                : null;
+
+            $payload = $extraFields;
+            if ($catatanAdmin !== null) {
+                $payload['catatan_admin'] = trim($catatanAdmin) !== '' ? trim($catatanAdmin) : null;
+            }
+
+            if ($barang) {
+                $unitIds = self::applyUnitRenamesAndNewUnit($barang, $selectedUnitIds, $unitCodes, $newKodeUnit);
+
+                if (empty($unitIds)) {
+                    throw new \RuntimeException('Pilih minimal 1 Kode Unit atau masukkan Kode Unit baru.');
+                }
+
+                $units = BarangLainnyaUnit::where('barang_lainnya_id', $barang->id)
+                    ->whereIn('id', $unitIds)
+                    ->lockForUpdate()
+                    ->get();
+
+                if ($units->count() !== count($unitIds)) {
+                    throw new \RuntimeException('Sebagian kode unit yang dipilih tidak valid untuk barang ini.');
+                }
+
+                $unavailable = $units->filter(fn($u) => $u->status !== 'tersedia');
+                if ($unavailable->isNotEmpty()) {
+                    $badCodes = $unavailable->pluck('kode_unit')->implode(', ');
+                    throw new \RuntimeException("Kode unit [{$badCodes}] sedang tidak tersedia. Silakan pilih kode unit lain yang tersedia.");
+                }
+
+                $sortedUnits = $units->sort(fn($a, $b) => strnatcasecmp((string) $a->kode_unit, (string) $b->kode_unit))->values();
+
+                $payload['jumlah'] = $sortedUnits->count();
+                $payload['unit_ids'] = $sortedUnits->pluck('id')->all();
+                $payload['kode_unit'] = $sortedUnits->pluck('kode_unit')->implode(', ');
+            }
+
+            $lockedPinjam->update($payload);
+            return $lockedPinjam->fresh();
+        });
     }
 
     /**
@@ -439,11 +590,17 @@ class BarangLainnyaUnitService
     /**
      * Opsi 3 (Hybrid): Setujui peminjaman dengan kode unit yang diverifikasi / disesuaikan oleh Admin
      */
-    public static function assignUnitsOnApproval(PeminjamanBarangLainnya $pinjam, array $requestedUnitIds, ?int $approverId = null, ?string $catatanAdmin = null): void
-    {
+    public static function assignUnitsOnApproval(
+        PeminjamanBarangLainnya $pinjam,
+        array $requestedUnitIds,
+        ?int $approverId = null,
+        ?string $catatanAdmin = null,
+        array $unitCodes = [],
+        ?string $newKodeUnit = null
+    ): void {
         self::ensureSchema();
 
-        DB::transaction(function () use ($pinjam, $requestedUnitIds, $approverId, $catatanAdmin) {
+        DB::transaction(function () use ($pinjam, $requestedUnitIds, $approverId, $catatanAdmin, $unitCodes, $newKodeUnit) {
             $barang = $pinjam->barang_lainnya_id ? BarangLainnya::lockForUpdate()->find($pinjam->barang_lainnya_id) : null;
 
             if (!$barang) {
@@ -455,7 +612,7 @@ class BarangLainnyaUnitService
                 return;
             }
 
-            $unitIds = array_values(array_unique(array_map('intval', array_filter($requestedUnitIds))));
+            $unitIds = self::applyUnitRenamesAndNewUnit($barang, $requestedUnitIds, $unitCodes, $newKodeUnit);
 
             // Fallback: jika unitIds kosong, gunakan unit_ids dari pengajuan pegawai atau ambil otomatis unit tersedia
             if (empty($unitIds) && is_array($pinjam->unit_ids) && !empty($pinjam->unit_ids)) {
@@ -466,7 +623,6 @@ class BarangLainnyaUnitService
                 $units = BarangLainnyaUnit::where('barang_lainnya_id', $barang->id)
                     ->whereIn('id', $unitIds)
                     ->lockForUpdate()
-                    ->orderBy('id', 'asc')
                     ->get();
 
                 if ($units->count() !== count($unitIds)) {
@@ -478,6 +634,8 @@ class BarangLainnyaUnitService
                     $badCodes = $unavailable->pluck('kode_unit')->implode(', ');
                     throw new \RuntimeException("Kode unit [{$badCodes}] saat ini tidak tersedia / sedang dipinjam. Silakan pilih kode unit lain yang tersedia.");
                 }
+
+                $units = $units->sort(fn($a, $b) => strnatcasecmp((string) $a->kode_unit, (string) $b->kode_unit))->values();
             } else {
                 // Legacy fallback bila pengajuan lama belum memilih kode unit spesifik
                 $needed = max(1, (int) $pinjam->jumlah);

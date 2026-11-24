@@ -440,6 +440,29 @@
     .ucs-pending { background: #fef3c7; color: #b45309; }
     .ucs-dipinjam { background: #fee2e2; color: #b91c1c; }
     .ucs-rusak { background: #e2e8f0; color: #475569; }
+
+    /* MODAL EDIT PENGAJUAN PEGAWAI */
+    .edit-modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .edit-modal-overlay.show { display: flex; }
+    .edit-modal-box {
+      width: 100%;
+      max-width: 560px;
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
   </style>
 </head>
 
@@ -649,12 +672,32 @@
                   <i class="fas fa-info-circle"></i> <strong>Keperluan:</strong> {{ Str::limit($item->keperluan, 60) }}
                 </div>
                 @if($item->status === 'pending')
-                  <form method="POST" action="{{ route('pegawai.peminjaman-barang-lainnya.cancel', $item->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?')">
-                    @csrf
-                    <button type="submit" style="padding:4px 10px; font-size:11.5px; border-radius:6px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; cursor:pointer; font-weight:600;">
-                      <i class="fas fa-times"></i> Batalkan
+                  @php
+                    $editLoanPayload = [
+                      'id'                => $item->id,
+                      'barang_lainnya_id' => $item->barang_lainnya_id,
+                      'nama_barang'       => $item->nama_barang,
+                      'satuan'            => $item->satuan,
+                      'unit_ids'          => is_array($item->unit_ids) ? $item->unit_ids : [],
+                      'kode_unit'         => $item->kode_unit,
+                      'tanggal_pinjam'    => $item->tanggal_pinjam?->format('Y-m-d'),
+                      'tanggal_kembali'   => $item->tanggal_kembali?->format('Y-m-d'),
+                      'keperluan'         => $item->keperluan,
+                    ];
+                  @endphp
+                  <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+                    <button type="button"
+                            onclick='openEditLoanModal(@json($editLoanPayload))'
+                            style="padding:4px 10px; font-size:11.5px; border-radius:6px; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; cursor:pointer; font-weight:700;">
+                      <i class="fas fa-pen"></i> Edit Kode
                     </button>
-                  </form>
+                    <form method="POST" action="{{ route('pegawai.peminjaman-barang-lainnya.cancel', $item->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pengajuan ini?')">
+                      @csrf
+                      <button type="submit" style="padding:4px 10px; font-size:11.5px; border-radius:6px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; cursor:pointer; font-weight:600;">
+                        <i class="fas fa-times"></i> Batalkan
+                      </button>
+                    </form>
+                  </div>
                 @endif
               </div>
             </div>
@@ -668,6 +711,57 @@
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- MODAL EDIT KODE UNIT PENGAJUAN PENDING -->
+  <div id="modalEditPinjamPegawai" class="edit-modal-overlay" onclick="if (event.target === this) closeEditLoanModal()">
+    <div class="edit-modal-box">
+      <div style="padding:18px 22px; background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; display:flex; align-items:center; justify-content:space-between;">
+        <div>
+          <div style="font-size:15.5px; font-weight:800;"><i class="fas fa-pen"></i> Edit Kode Unit Pengajuan</div>
+          <div style="font-size:12px; opacity:0.9;" id="editLoanSubTitle">Ubah pilihan kode unit sebelum disetujui Admin Persediaan</div>
+        </div>
+        <button type="button" onclick="closeEditLoanModal()" style="background:rgba(255,255,255,0.2); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-weight:700;">✕</button>
+      </div>
+
+      <form method="POST" id="formEditPinjamPegawai" action="" style="padding:20px 22px; max-height:76vh; overflow-y:auto;" onsubmit="return validateEditLoanSelection()">
+        @csrf
+        @method('PUT')
+
+        <div class="unit-picker-box show" style="margin-bottom:14px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+            <label class="form-label" style="margin-bottom:0; color:#92400e;">
+              <i class="fas fa-tag"></i> Pilih Ulang Kode Unit <span style="color:var(--danger);">*</span>
+            </label>
+            <span id="editSelectedUnitSummary" style="font-size:11.5px; font-weight:700; color:#059669; background:#ecfdf5; border:1px solid #a7f3d0; padding:2px 9px; border-radius:99px;">
+              0 unit dipilih
+            </span>
+          </div>
+          <div class="unit-chips-grid" id="editUnitChipsContainer"></div>
+        </div>
+
+        <div class="input-row">
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-calendar-alt"></i> Tgl Pinjam</label>
+            <input type="date" name="tanggal_pinjam" id="editLoanTglPinjam" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fas fa-calendar-check"></i> Est. Tgl Kembali</label>
+            <input type="date" name="tanggal_kembali" id="editLoanTglKembali" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label"><i class="fas fa-clipboard-list"></i> Keperluan</label>
+          <textarea name="keperluan" id="editLoanKeperluan" class="form-input" rows="2" required></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+          <button type="button" onclick="closeEditLoanModal()" style="padding:9px 16px; border-radius:9px; border:1px solid var(--border); background:#fff; color:var(--text-secondary); font-weight:700; cursor:pointer;">Batal</button>
+          <button type="submit" style="padding:9px 18px; border-radius:9px; border:none; background:#2563eb; color:#fff; font-weight:700; cursor:pointer;"><i class="fas fa-save"></i> Simpan Perubahan</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -703,12 +797,14 @@
       document.getElementById('displaySatuan').value = opt.dataset.satuan || 'unit';
       preview.classList.add('show');
 
-      renderUnitChips(opt.value, preserveOld);
+      const prechecked = preserveOld ? OLD_UNIT_IDS : [];
+      renderChipsToContainer('unitChipsContainer', opt.value, prechecked, 'onCreateUnitToggle(this)');
+      updateSelectedUnitsSummary();
       pickerBox.classList.add('show');
     }
 
-    function renderUnitChips(barangId, preserveOld = false) {
-      const container = document.getElementById('unitChipsContainer');
+    function renderChipsToContainer(containerId, barangId, precheckedIds, onChangeHandler) {
+      const container = document.getElementById(containerId);
       const rawUnits = UNITS_BY_BARANG[barangId] || [];
       const units = [...rawUnits].sort((a, b) => {
         const codeA = String(a.kode_unit ?? '').trim();
@@ -718,13 +814,12 @@
 
       if (!units.length) {
         container.innerHTML = '<div style="grid-column:1/-1; font-size:12px; color:#dc2626; padding:8px;">Belum ada kode unit terdaftar untuk barang ini.</div>';
-        updateSelectedUnitsSummary();
         return;
       }
 
       container.innerHTML = units.map(u => {
         const isAvailable = u.status === 'tersedia';
-        const isPrechecked = isAvailable && preserveOld && OLD_UNIT_IDS.includes(Number(u.id));
+        const isPrechecked = isAvailable && precheckedIds.includes(Number(u.id));
         let statusText = 'Tersedia';
         let statusClass = 'ucs-tersedia';
 
@@ -750,7 +845,7 @@
                    data-kode="${escapeHtml(u.kode_unit)}"
                    ${isAvailable ? '' : 'disabled'}
                    ${isPrechecked ? 'checked' : ''}
-                   onchange="onUnitChipToggle(this)">
+                   onchange="${onChangeHandler}">
             <div class="unit-chip-code">
               <i class="fas ${isPrechecked ? 'fa-check-circle' : (isAvailable ? 'fa-tag' : 'fa-lock')}" style="font-size:11px;"></i>
               <span>Kode ${escapeHtml(u.kode_unit)}</span>
@@ -759,11 +854,9 @@
           </label>
         `;
       }).join('');
-
-      updateSelectedUnitsSummary();
     }
 
-    function onUnitChipToggle(checkbox) {
+    function applyChipVisualToggle(checkbox) {
       const label = checkbox.closest('.unit-chip');
       const icon = label ? label.querySelector('.unit-chip-code i') : null;
       if (checkbox.checked) {
@@ -773,20 +866,29 @@
         label.classList.remove('selected');
         if (icon) icon.className = 'fas fa-tag';
       }
+    }
+
+    function onCreateUnitToggle(checkbox) {
+      applyChipVisualToggle(checkbox);
       updateSelectedUnitsSummary();
     }
 
-    function updateSelectedUnitsSummary() {
-      const checked = Array.from(document.querySelectorAll('#unitChipsContainer input[type="checkbox"]:checked'));
-      const summaryEl = document.getElementById('selectedUnitSummary');
-      const inputJumlah = document.getElementById('inputJumlah');
+    function onEditLoanUnitToggle(checkbox) {
+      applyChipVisualToggle(checkbox);
+      updateSummaryBadge('editUnitChipsContainer', 'editSelectedUnitSummary', null);
+    }
+
+    function updateSummaryBadge(containerId, summaryId, inputJumlahId) {
+      const checked = Array.from(document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`));
+      const summaryEl = document.getElementById(summaryId);
+      const inputJumlah = inputJumlahId ? document.getElementById(inputJumlahId) : null;
 
       if (!checked.length) {
         summaryEl.textContent = 'Belum ada unit dipilih';
         summaryEl.style.background = '#fef2f2';
         summaryEl.style.color = '#dc2626';
         summaryEl.style.borderColor = '#fecaca';
-        inputJumlah.value = 0;
+        if (inputJumlah) inputJumlah.value = 0;
         return;
       }
 
@@ -795,13 +897,43 @@
       summaryEl.style.background = '#ecfdf5';
       summaryEl.style.color = '#059669';
       summaryEl.style.borderColor = '#a7f3d0';
-      inputJumlah.value = codes.length;
+      if (inputJumlah) inputJumlah.value = codes.length;
+    }
+
+    function updateSelectedUnitsSummary() {
+      updateSummaryBadge('unitChipsContainer', 'selectedUnitSummary', 'inputJumlah');
     }
 
     function validateUnitSelection() {
       const checked = document.querySelectorAll('#unitChipsContainer input[type="checkbox"]:checked');
       if (!checked.length) {
         alert('Silakan pilih minimal 1 Kode Unit barang terlebih dahulu (misalnya Kode A atau Kode B)!');
+        return false;
+      }
+      return true;
+    }
+
+    function openEditLoanModal(payload) {
+      document.getElementById('formEditPinjamPegawai').action = `/pegawai/peminjaman-barang-lainnya/${payload.id}`;
+      document.getElementById('editLoanSubTitle').textContent = `${payload.nama_barang} • Kode Saat Ini: ${payload.kode_unit || '-'}`;
+      document.getElementById('editLoanTglPinjam').value = payload.tanggal_pinjam || '';
+      document.getElementById('editLoanTglKembali').value = payload.tanggal_kembali || '';
+      document.getElementById('editLoanKeperluan').value = payload.keperluan || '';
+
+      const selectedIds = (payload.unit_ids || []).map(Number);
+      renderChipsToContainer('editUnitChipsContainer', payload.barang_lainnya_id, selectedIds, 'onEditLoanUnitToggle(this)');
+      updateSummaryBadge('editUnitChipsContainer', 'editSelectedUnitSummary', null);
+      document.getElementById('modalEditPinjamPegawai').classList.add('show');
+    }
+
+    function closeEditLoanModal() {
+      document.getElementById('modalEditPinjamPegawai').classList.remove('show');
+    }
+
+    function validateEditLoanSelection() {
+      const checked = document.querySelectorAll('#editUnitChipsContainer input[type="checkbox"]:checked');
+      if (!checked.length) {
+        alert('Silakan pilih minimal 1 Kode Unit barang yang ingin dipinjam!');
         return false;
       }
       return true;
