@@ -188,6 +188,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/barang-lainnya/{id}', [AdminPersediaanController::class, 'destroyBarangLainnya'])->name('barang-lainnya.destroy');
             Route::post('/barang-lainnya/{id}/unit', [AdminPersediaanController::class, 'storeUnitBarangLainnya'])->name('barang-lainnya.unit.store');
             Route::put('/barang-lainnya/unit/{unitId}', [AdminPersediaanController::class, 'updateUnitBarangLainnya'])->name('barang-lainnya.unit.update');
+            Route::post('/barang-lainnya/unit/{unitId}/release', [AdminPersediaanController::class, 'releaseUnitBarangLainnya'])->name('barang-lainnya.unit.release');
             Route::delete('/barang-lainnya/unit/{unitId}', [AdminPersediaanController::class, 'destroyUnitBarangLainnya'])->name('barang-lainnya.unit.destroy');
             Route::post('/barang-lainnya/peminjaman/{id}/approve', [AdminPersediaanController::class, 'approvePeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.approve');
             Route::post('/barang-lainnya/peminjaman/{id}/reject', [AdminPersediaanController::class, 'rejectPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.reject');

@@ -165,9 +165,106 @@ class BarangLainnyaUnitService
 
                 self::recalculateAvailableStock($barang);
             }
+
+            // Rekonsiliasi unit berstatus 'dipinjam' yang peminjamannya sudah selesai/dibatalkan/ditolak/terhapus
+            self::reconcileStaleBorrowedUnits();
         } catch (\Throwable $e) {
             Log::warning('BarangLainnyaUnitService::syncAllUnindexed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Bebaskan unit berstatus 'dipinjam' jika record peminjaman aktifnya hilang atau sudah tidak aktif
+     */
+    public static function reconcileStaleBorrowedUnits(): int
+    {
+        if (!Schema::hasTable('barang_lainnya_units') || !Schema::hasTable('peminjaman_barang_lainnya')) {
+            return 0;
+        }
+
+        $borrowedUnits = BarangLainnyaUnit::where('status', 'dipinjam')->get();
+        if ($borrowedUnits->isEmpty()) {
+            return 0;
+        }
+
+        $loanIds = $borrowedUnits->pluck('peminjaman_aktif_id')->filter()->unique()->values()->all();
+        $activeLoanIds = [];
+        if (!empty($loanIds)) {
+            $activeLoanIds = PeminjamanBarangLainnya::whereIn('id', $loanIds)
+                ->whereIn('status', ['disetujui', 'proses_pengembalian'])
+                ->pluck('id')
+                ->all();
+        }
+        $activeLookup = array_flip($activeLoanIds);
+
+        $affectedBarangIds = [];
+        $fixedCount = 0;
+
+        foreach ($borrowedUnits as $unit) {
+            $loanId = (int) ($unit->peminjaman_aktif_id ?? 0);
+            if ($loanId > 0 && isset($activeLookup[$loanId])) {
+                continue;
+            }
+
+            $unit->update([
+                'status'              => 'tersedia',
+                'peminjaman_aktif_id' => null,
+            ]);
+            $affectedBarangIds[$unit->barang_lainnya_id] = true;
+            $fixedCount++;
+        }
+
+        foreach (array_keys($affectedBarangIds) as $barangId) {
+            $barang = BarangLainnya::find($barangId);
+            if ($barang) {
+                self::recalculateAvailableStock($barang);
+            }
+        }
+
+        return $fixedCount;
+    }
+
+    /**
+     * Kembalikan/bebaskan satu kode unit yang sedang berstatus 'dipinjam' secara aman dari modal Daftar Unit Fisik
+     */
+    public static function releaseSingleBorrowedUnit(BarangLainnyaUnit $unit): void
+    {
+        self::ensureSchema();
+
+        DB::transaction(function () use ($unit) {
+            $lockedUnit = BarangLainnyaUnit::lockForUpdate()->findOrFail($unit->id);
+            $loan = $lockedUnit->peminjaman_aktif_id
+                ? PeminjamanBarangLainnya::lockForUpdate()->find($lockedUnit->peminjaman_aktif_id)
+                : null;
+
+            $lockedUnit->update([
+                'status'              => 'tersedia',
+                'peminjaman_aktif_id' => null,
+            ]);
+
+            if ($loan && in_array($loan->status, ['disetujui', 'proses_pengembalian'], true)) {
+                $remainingUnits = BarangLainnyaUnit::where('peminjaman_aktif_id', $loan->id)
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                if ($remainingUnits->isEmpty()) {
+                    $loan->update([
+                        'status' => 'dikembalikan',
+                    ]);
+                } else {
+                    $loan->update([
+                        'jumlah'    => $remainingUnits->count(),
+                        'unit_ids'  => $remainingUnits->pluck('id')->all(),
+                        'kode_unit' => $remainingUnits->pluck('kode_unit')->implode(', '),
+                    ]);
+                }
+            }
+
+            $barang = BarangLainnya::lockForUpdate()->find($lockedUnit->barang_lainnya_id);
+            if ($barang) {
+                self::recalculateAvailableStock($barang);
+            }
+        });
     }
 
     /**

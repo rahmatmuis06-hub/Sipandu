@@ -280,7 +280,10 @@
       <button type="button" class="tab-btn" id="tabBtnPinjam" onclick="switchMainTab('pinjam')" style="padding:10px 20px; border-radius:10px; font-weight:700; font-size:13.5px; border:1px solid var(--border); cursor:pointer; background:#fff; color:var(--muted); display:flex; align-items:center; gap:8px; transition:all .2s;">
         <i class="fas fa-hand-holding"></i> <span>Permohonan Peminjaman Pegawai</span>
         @if(($pendingPeminjamanCount ?? 0) > 0)
-          <span style="background:#ef4444; color:#fff; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:800;">{{ $pendingPeminjamanCount }}</span>
+          <span style="background:#ef4444; color:#fff; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:800;">{{ $pendingPeminjamanCount }} Pending</span>
+        @endif
+        @if(($activePeminjamanCount ?? 0) > 0)
+          <span style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:800;">{{ $activePeminjamanCount }} Dipinjam</span>
         @endif
       </button>
     </div>
@@ -389,11 +392,40 @@
 
     <!-- PANE 2: TABLE PEMINJAMAN PEGAWAI -->
     <div id="panePinjam" class="table-card" style="display:none;">
-      <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: #FFFBEB; display: flex; align-items: center; justify-content: space-between;">
+      <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: #FFFBEB; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
         <div style="font-weight: 700; color: #92400E; font-size: 14px; display: flex; align-items: center; gap: 8px;">
           <i class="fas fa-hand-holding"></i> Daftar Pengajuan Peminjaman Barang Lainnya oleh Pegawai
         </div>
         <span style="font-size: 12px; color: var(--muted);">Total: {{ $peminjamanList instanceof \Illuminate\Pagination\LengthAwarePaginator ? $peminjamanList->total() : count($peminjamanList) }} Pengajuan</span>
+      </div>
+
+      <div class="table-toolbar" style="justify-content: space-between; flex-wrap: wrap;">
+        <form method="GET" action="{{ route('adminpersediaan.barang-lainnya') }}" style="display:flex; gap:10px; flex:1; flex-wrap:wrap; align-items:center;">
+          <input type="hidden" name="tab" value="pinjam">
+          <div class="search-wrap" style="min-width: 220px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#94A3B8">
+              <path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input type="text" name="peminjaman_search" placeholder="Cari nama pegawai, nama barang, atau kode unit..." value="{{ request('peminjaman_search') }}">
+          </div>
+          <select name="peminjaman_status" class="form-select" style="width:auto; min-width:170px; padding:8px 12px; font-size:13px;" onchange="this.form.submit()">
+            <option value="semua" {{ request('peminjaman_status', 'semua') === 'semua' ? 'selected' : '' }}>Semua Status</option>
+            <option value="dipinjam" {{ request('peminjaman_status') === 'dipinjam' ? 'selected' : '' }}>Sedang Dipinjam</option>
+            <option value="pending" {{ request('peminjaman_status') === 'pending' ? 'selected' : '' }}>Pending</option>
+            <option value="proses_pengembalian" {{ request('peminjaman_status') === 'proses_pengembalian' ? 'selected' : '' }}>Verifikasi Kembali</option>
+            <option value="dikembalikan" {{ request('peminjaman_status') === 'dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
+            <option value="ditolak" {{ request('peminjaman_status') === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+            <option value="dibatalkan" {{ request('peminjaman_status') === 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+          </select>
+          <button type="submit" class="btn btn-primary" style="padding:8px 14px; font-size:12.5px;">
+            <i class="fas fa-search"></i> Cari
+          </button>
+          @if(request()->filled('peminjaman_search') || (request()->filled('peminjaman_status') && request('peminjaman_status') !== 'semua'))
+            <a href="{{ route('adminpersediaan.barang-lainnya', ['tab' => 'pinjam']) }}" class="btn btn-secondary" style="padding:8px 12px; font-size:12.5px; text-decoration:none;">
+              Reset
+            </a>
+          @endif
+        </form>
       </div>
 
       <table>
@@ -851,9 +883,10 @@ function renderDetailModal(item, showModal = true) {
     let statusControl = '';
 
     if (isBorrowed) {
+      const loanStatusLabel = u.peminjaman_status === 'proses_pengembalian' ? ' (Verifikasi Kembali)' : '';
       statusControl = `
-        <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; background:#FEF3C7; color:#B45309; font-size:11.5px; font-weight:700;">
-          <i class="fas fa-hand-holding"></i> Dipinjam: ${escHtml(u.peminjam_nama || 'Pegawai')}
+        <span style="display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; background:#FEF3C7; color:#B45309; font-size:11.5px; font-weight:700;" title="Sedang dipinjam oleh ${escHtml(u.peminjam_nama || 'Pegawai')}${loanStatusLabel}">
+          <i class="fas fa-hand-holding"></i> Dipinjam: ${escHtml(u.peminjam_nama || 'Pegawai')}${escHtml(loanStatusLabel)}
         </span>
       `;
     } else {
@@ -870,7 +903,7 @@ function renderDetailModal(item, showModal = true) {
       <tr>
         <td style="padding:8px 10px; font-size:12px; color:#64748B; font-weight:700; text-align:center;">${idx + 1}</td>
         <td style="padding:8px 10px;" colspan="3">
-          <form method="POST" action="/adminpersediaan/barang-lainnya/unit/${u.id}" style="display:grid; grid-template-columns: 115px 165px 1fr auto; gap:8px; align-items:center;">
+          <form method="POST" action="/adminpersediaan/barang-lainnya/unit/${u.id}" style="display:grid; grid-template-columns: 115px 185px 1fr auto; gap:8px; align-items:center;">
             <input type="hidden" name="_token" value="${escHtml(CSRF_TOKEN)}">
             <input type="hidden" name="_method" value="PUT">
             <input type="text" name="kode_unit" value="${escHtml(u.kode_unit)}" class="form-input" style="padding:6px 10px; font-weight:800; font-size:12.5px; background:#FEFCE8; border-color:#FDE047;" required title="Edit manual Kode Unit">
@@ -880,11 +913,15 @@ function renderDetailModal(item, showModal = true) {
               <button type="submit" class="btn btn-primary" style="padding:6px 11px; font-size:11.5px;" title="Simpan perubahan kode/status unit">
                 <i class="fas fa-save"></i> Simpan
               </button>
-              ${!isBorrowed ? `
+              ${isBorrowed ? `
+                <button type="button" class="btn btn-secondary" style="padding:6px 9px; font-size:11.5px; color:#2563EB; border-color:#BFDBFE; background:#EFF6FF;" title="Tandai unit ini sudah dikembalikan ke stok tersedia" onclick="kembalikanKodeUnit(${u.id})">
+                  <i class="fas fa-undo"></i> Kembali
+                </button>
+              ` : `
                 <button type="button" class="btn btn-secondary" style="padding:6px 9px; font-size:11.5px; color:#DC2626; border-color:#FECACA; background:#FEF2F2;" title="Hapus kode unit ini" onclick="hapusKodeUnit(${u.id}, '${escHtml(u.kode_unit)}')">
                   <i class="fas fa-trash"></i>
                 </button>
-              ` : ''}
+              `}
             </div>
           </form>
         </td>
@@ -969,6 +1006,9 @@ function renderDetailModal(item, showModal = true) {
       <input type="hidden" name="_token" value="${escHtml(CSRF_TOKEN)}">
       <input type="hidden" name="_method" value="DELETE">
     </form>
+    <form id="hiddenReleaseUnitForm" method="POST" style="display:none;">
+      <input type="hidden" name="_token" value="${escHtml(CSRF_TOKEN)}">
+    </form>
   `;
 
   if (showModal) {
@@ -981,6 +1021,18 @@ function hapusKodeUnit(unitId, kodeUnit) {
   const form = document.getElementById('hiddenDeleteUnitForm');
   if (form) {
     form.action = `/adminpersediaan/barang-lainnya/unit/${unitId}`;
+    form.submit();
+  }
+}
+
+function kembalikanKodeUnit(unitId) {
+  const rawUnits = currentDetailItem ? (UNITS_BY_BARANG[currentDetailItem.id] || []) : [];
+  const unit = rawUnits.find(u => Number(u.id) === Number(unitId));
+  const label = unit ? `Kode Unit '${unit.kode_unit}' (${unit.peminjam_nama || 'Pegawai'})` : 'unit ini';
+  if (!confirm(`Tandai ${label} sudah dikembalikan ke stok tersedia?`)) return;
+  const form = document.getElementById('hiddenReleaseUnitForm');
+  if (form) {
+    form.action = `/adminpersediaan/barang-lainnya/unit/${unitId}/release`;
     form.submit();
   }
 }
@@ -1169,8 +1221,13 @@ function switchMainTab(tab) {
   }
 }
 
-// Cek jika halaman dibuka dengan peminjaman_page
-if (window.location.search.includes('peminjaman_page') || window.location.search.includes('tab=pinjam')) {
+// Cek jika halaman dibuka dengan peminjaman_page / filter tab peminjaman
+if (
+  window.location.search.includes('peminjaman_page') ||
+  window.location.search.includes('tab=pinjam') ||
+  window.location.search.includes('peminjaman_search') ||
+  window.location.search.includes('peminjaman_status')
+) {
   switchMainTab('pinjam');
 }
 </script>

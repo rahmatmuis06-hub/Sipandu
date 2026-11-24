@@ -135,11 +135,37 @@ class AdminPersediaanController extends Controller
 
         $peminjamanList = collect([]);
         $pendingPeminjamanCount = 0;
+        $activePeminjamanCount = 0;
         $pendingByUnitId = [];
 
         if (Schema::hasTable('peminjaman_barang_lainnya')) {
-            $peminjamanList = PeminjamanBarangLainnya::with('user')->latest()->paginate(10, ['*'], 'peminjaman_page');
+            $peminjamanQuery = PeminjamanBarangLainnya::with('user');
+
+            if ($request->filled('peminjaman_status') && $request->peminjaman_status !== 'semua') {
+                $statusFilter = $request->peminjaman_status === 'dipinjam' ? 'disetujui' : $request->peminjaman_status;
+                $peminjamanQuery->where('status', $statusFilter);
+            }
+
+            if ($request->filled('peminjaman_search')) {
+                $term = '%' . trim((string) $request->peminjaman_search) . '%';
+                $peminjamanQuery->where(function ($q) use ($term) {
+                    $q->where('nama_barang', 'like', $term)
+                        ->orWhere('kode_barang', 'like', $term)
+                        ->orWhere('kode_unit', 'like', $term)
+                        ->orWhere('keperluan', 'like', $term)
+                        ->orWhereHas('user', fn($uq) => $uq->where('name', 'like', $term));
+                });
+            }
+
+            // Prioritaskan pengajuan pending & sedang dipinjam aktif di bagian atas daftar
+            $peminjamanList = $peminjamanQuery
+                ->orderByRaw("CASE WHEN status IN ('pending', 'disetujui', 'proses_pengembalian') THEN 0 ELSE 1 END ASC")
+                ->latest()
+                ->paginate(10, ['*'], 'peminjaman_page')
+                ->withQueryString();
+
             $pendingPeminjamanCount = PeminjamanBarangLainnya::where('status', 'pending')->count();
+            $activePeminjamanCount = PeminjamanBarangLainnya::whereIn('status', ['disetujui', 'proses_pengembalian'])->count();
 
             $pendingRequests = PeminjamanBarangLainnya::with('user')
                 ->where('status', 'pending')
@@ -163,12 +189,14 @@ class AdminPersediaanController extends Controller
 
             foreach ($allUnits as $u) {
                 $unitsByBarangId[$u->barang_lainnya_id][] = [
-                    'id'            => $u->id,
-                    'kode_unit'     => $u->kode_unit,
-                    'status'        => $u->status,
-                    'keterangan'    => $u->keterangan,
-                    'peminjam_nama' => $u->peminjamanAktif?->user?->name,
-                    'pending_list'  => $pendingByUnitId[$u->id] ?? [],
+                    'id'                => $u->id,
+                    'kode_unit'         => $u->kode_unit,
+                    'status'            => $u->status,
+                    'keterangan'        => $u->keterangan,
+                    'peminjam_nama'     => $u->peminjamanAktif?->user?->name,
+                    'peminjaman_id'     => $u->peminjamanAktif?->id,
+                    'peminjaman_status' => $u->peminjamanAktif?->status,
+                    'pending_list'      => $pendingByUnitId[$u->id] ?? [],
                 ];
             }
 
@@ -184,6 +212,7 @@ class AdminPersediaanController extends Controller
             'barangLainnya',
             'peminjamanList',
             'pendingPeminjamanCount',
+            'activePeminjamanCount',
             'unitsByBarangId'
         ));
     }
@@ -357,6 +386,28 @@ class AdminPersediaanController extends Controller
             return back()->with('success', "Kode Unit '{$kode}' berhasil dihapus.");
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Kembalikan / bebaskan 1 unit yang sedang berstatus dipinjam langsung dari Daftar Unit Fisik
+     */
+    public function releaseUnitBarangLainnya($unitId)
+    {
+        $this->ensureBarangLainnyaTable();
+
+        $unit = BarangLainnyaUnit::findOrFail($unitId);
+
+        if ($unit->status !== 'dipinjam') {
+            return back()->with('error', "Unit dengan kode '{$unit->kode_unit}' tidak sedang berstatus dipinjam.");
+        }
+
+        try {
+            $kode = $unit->kode_unit;
+            BarangLainnyaUnitService::releaseSingleBorrowedUnit($unit);
+            return back()->with('success', "Kode Unit '{$kode}' berhasil dikembalikan ke stok tersedia.");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal membebaskan unit: ' . $e->getMessage());
         }
     }
 
