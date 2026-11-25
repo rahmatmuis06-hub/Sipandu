@@ -26,6 +26,7 @@ use App\Models\{
     PengembalianBarangLainnya,
 };
 use App\Services\BarangLainnyaUnitService;
+use App\Services\CancelledArchiveService;
 use App\Services\FonnteService;
 use App\Services\PersediaanBatchService;
 use Maatwebsite\Excel\Facades\Excel;
@@ -136,6 +137,7 @@ class AdminPersediaanController extends Controller
         $peminjamanList = collect([]);
         $pendingPeminjamanCount = 0;
         $activePeminjamanCount = 0;
+        $cancelledPeminjamanCount = 0;
         $pendingByUnitId = [];
 
         if (Schema::hasTable('peminjaman_barang_lainnya')) {
@@ -166,6 +168,7 @@ class AdminPersediaanController extends Controller
 
             $pendingPeminjamanCount = PeminjamanBarangLainnya::where('status', 'pending')->count();
             $activePeminjamanCount = PeminjamanBarangLainnya::whereIn('status', ['disetujui', 'proses_pengembalian'])->count();
+            $cancelledPeminjamanCount = PeminjamanBarangLainnya::whereIn('status', CancelledArchiveService::CANCELLED_STATUSES)->count();
 
             $pendingRequests = PeminjamanBarangLainnya::with('user')
                 ->where('status', 'pending')
@@ -213,6 +216,7 @@ class AdminPersediaanController extends Controller
             'peminjamanList',
             'pendingPeminjamanCount',
             'activePeminjamanCount',
+            'cancelledPeminjamanCount',
             'unitsByBarangId'
         ));
     }
@@ -533,6 +537,37 @@ class AdminPersediaanController extends Controller
         }
 
         return back()->with('error', 'Status peminjaman belum disetujui atau sudah selesai.');
+    }
+
+    /**
+     * Hapus 1 peminjaman barang lainnya yang berstatus dibatalkan (SoftDelete: terbackup di Super Admin)
+     */
+    public function destroyCancelledBarangLainnya($id)
+    {
+        $this->ensureBarangLainnyaTable();
+        $pinjam = PeminjamanBarangLainnya::findOrFail($id);
+
+        try {
+            CancelledArchiveService::deleteCancelledRecord($pinjam, Auth::id());
+            return redirect()->route('adminpersediaan.barang-lainnya', ['tab' => 'pinjam'])
+                ->with('success', "Data peminjaman '{$pinjam->nama_barang}' yang dibatalkan berhasil dihapus (cadangan tetap tersimpan di Super Admin).");
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus massal seluruh peminjaman barang lainnya yang dibatalkan (SoftDelete)
+     */
+    public function destroyAllCancelledBarangLainnya()
+    {
+        $this->ensureBarangLainnyaTable();
+        $deleted = CancelledArchiveService::deleteAllCancelled('barang_lainnya', Auth::id());
+
+        return redirect()->route('adminpersediaan.barang-lainnya', ['tab' => 'pinjam'])
+            ->with('success', $deleted > 0
+                ? "Berhasil menghapus {$deleted} permintaan barang lainnya yang dibatalkan (cadangan tetap tersimpan di Super Admin)."
+                : 'Tidak ada data permintaan barang lainnya berstatus dibatalkan untuk dihapus.');
     }
 
     /**
@@ -1501,11 +1536,43 @@ class AdminPersediaanController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            if ($request->status === 'dibatalkan') {
+                $query->whereIn('status', CancelledArchiveService::CANCELLED_STATUSES);
+            } else {
+                $query->where('status', $request->status);
+            }
         }
 
+        $cancelledCount = PermintaanPersediaan::whereIn('status', CancelledArchiveService::CANCELLED_STATUSES)->count();
         $permintaan = $query->paginate(10)->appends($request->query());
-        return view('adminpersediian.permintaan_persediaan', compact('permintaan'));
+        return view('adminpersediian.permintaan_persediaan', compact('permintaan', 'cancelledCount'));
+    }
+
+    /**
+     * Hapus 1 permintaan persediaan yang berstatus dibatalkan (SoftDelete: terbackup di Super Admin)
+     */
+    public function destroyCancelledPermintaan($id)
+    {
+        $permintaan = PermintaanPersediaan::findOrFail($id);
+
+        try {
+            CancelledArchiveService::deleteCancelledRecord($permintaan, Auth::id());
+            return back()->with('success', 'Permintaan persediaan yang dibatalkan berhasil dihapus dari daftar admin (cadangan tetap tersimpan di Super Admin).');
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus massal seluruh permintaan persediaan yang berstatus dibatalkan (SoftDelete)
+     */
+    public function destroyAllCancelledPermintaan()
+    {
+        $deleted = CancelledArchiveService::deleteAllCancelled('persediaan', Auth::id());
+
+        return back()->with('success', $deleted > 0
+            ? "Berhasil menghapus {$deleted} permintaan persediaan yang dibatalkan (cadangan tetap tersimpan di Super Admin)."
+            : 'Tidak ada data permintaan persediaan berstatus dibatalkan untuk dihapus.');
     }
 
     public function showPermintaan($id)

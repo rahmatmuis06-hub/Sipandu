@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\AssetTetap;
 use App\Models\Persediaan;
+use App\Models\PermintaanPersediaan;
 use App\Models\BarangLainnya;
+use App\Models\PeminjamanBarangLainnya;
+use App\Services\CancelledArchiveService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -146,7 +149,7 @@ class SuperadminController extends Controller
     /**
      * ⚡ PUSAT KELOLA & BACKUP DATA (ASET, PERSEDIAAN, BARANG LAINNYA)
      */
-    public function kelolaData()
+    public function kelolaData(Request $request)
     {
         $stats = [
             'aset' => [
@@ -162,19 +165,32 @@ class SuperadminController extends Controller
                 'total_nilai'      => Schema::hasTable('persediaan') ? (float) Persediaan::where('kode_kategori', '!=', 'BLN')->sum('harga_total') : 0,
                 'transaksi_masuk'  => Schema::hasTable('transaksi_masuk_persediaan') ? DB::table('transaksi_masuk_persediaan')->count() : 0,
                 'transaksi_keluar' => Schema::hasTable('transaksi_keluar_persediaan') ? DB::table('transaksi_keluar_persediaan')->count() : 0,
-                'permintaan'       => Schema::hasTable('permintaan_persediaan') ? DB::table('permintaan_persediaan')->count() : 0,
+                'permintaan'       => Schema::hasTable('permintaan_persediaan') ? PermintaanPersediaan::count() : 0,
             ],
             'barang_lainnya' => [
                 'total_item'       => Schema::hasTable('barang_lainnya') ? BarangLainnya::count() : 0,
                 'total_unit'       => Schema::hasTable('barang_lainnya') ? (int) BarangLainnya::sum('jumlah') : 0,
                 'total_nilai'      => Schema::hasTable('barang_lainnya') ? (float) BarangLainnya::sum('harga_total') : 0,
-                'peminjaman'       => Schema::hasTable('peminjaman_barang_lainnya') ? DB::table('peminjaman_barang_lainnya')->count() : 0,
+                'peminjaman'       => Schema::hasTable('peminjaman_barang_lainnya') ? PeminjamanBarangLainnya::count() : 0,
             ],
         ];
 
         $fifoEnabled = \App\Services\PersediaanBatchService::isFifoEnabled();
 
-        return view('superadmin.kelola_data', compact('stats', 'fifoEnabled'));
+        $arsipKategori = (string) $request->input('arsip_kategori', 'all');
+        $arsipSearch = $request->input('arsip_search');
+        $archive = CancelledArchiveService::getArchiveSummary($arsipKategori, $arsipSearch);
+        $archiveCounts = $archive['counts'];
+        $archiveItems = $archive['items'];
+
+        return view('superadmin.kelola_data', compact(
+            'stats',
+            'fifoEnabled',
+            'archiveCounts',
+            'archiveItems',
+            'arsipKategori',
+            'arsipSearch'
+        ));
     }
 
     /**
@@ -213,6 +229,8 @@ class SuperadminController extends Controller
                 'peminjaman_barang',
                 'detail_peminjaman_barang',
                 'pengembalian_barang',
+                'peminjaman_kendaraan',
+                'pengembalian_kendaraan',
             ],
             'persediaan' => [
                 'persediaan',
@@ -470,5 +488,58 @@ class SuperadminController extends Controller
             'Content-Type' => 'application/sql',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * Unduh file backup JSON khusus arsip pengajuan dibatalkan yang telah dihapus Admin
+     */
+    public function exportArsipDibatalkan(Request $request)
+    {
+        $kategori = (string) $request->input('kategori', 'all');
+        $archive = CancelledArchiveService::getArchiveSummary($kategori, $request->input('search'));
+        $timestamp = now()->format('Y-m-d_His');
+        $filename = "sipandu_backup_arsip_dibatalkan_{$kategori}_{$timestamp}.json";
+
+        $payload = [
+            'exported_at'    => now()->toIso8601String(),
+            'filter_category' => $kategori,
+            'counts'         => $archive['counts'],
+            'records'        => $archive['items']->values()->all(),
+        ];
+
+        return response()->streamDownload(function () use ($payload) {
+            echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        }, $filename, [
+            'Content-Type'        => 'application/json',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
+     * Pulihkan data dibatalkan dari arsip backup Super Admin kembali ke daftar Admin
+     */
+    public function restoreArsipDibatalkan(string $kategori, int $id)
+    {
+        try {
+            CancelledArchiveService::restore($kategori, $id);
+            return redirect()->route('superadmin.kelola-data', ['arsip_kategori' => $kategori])
+                ->with('success', 'Data berhasil dipulihkan dari backup arsip ke daftar Admin terkait.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal memulihkan data arsip: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus permanen data backup arsip dari database (hanya Super Admin)
+     */
+    public function forceDeleteArsipDibatalkan(string $kategori, int $id)
+    {
+        try {
+            CancelledArchiveService::forceDelete($kategori, $id);
+            return redirect()->route('superadmin.kelola-data', ['arsip_kategori' => $kategori])
+                ->with('success', 'Data backup berhasil dihapus secara permanen dari database.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal menghapus permanen data arsip: ' . $e->getMessage());
+        }
     }
 }

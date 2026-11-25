@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\SafeSoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,6 +11,8 @@ use Illuminate\Support\Str;
 
 class PeminjamanKendaraan extends Model
 {
+    use SafeSoftDeletes;
+
     protected $table = 'peminjaman_kendaraan';
     
     protected $guarded = ['id'];

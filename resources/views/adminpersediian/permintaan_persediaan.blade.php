@@ -254,8 +254,8 @@ tr:hover { background: #f8faff; }
     @endif
 
     <div class="table-card">
-      <div class="table-toolbar">
-        <form method="GET" action="" style="display: flex; gap: 16px; width: 100%; flex-wrap: wrap;">
+      <div class="table-toolbar" style="justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <form method="GET" action="" style="display: flex; gap: 16px; flex: 1; flex-wrap: wrap;">
           <div class="search-wrap">
             <i class="fas fa-search"></i>
             <input type="text" name="search" placeholder="Cari nama barang, pemohon..." value="{{ request('search') }}">
@@ -270,6 +270,16 @@ tr:hover { background: #f8faff; }
             <option value="dibatalkan" {{ request('status') == 'dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
           </select>
         </form>
+
+        @if(($cancelledCount ?? 0) > 0)
+          <form method="POST" action="{{ route('adminpersediaan.permintaan.destroy-all-cancelled') }}" style="margin:0;" onsubmit="return confirm('Hapus seluruh ({{ $cancelledCount }}) permintaan persediaan yang berstatus dibatalkan dari daftar admin?\n\nCatatan: Data yang dihapus akan tetap terbackup dan dapat dipulihkan di panel Super Admin.')">
+            @csrf
+            <button type="submit" class="btn-outline btn-tolak" style="background:#fef2f2; border-color:#fecaca; color:#dc2626; padding:10px 14px;">
+              <i class="fas fa-trash-alt"></i>
+              <span>Hapus Semua Dibatalkan ({{ $cancelledCount }})</span>
+            </button>
+          </form>
+        @endif
       </div>
 
       <div class="table-responsive">
@@ -367,6 +377,9 @@ tr:hover { background: #f8faff; }
                     } elseif(in_array($item->status, ['ditolak', 'ditolak_kasubag'])) {
                         $badgeClass = 'bg-danger';
                         $iconClass = 'fa-times-circle';
+                    } elseif(in_array(strtolower((string) $item->status), ['dibatalkan', 'cancelled'])) {
+                        $badgeClass = 'bg-danger';
+                        $iconClass = 'fa-ban';
                     } elseif($item->status == 'diteruskan_kasubag') {
                         $badgeClass = 'bg-review';
                         $iconClass = 'fa-forward';
@@ -438,6 +451,15 @@ tr:hover { background: #f8faff; }
                         <span>Lihat</span>
                       </a>
                       @endif
+                    @elseif(in_array(strtolower((string) $item->status), ['dibatalkan', 'cancelled']))
+                      <form method="POST" action="{{ route('adminpersediaan.permintaan.destroy-cancelled', $item->id) }}" style="margin:0; display:inline;" onsubmit="return confirm('Hapus data permintaan dibatalkan ini dari daftar admin?\n\nData tetap terbackup di bagian Super Admin.')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn-outline btn-tolak" style="background:#fef2f2; color:#dc2626; border-color:#fecaca;" title="Hapus data dibatalkan (tetap terbackup di Super Admin)">
+                          <i class="fas fa-trash"></i>
+                          <span>Hapus</span>
+                        </button>
+                      </form>
                     @endif
                   </div>
                 </td>

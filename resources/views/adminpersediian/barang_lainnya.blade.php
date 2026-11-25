@@ -426,6 +426,15 @@
             </a>
           @endif
         </form>
+
+        @if(($cancelledPeminjamanCount ?? 0) > 0)
+          <form method="POST" action="{{ route('adminpersediaan.barang-lainnya.peminjaman.destroy-all-cancelled') }}" style="margin:0;" onsubmit="return confirm('Hapus seluruh ({{ $cancelledPeminjamanCount }}) permintaan barang lainnya yang berstatus dibatalkan dari daftar admin?\n\nData tetap terbackup di bagian Super Admin.')">
+            @csrf
+            <button type="submit" class="btn btn-secondary" style="padding:8px 13px; font-size:12.5px; background:#fef2f2; color:#dc2626; border-color:#fecaca;">
+              <i class="fas fa-trash-alt"></i> Hapus Semua Dibatalkan ({{ $cancelledPeminjamanCount }})
+            </button>
+          </form>
+        @endif
       </div>
 
       <table>
@@ -520,6 +529,14 @@
                       @csrf
                       <button type="submit" class="btn-action" style="background: #eff6ff; color: #2563eb; border-color: #bfdbfe; font-size: 11px; padding: 4px 8px; width: auto; gap: 4px;" title="Tandai Dikembalikan">
                         <i class="fas fa-undo"></i> Kembali
+                      </button>
+                    </form>
+                  @elseif(in_array(strtolower((string) $p->status), ['dibatalkan', 'cancelled']))
+                    <form method="POST" action="{{ route('adminpersediaan.barang-lainnya.peminjaman.destroy-cancelled', $p->id) }}" style="margin:0;" onsubmit="return confirm('Hapus data permintaan barang lainnya yang dibatalkan ini dari daftar admin?\n\nData tetap terbackup di bagian Super Admin.')">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="btn-action" style="background: #fef2f2; color: #dc2626; border-color: #fecaca; width: auto; padding: 0 10px; gap: 4px; font-size: 11.5px; font-weight: 700;" title="Hapus data dibatalkan (tetap terbackup di Super Admin)">
+                        <i class="fas fa-trash"></i> Hapus
                       </button>
                     </form>
                   @else

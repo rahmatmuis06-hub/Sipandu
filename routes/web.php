@@ -81,6 +81,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/kelola-data', [SuperadminController::class, 'kelolaData'])->name('kelola-data');
             Route::post('/kelola-data/backup', [SuperadminController::class, 'backupData'])->name('kelola-data.backup');
             Route::post('/kelola-data/hapus', [SuperadminController::class, 'hapusData'])->name('kelola-data.hapus');
+            Route::get('/kelola-data/arsip-dibatalkan/export', [SuperadminController::class, 'exportArsipDibatalkan'])->name('kelola-data.arsip.export');
+            Route::post('/kelola-data/arsip-dibatalkan/{kategori}/{id}/restore', [SuperadminController::class, 'restoreArsipDibatalkan'])->name('kelola-data.arsip.restore');
+            Route::delete('/kelola-data/arsip-dibatalkan/{kategori}/{id}/force', [SuperadminController::class, 'forceDeleteArsipDibatalkan'])->name('kelola-data.arsip.force-delete');
             Route::post('/pengaturan/toggle-fifo', [SuperadminController::class, 'toggleFifoPersediaan'])->name('toggle-fifo');
         });
 
@@ -194,6 +197,8 @@ Route::middleware('auth')->group(function () {
             Route::post('/barang-lainnya/peminjaman/{id}/approve', [AdminPersediaanController::class, 'approvePeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.approve');
             Route::post('/barang-lainnya/peminjaman/{id}/reject', [AdminPersediaanController::class, 'rejectPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.reject');
             Route::post('/barang-lainnya/peminjaman/{id}/return', [AdminPersediaanController::class, 'returnPeminjamanBarangLainnya'])->name('barang-lainnya.peminjaman.return');
+            Route::delete('/barang-lainnya/peminjaman/{id}/hapus-dibatalkan', [AdminPersediaanController::class, 'destroyCancelledBarangLainnya'])->name('barang-lainnya.peminjaman.destroy-cancelled');
+            Route::post('/barang-lainnya/peminjaman/hapus-semua-dibatalkan', [AdminPersediaanController::class, 'destroyAllCancelledBarangLainnya'])->name('barang-lainnya.peminjaman.destroy-all-cancelled');
 
             // ⚡ PENGEMBALIAN BARANG LAINNYA
             Route::get('/pengembalian-barang-lainnya', [AdminPersediaanController::class, 'pengembalianBarangLainnya'])->name('pengembalian-barang-lainnya');
@@ -230,6 +235,8 @@ Route::middleware('auth')->group(function () {
             //PERMINTAAN PERSEDIAAN
             Route::get('/permintaan-persediaan', [AdminPersediaanController::class, 'PermintaanPersediaan'])->name('permintaan-persediaan');
             Route::get('/permintaan/{id}', [AdminPersediaanController::class, 'showPermintaan'])->name('permintaan.show');
+            Route::delete('/permintaan/{id}/hapus-dibatalkan', [AdminPersediaanController::class, 'destroyCancelledPermintaan'])->name('permintaan.destroy-cancelled');
+            Route::post('/permintaan/hapus-semua-dibatalkan', [AdminPersediaanController::class, 'destroyAllCancelledPermintaan'])->name('permintaan.destroy-all-cancelled');
 
             Route::post('/permintaan/{permintaan}/review', [AdminPersediaanController::class, 'reviewPermintaan'])->name('review-permintaan');
             Route::get('/surat/{permintaan}', [AdminPersediaanController::class, 'generateSuratPermintaan'])->name('surat-permintaan');
@@ -343,6 +350,8 @@ Route::middleware('auth')->group(function () {
 
             //PEMINJAMAN KENDARAAN
             Route::get('/peminjaman-kendaraan', [AdminAsettetapController::class, 'PeminjamanKendaraan'])->name('peminjaman-kendaraan');
+            Route::post('/peminjaman-kendaraan/hapus-semua-dibatalkan', [AdminAsettetapController::class, 'destroyAllCancelledKendaraan'])->name('peminjaman-kendaraan.destroy-all-cancelled');
+            Route::delete('/peminjaman-kendaraan/{id}/hapus-dibatalkan', [AdminAsettetapController::class, 'destroyCancelledKendaraan'])->name('peminjaman-kendaraan.destroy-cancelled');
             Route::post('/peminjaman-kendaraan/{id}/review', [AdminAsettetapController::class, 'reviewPeminjamanKendaraan']);
             Route::post('/peminjaman-kendaraan/{id}/upload', [AdminAsettetapController::class, 'uploadBastKendaraan']);
             Route::get('/peminjaman-kendaraan/{peminjaman}/print', [AdminAsettetapController::class, 'generateSuratPeminjamanKendaraan'])->name('peminjaman-kendaraan.print');
@@ -356,6 +365,8 @@ Route::middleware('auth')->group(function () {
 
             //PEMINJAMAN BARANG
             Route::get('/peminjaman-barang', [AdminAsettetapController::class, 'PeminjamanBarang'])->name('peminjaman-barang');
+            Route::post('/peminjaman-barang/hapus-semua-dibatalkan', [AdminAsettetapController::class, 'destroyAllCancelledBarang'])->name('peminjaman-barang.destroy-all-cancelled');
+            Route::delete('/peminjaman-barang/{id}/hapus-dibatalkan', [AdminAsettetapController::class, 'destroyCancelledBarang'])->name('peminjaman-barang.destroy-cancelled');
             Route::post('/peminjaman-barang/{id}/review', [AdminAsettetapController::class, 'reviewPeminjaman'])->name('peminjaman-barang.review');
             Route::post('/peminjaman-barang/{id}/upload-bast', [AdminAsettetapController::class, 'uploadSuratBast'])->name('peminjaman-barang.upload-bast');
             Route::get('/peminjaman-barang/{peminjaman}/generate-surat', [AdminAsettetapController::class, 'generateSuratPeminjaman'])->name('peminjaman-barang.print');

@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\SafeSoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PeminjamanBarangLainnya extends Model
 {
-    use HasFactory;
+    use HasFactory, SafeSoftDeletes;
 
     protected $table = 'peminjaman_barang_lainnya';
 

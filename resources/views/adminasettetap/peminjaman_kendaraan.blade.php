@@ -109,13 +109,36 @@
                 <i class="fas fa-check-circle"></i> {{ session('success') }}
             </div>
         @endif
+        @if(session('error'))
+            <div style="background:#FEE2E2; color:#B91C1C; padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px; font-weight:600; border: 1px solid #fecaca;">
+                <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
+            </div>
+        @endif
 
         <div class="table-card">
-            <div class="table-toolbar">
-                <form action="{{ url()->current() }}" method="GET" class="search-wrap">
-                    <i class="fas fa-search" style="color: var(--muted)"></i>
-                    <input type="text" name="search" placeholder="Cari kendaraan atau peminjam..." value="{{ request('search') }}">
+            <div class="table-toolbar" style="justify-content: space-between; flex-wrap: wrap;">
+                <form action="{{ url()->current() }}" method="GET" style="display:flex; gap:10px; flex:1; flex-wrap:wrap; align-items:center;">
+                    <div class="search-wrap" style="min-width:220px;">
+                        <i class="fas fa-search" style="color: var(--muted)"></i>
+                        <input type="text" name="search" placeholder="Cari kendaraan, nopol, atau peminjam..." value="{{ request('search') }}">
+                    </div>
+                    <select name="status" onchange="this.form.submit()" style="padding:9px 12px; border:1.5px solid var(--border); border-radius:10px; background:var(--surface); font-size:13px; font-weight:600; color:var(--text);">
+                        <option value="Semua Status" {{ request('status', 'Semua Status') === 'Semua Status' ? 'selected' : '' }}>Semua Status</option>
+                        <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending / Proses</option>
+                        <option value="Diterima" {{ request('status') === 'Diterima' ? 'selected' : '' }}>Disetujui</option>
+                        <option value="Ditolak" {{ request('status') === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
+                        <option value="Dibatalkan" {{ request('status') === 'Dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
+                    </select>
                 </form>
+
+                @if(($cancelledCount ?? 0) > 0)
+                    <form method="POST" action="{{ route('adminasettetap.peminjaman-kendaraan.destroy-all-cancelled') }}" style="margin:0;" onsubmit="return confirm('Hapus seluruh ({{ $cancelledCount }}) peminjaman kendaraan yang dibatalkan dari daftar admin?\n\nData tetap terbackup di bagian Super Admin.')">
+                        @csrf
+                        <button type="submit" class="action-btn tolak" style="margin-bottom:0; background:#FEF2F2; border-color:#FECACA; color:#DC2626;">
+                            <i class="fas fa-trash-alt"></i> Hapus Semua Dibatalkan ({{ $cancelledCount }})
+                        </button>
+                    </form>
+                @endif
             </div>
 
             <table>
@@ -144,7 +167,7 @@
                             <!-- Menampilkan Nopol dari snapshot transaksi -->
                             <span style="font-weight: 700; color: var(--blue);">{{ $item->nomor_polisi_saat_pinjam ?? '-' }}</span>
                         </td>
-                        <td>{{ $item->user->name }}</td>
+                        <td>{{ $item->user->name ?? '-' }}</td>
                         <td>
                             <div style="font-size: 12px;">
                                 <i class="far fa-calendar-alt"></i> {{ \Carbon\Carbon::parse($item->tanggal_peminjaman)->format('d/m/Y') }}
@@ -164,13 +187,21 @@
                             <span class="status-badge {{ $statusClass }}">{{ str_replace('_', ' ', ucfirst($statusText)) }}</span>
                         </td>
                         <td>
-                            @if(in_array($item->status, ['dibatalkan', 'ditolak']))
+                            @if(in_array($item->status, ['dibatalkan', 'cancelled', 'ditolak']))
                                 <button class="action-btn" onclick="showDetail({{ $item->id }})">
                                     <i class="fas fa-eye"></i> Detail
                                 </button>
-                                <span style="font-size: 12px; color: var(--muted); font-style: italic; margin-left: 6px;">
-                                    {{ $item->status == 'ditolak' ? 'Ditolak' : 'Dibatalkan' }}
-                                </span>
+                                @if(in_array($item->status, ['dibatalkan', 'cancelled']))
+                                    <form method="POST" action="{{ route('adminasettetap.peminjaman-kendaraan.destroy-cancelled', $item->id) }}" style="display:inline; margin:0;" onsubmit="return confirm('Hapus data peminjaman kendaraan yang dibatalkan ini dari daftar admin?\n\nData tetap terbackup di bagian Super Admin.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="action-btn tolak" style="background:#FEF2F2; border-color:#FECACA; color:#DC2626;" title="Hapus data dibatalkan (tetap terbackup di Super Admin)">
+                                            <i class="fas fa-trash"></i> Hapus
+                                        </button>
+                                    </form>
+                                @else
+                                    <span style="font-size: 12px; color: var(--muted); font-style: italic; margin-left: 6px;">Ditolak</span>
+                                @endif
                             @else
                                 <button class="action-btn" onclick="showDetail({{ $item->id }})">
                                     <i class="fas fa-eye"></i> Detail

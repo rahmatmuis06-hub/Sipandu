@@ -374,6 +374,129 @@
     </div>
   </div>
 
+  {{-- ROW 2.5: ARSIP BACKUP DATA DIBATALKAN YANG DIHAPUS ADMIN --}}
+  <div id="arsip-dibatalkan" class="backup-panel">
+    <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:14px;">
+      <div>
+        <div class="section-title" style="margin-bottom:4px;">
+          <i class="fas fa-archive" style="color: #7c3aed;"></i> Arsip Backup Data Dibatalkan (Dihapus Admin)
+        </div>
+        <p style="font-size:12.5px; color:var(--muted);">
+          Seluruh data Permintaan Persediaan, Peminjaman Kendaraan, Peminjaman Barang, dan Permintaan Barang Lainnya berstatus dibatalkan yang dihapus oleh Admin otomatis tercadang di sini.
+        </p>
+      </div>
+      <a href="{{ route('superadmin.kelola-data.arsip.export', ['kategori' => $arsipKategori ?? 'all', 'search' => $arsipSearch ?? '']) }}" class="btn-download-sm" style="flex:0 0 auto; background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; padding:10px 16px;">
+        <i class="fas fa-download"></i> Unduh Backup Arsip (.JSON)
+      </a>
+    </div>
+
+    {{-- Ringkasan Jumlah Per Kategori --}}
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap:10px; margin-bottom:16px;">
+      <div style="background:#f8fafc; border:1px solid var(--border); border-radius:12px; padding:12px 14px;">
+        <div style="font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase;">Total Terbackup</div>
+        <div style="font-size:20px; font-weight:800; color:#7c3aed; margin-top:2px;">{{ number_format($archiveCounts['total'] ?? 0) }} data</div>
+      </div>
+      <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:12px 14px;">
+        <div style="font-size:11px; color:#15803d; font-weight:700;">Permintaan Persediaan</div>
+        <div style="font-size:18px; font-weight:800; color:#166534; margin-top:2px;">{{ number_format($archiveCounts['persediaan'] ?? 0) }}</div>
+      </div>
+      <div style="background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:12px 14px;">
+        <div style="font-size:11px; color:#4338ca; font-weight:700;">Peminjaman Kendaraan</div>
+        <div style="font-size:18px; font-weight:800; color:#3730a3; margin-top:2px;">{{ number_format($archiveCounts['kendaraan'] ?? 0) }}</div>
+      </div>
+      <div style="background:#f5f3ff; border:1px solid #ddd6fe; border-radius:12px; padding:12px 14px;">
+        <div style="font-size:11px; color:#6d28d9; font-weight:700;">Peminjaman Barang</div>
+        <div style="font-size:18px; font-weight:800; color:#5b21b6; margin-top:2px;">{{ number_format($archiveCounts['barang'] ?? 0) }}</div>
+      </div>
+      <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:12px 14px;">
+        <div style="font-size:11px; color:#b45309; font-weight:700;">Permintaan Barang Lainnya</div>
+        <div style="font-size:18px; font-weight:800; color:#92400e; margin-top:2px;">{{ number_format($archiveCounts['barang_lainnya'] ?? 0) }}</div>
+      </div>
+    </div>
+
+    {{-- Filter & Pencarian Arsip --}}
+    <form method="GET" action="{{ route('superadmin.kelola-data') }}#arsip-dibatalkan" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px;">
+      <select name="arsip_kategori" class="form-control" style="width:auto; min-width:220px;" onchange="this.form.submit()">
+        <option value="all" {{ ($arsipKategori ?? 'all') === 'all' ? 'selected' : '' }}>Semua Kategori ({{ $archiveCounts['total'] ?? 0 }})</option>
+        <option value="persediaan" {{ ($arsipKategori ?? '') === 'persediaan' ? 'selected' : '' }}>Permintaan Persediaan ({{ $archiveCounts['persediaan'] ?? 0 }})</option>
+        <option value="kendaraan" {{ ($arsipKategori ?? '') === 'kendaraan' ? 'selected' : '' }}>Peminjaman Kendaraan ({{ $archiveCounts['kendaraan'] ?? 0 }})</option>
+        <option value="barang" {{ ($arsipKategori ?? '') === 'barang' ? 'selected' : '' }}>Peminjaman Barang ({{ $archiveCounts['barang'] ?? 0 }})</option>
+        <option value="barang_lainnya" {{ ($arsipKategori ?? '') === 'barang_lainnya' ? 'selected' : '' }}>Permintaan Barang Lainnya ({{ $archiveCounts['barang_lainnya'] ?? 0 }})</option>
+      </select>
+      <input type="text" name="arsip_search" value="{{ $arsipSearch ?? '' }}" placeholder="Cari nama pemohon, barang, kendaraan, kode, atau admin penghapus..." class="form-control" style="flex:1; min-width:220px;">
+      <button type="submit" class="btn-download-sm" style="flex:0 0 auto; background:#7c3aed; color:#fff; border-color:#7c3aed; padding:10px 18px;">
+        <i class="fas fa-search"></i> Cari Arsip
+      </button>
+      @if(($arsipKategori ?? 'all') !== 'all' || !empty($arsipSearch))
+        <a href="{{ route('superadmin.kelola-data') }}#arsip-dibatalkan" class="btn-download-sm" style="flex:0 0 auto; padding:10px 14px;">Reset</a>
+      @endif
+    </form>
+
+    {{-- Tabel Arsip Data Terhapus --}}
+    <div style="border:1px solid var(--border); border-radius:12px; overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <thead>
+          <tr style="background:#f8fafc; border-bottom:1px solid var(--border); text-align:left;">
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">No</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Kategori</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Pemohon</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Barang / Kendaraan</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Jumlah</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Tgl Pengajuan</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Dihapus Admin</th>
+            <th style="padding:11px 14px; font-size:11px; text-transform:uppercase; color:var(--muted);">Aksi Super Admin</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($archiveItems ?? [] as $aIdx => $arch)
+            <tr style="border-bottom:1px solid var(--border);">
+              <td style="padding:11px 14px; font-weight:700;">{{ $aIdx + 1 }}</td>
+              <td style="padding:11px 14px;">
+                <span style="display:inline-block; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:700; background:{{ $arch['badge_bg'] }}; color:{{ $arch['badge_color'] }}; white-space:nowrap;">
+                  {{ $arch['kategori_label'] }}
+                </span>
+              </td>
+              <td style="padding:11px 14px; font-weight:700;">{{ $arch['pemohon'] }}</td>
+              <td style="padding:11px 14px;">
+                <div style="font-weight:700; color:var(--text);">{{ $arch['judul_barang'] }}</div>
+                <div style="font-size:11.5px; color:var(--muted);">{{ $arch['detail_ringkas'] }}</div>
+              </td>
+              <td style="padding:11px 14px; white-space:nowrap;">{{ $arch['jumlah_label'] }}</td>
+              <td style="padding:11px 14px; white-space:nowrap;">{{ $arch['tanggal_pengajuan'] }}</td>
+              <td style="padding:11px 14px;">
+                <div style="font-weight:600; font-size:12px;">{{ $arch['deleted_by_nama'] }}</div>
+                <div style="font-size:11px; color:var(--muted);">{{ $arch['deleted_at'] }}</div>
+              </td>
+              <td style="padding:11px 14px; white-space:nowrap;">
+                <div style="display:inline-flex; gap:6px; align-items:center;">
+                  <form method="POST" action="{{ route('superadmin.kelola-data.arsip.restore', [$arch['kategori'], $arch['id']]) }}" style="margin:0;" onsubmit="return confirm('Pulihkan data ini kembali ke daftar Admin terkait?')">
+                    @csrf
+                    <button type="submit" class="btn-download-sm" style="flex:0 0 auto; background:#ecfdf5; color:#059669; border-color:#a7f3d0; padding:6px 10px; font-size:11.5px;">
+                      <i class="fas fa-undo"></i> Pulihkan
+                    </button>
+                  </form>
+                  <form method="POST" action="{{ route('superadmin.kelola-data.arsip.force-delete', [$arch['kategori'], $arch['id']]) }}" style="margin:0;" onsubmit="return confirm('Hapus PERMANEN data backup ini dari database? Tindakan ini tidak dapat dibatalkan.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn-download-sm" style="flex:0 0 auto; background:#fef2f2; color:#dc2626; border-color:#fecaca; padding:6px 10px; font-size:11.5px;">
+                      <i class="fas fa-trash-alt"></i> Hapus Permanen
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="8" style="text-align:center; padding:32px; color:var(--muted);">
+                Belum ada data dibatalkan yang dihapus oleh Admin pada kategori ini.
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   {{-- ROW 3: DANGER ZONE (HAPUS & KOSONGKAN DATA) --}}
   <div class="danger-panel">
     <div class="danger-header">

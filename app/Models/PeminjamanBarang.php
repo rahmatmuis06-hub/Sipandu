@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\SafeSoftDeletes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,8 @@ use Override;
 
 class PeminjamanBarang extends Model
 {
+    use SafeSoftDeletes;
+
     protected $table = 'peminjaman_barang';
     protected $guarded = [
         'id',

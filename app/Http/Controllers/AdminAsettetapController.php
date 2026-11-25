@@ -30,6 +30,7 @@ use App\Models\{
     AjuanMutasi,
     DetailKendaraan
 };
+use App\Services\CancelledArchiveService;
 use App\Services\FonnteService;
 
 class AdminAsettetapController extends Controller
@@ -1163,17 +1164,20 @@ class AdminAsettetapController extends Controller
     {
         $query = PeminjamanBarang::with(['user', 'items'])
             ->when($request->search, function ($q, $search) {
-                $q->where('kode_barang', 'like', "%{$search}%")
-                    ->orWhere('nama_barang', 'like', "%{$search}%")
-                    ->orWhereHas('user', fn($qb) => $qb->where('name', 'like', "%{$search}%"));
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('kode_barang', 'like', "%{$search}%")
+                        ->orWhere('nama_barang', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn($qb) => $qb->where('name', 'like', "%{$search}%"));
+                });
             });
 
-        // Filter status (contoh: Semua Status, Diterima, Pending, Ditolak)
+        // Filter status (contoh: Semua Status, Diterima, Pending, Ditolak, Dibatalkan)
         if ($request->status && $request->status !== 'Semua Status') {
             $statusMap = [
-                'Diterima' => ['disetujui', 'disetujui_admin'],
-                'Pending'  => ['pending', 'dalam_review', 'diteruskan_kasubag'],
-                'Ditolak'  => ['ditolak']
+                'Diterima'   => ['disetujui', 'disetujui_admin'],
+                'Pending'    => ['pending', 'dalam_review', 'diteruskan_kasubag'],
+                'Ditolak'    => ['ditolak'],
+                'Dibatalkan' => CancelledArchiveService::CANCELLED_STATUSES,
             ];
             $selectedStatuses = $statusMap[$request->status] ?? [];
             if (!empty($selectedStatuses)) {
@@ -1181,9 +1185,37 @@ class AdminAsettetapController extends Controller
             }
         }
 
+        $cancelledCount = PeminjamanBarang::whereIn('status', CancelledArchiveService::CANCELLED_STATUSES)->count();
         $peminjamanBarang = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
 
-        return view('adminasettetap.peminjaman_barang', compact('peminjamanBarang'));
+        return view('adminasettetap.peminjaman_barang', compact('peminjamanBarang', 'cancelledCount'));
+    }
+
+    /**
+     * Hapus 1 peminjaman barang berstatus dibatalkan (SoftDelete: terbackup di Super Admin)
+     */
+    public function destroyCancelledBarang($id)
+    {
+        $peminjaman = PeminjamanBarang::findOrFail($id);
+
+        try {
+            CancelledArchiveService::deleteCancelledRecord($peminjaman, Auth::id());
+            return back()->with('success', "Data peminjaman barang '{$peminjaman->nama_barang}' yang dibatalkan berhasil dihapus (cadangan tetap tersimpan di Super Admin).");
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus massal seluruh peminjaman barang berstatus dibatalkan (SoftDelete)
+     */
+    public function destroyAllCancelledBarang()
+    {
+        $deleted = CancelledArchiveService::deleteAllCancelled('barang', Auth::id());
+
+        return back()->with('success', $deleted > 0
+            ? "Berhasil menghapus {$deleted} peminjaman barang yang dibatalkan (cadangan tetap tersimpan di Super Admin)."
+            : 'Tidak ada data peminjaman barang berstatus dibatalkan untuk dihapus.');
     }
 
     // Aksi: Teruskan / Tolak Permintaan
@@ -1395,11 +1427,63 @@ class AdminAsettetapController extends Controller
     // ========== PEMINJAMAN KENDARAAN ==========
     public function PeminjamanKendaraan(Request $request)
     {
-        $peminjamanKendaraan = PeminjamanKendaraan::with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        $query = PeminjamanKendaraan::with('user')
+            ->when($request->search, function ($q, $search) {
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('nama_barang', 'like', "%{$search}%")
+                        ->orWhere('merek', 'like', "%{$search}%")
+                        ->orWhere('nup', 'like', "%{$search}%")
+                        ->orWhere('nomor_polisi_saat_pinjam', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn($qb) => $qb->where('name', 'like', "%{$search}%"));
+                });
+            });
 
-        return view('adminasettetap.peminjaman_kendaraan', compact('peminjamanKendaraan'));
+        if ($request->status && $request->status !== 'Semua Status') {
+            $statusMap = [
+                'Diterima'   => ['disetujui', 'disetujui_admin'],
+                'Pending'    => ['pending', 'dalam_review', 'diteruskan_kasubag'],
+                'Ditolak'    => ['ditolak'],
+                'Dibatalkan' => CancelledArchiveService::CANCELLED_STATUSES,
+            ];
+            $selectedStatuses = $statusMap[$request->status] ?? [];
+            if (!empty($selectedStatuses)) {
+                $query->whereIn('status', $selectedStatuses);
+            }
+        }
+
+        $cancelledCount = PeminjamanKendaraan::whereIn('status', CancelledArchiveService::CANCELLED_STATUSES)->count();
+        $peminjamanKendaraan = $query->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('adminasettetap.peminjaman_kendaraan', compact('peminjamanKendaraan', 'cancelledCount'));
+    }
+
+    /**
+     * Hapus 1 peminjaman kendaraan berstatus dibatalkan (SoftDelete: terbackup di Super Admin)
+     */
+    public function destroyCancelledKendaraan($id)
+    {
+        $peminjaman = PeminjamanKendaraan::findOrFail($id);
+
+        try {
+            CancelledArchiveService::deleteCancelledRecord($peminjaman, Auth::id());
+            return back()->with('success', "Data peminjaman kendaraan '{$peminjaman->nama_barang}' yang dibatalkan berhasil dihapus (cadangan tetap tersimpan di Super Admin).");
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus massal seluruh peminjaman kendaraan berstatus dibatalkan (SoftDelete)
+     */
+    public function destroyAllCancelledKendaraan()
+    {
+        $deleted = CancelledArchiveService::deleteAllCancelled('kendaraan', Auth::id());
+
+        return back()->with('success', $deleted > 0
+            ? "Berhasil menghapus {$deleted} peminjaman kendaraan yang dibatalkan (cadangan tetap tersimpan di Super Admin)."
+            : 'Tidak ada data peminjaman kendaraan berstatus dibatalkan untuk dihapus.');
     }
 
     public function reviewPeminjamanKendaraan(Request $request, $id)
