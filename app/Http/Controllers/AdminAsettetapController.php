@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\AsetTetapTemplateExport;
 use App\Imports\AsetTetapImport;
-use App\Jobs\SendFonnteNotification;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Illuminate\Validation\Rule;
@@ -31,7 +30,6 @@ use App\Models\{
     DetailKendaraan
 };
 use App\Services\CancelledArchiveService;
-use App\Services\FonnteService;
 
 class AdminAsettetapController extends Controller
 {
@@ -1373,31 +1371,6 @@ class AdminAsettetapController extends Controller
             $pengembalian->peminjamanBarang->update(['status' => 'disetujui']);
         }
 
-        $pegawai = $pengembalian->user;
-        if ($pegawai && $pegawai->nomor_telepon) {
-            $namaBarang = $pengembalian->peminjamanBarang->nama_barang ?? 'Barang';
-
-            if ($request->status_verifikasi === 'diterima') {
-                $pesanWa = "*Pengembalian Barang DITERIMA*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Terima kasih, laporan pengembalian barang Anda telah diverifikasi dan *Diterima* oleh Admin.\n\n";
-                $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
-                $pesanWa .= "📅 *Tgl Kembali:* {$pengembalian->tanggal_pengembalian_aktual}\n";
-                $pesanWa .= "🔍 *Kondisi:* " . ucfirst($pengembalian->kondisi_barang) . "\n\n";
-                $pesanWa .= "Status peminjaman Anda sekarang telah selesai.";
-            } else {
-                $pesanWa = "*Pengembalian Barang DITOLAK/REVISI*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Laporan pengembalian barang Anda *Ditolak* oleh Admin.\n\n";
-                $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
-                $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar_admin ?? '-') . "\n\n";
-                $pesanWa .= "Silakan login ke sistem untuk memperbaiki data laporan pengembalian Anda.";
-            }
-
-            $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpPegawai, $pesanWa);
-        }
-
         return back()->with('success', 'Verifikasi pengembalian berhasil disimpan!');
     }
 
@@ -1496,56 +1469,11 @@ class AdminAsettetapController extends Controller
             $peminjaman->diteruskan_ke_kasubag_date = now();
             $peminjaman->save();
             $msg = 'Permintaan diteruskan ke Kasubag.';
-            // --- 1. NOTIFIKASI KE KASUBAG
-            $kasubag = User::where('role', 'kasubag')->first();
-            if ($kasubag && $kasubag->nomor_telepon) {
-                $namaPegawai = $peminjaman->user->name ?? 'Pegawai';
-
-                $pesanWa = "*Persetujuan Peminjaman KENDARAAN*\n\n";
-                $pesanWa .= "Yth. Kasubag,\n";
-                $pesanWa .= "Admin Aset Tetap meneruskan permintaan peminjaman kendaraan dinas untuk disetujui:\n\n";
-                $pesanWa .= "👤 *Pemohon:* {$namaPegawai}\n";
-                $pesanWa .= "🚗 *Kendaraan:* {$peminjaman->nama_barang}\n";
-                $pesanWa .= "📅 *Tgl Pinjam:* {$peminjaman->tanggal_peminjaman}\n";
-                $pesanWa .= "📅 *Tgl Kembali:* {$peminjaman->tanggal_pengembalian}\n";
-                $pesanWa .= "📝 *Keperluan:* {$peminjaman->deskripsi_peruntukan}\n\n";
-                $pesanWa .= "Silakan login ke sistem untuk memberikan persetujuan akhir.";
-
-                $noHpKasubag = preg_replace('/[^0-9]/', '', $kasubag->nomor_telepon);
-                SendFonnteNotification::dispatch($noHpKasubag, $pesanWa);
-            }
-            // --- 2. TAMBAHKAN KODE INI: NOTIFIKASI INFO KE PEGAWAI ---
-            $pegawai = $peminjaman->user;
-            if ($pegawai && $pegawai->nomor_telepon) {
-                $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
-
-                $pesanWaPegawai = "*Status Peminjaman Kendaraan*\n\n";
-                $pesanWaPegawai .= "Halo {$pegawai->name},\n";
-                $pesanWaPegawai .= "Pengajuan peminjaman kendaraan dinas Anda telah diverifikasi oleh Admin dan *sedang diteruskan ke Kasubag* untuk proses persetujuan akhir.\n\n";
-                $pesanWaPegawai .= "🚗 *Kendaraan:* {$peminjaman->nama_barang}\n";
-                $pesanWaPegawai .= "Kami akan mengabari Anda kembali setelah ada keputusan dari Kasubag. Terima kasih.";
-
-                SendFonnteNotification::dispatch($noHpPegawai, $pesanWaPegawai);
-            }
         } else {
             $peminjaman->status = 'ditolak';
             $peminjaman->komentar = $request->komentar;
             $peminjaman->save();
             $msg = 'Permintaan ditolak.';
-
-            $pegawai = $peminjaman->user;
-            if ($pegawai && $pegawai->nomor_telepon) {
-                $pesanWa = "*Peminjaman Kendaraan DITOLAK Admin*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Maaf, pengajuan peminjaman kendaraan dinas Anda telah *ditolak* oleh Admin.\n\n";
-                $pesanWa .= "🚗 *Kendaraan:* {$peminjaman->nama_barang}\n";
-                $pesanWa .= "📅 *Tgl Pinjam:* {$peminjaman->tanggal_peminjaman}\n";
-                $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar ?? '-') . "\n\n";
-                $pesanWa .= "Silakan hubungi Admin Aset Tetap jika ada pertanyaan lebih lanjut.";
-
-                $noHpAdmin = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
-                SendFonnteNotification::dispatch($noHpAdmin, $pesanWa);
-            }
         }
 
         return back()->with('success', $msg);
@@ -1687,32 +1615,6 @@ class AdminAsettetapController extends Controller
         } else {
             // Jika ditolak, kembalikan status ke disetujui agar pegawai merevisi pengembalian
             $pengembalian->peminjamanKendaraan->update(['status' => 'disetujui']);
-        }
-
-        $pegawai = $pengembalian->user;
-        if ($pegawai && $pegawai->nomor_telepon) {
-            $namaKendaraan = $pengembalian->peminjamanKendaraan->nama_barang ?? 'Kendaraan';
-
-            // Status pada kendaraan biasanya menggunakan 'diproses' / 'diterima'
-            if ($request->status_verifikasi === 'diterima' || $request->status_verifikasi === 'pending') {
-                $pesanWa = "*Pengembalian Kendaraan DITERIMA*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Terima kasih, laporan pengembalian kendaraan dinas Anda telah diverifikasi dan *Diterima* oleh Admin.\n\n";
-                $pesanWa .= "🚗 *Kendaraan:* {$namaKendaraan}\n";
-                $pesanWa .= "📅 *Tgl Kembali:* {$pengembalian->tanggal_pengembalian_aktual}\n";
-                $pesanWa .= "🔍 *Kondisi:* " . ucfirst($pengembalian->kondisi_kendaraan) . "\n\n";
-                $pesanWa .= "Status peminjaman kendaraan Anda sekarang telah selesai.";
-            } else {
-                $pesanWa = "*Pengembalian Kendaraan DITOLAK/REVISI*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Laporan pengembalian kendaraan dinas Anda *Ditolak* oleh Admin.\n\n";
-                $pesanWa .= "🚗 *Kendaraan:* {$namaKendaraan}\n";
-                $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar_admin ?? '-') . "\n\n";
-                $pesanWa .= "Silakan login ke sistem untuk memperbaiki data laporan pengembalian atau foto kendaraan Anda.";
-            }
-
-            $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpPegawai, $pesanWa);
         }
 
         return back()->with('success', 'Verifikasi pengembalian kendaraan berhasil disimpan!');

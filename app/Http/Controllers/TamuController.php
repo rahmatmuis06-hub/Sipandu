@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SendFonnteNotification;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
@@ -12,7 +11,6 @@ use App\Models\{
     PeminjamanGedung,
     User,
 };
-use App\Services\FonnteService;
 
 class TamuController extends Controller
 {
@@ -189,29 +187,6 @@ class TamuController extends Controller
             'status_pembayaran' => 'belum_lunas',
             'cara_pembayaran' => 'e-billing',
         ]);
-
-        // --- NOTIFIKASI KE ADMIN SARPRAS ---
-        $adminSarpras = \App\Models\User::where('role', 'adminsarpras')->first();
-        if ($adminSarpras && $adminSarpras->nomor_telepon) {
-            // Membersihkan format nomor telepon tujuan
-            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminSarpras->nomor_telepon);
-
-            $pesanAdmin = "*Permintaan Peminjaman GEDUNG Baru*\n\n";
-            $pesanAdmin .= "Halo Admin Sarpras,\n";
-            $pesanAdmin .= "Terdapat pengajuan peminjaman fasilitas baru dari Tamu:\n\n";
-
-            $pesanAdmin .= "👤 *Pemohon:* {$validated['nama_lengkap']} ({$validated['instansi_lembaga']})\n";
-            $pesanAdmin .= "🏫 *Fasilitas:* {$gedung->nama_gedung}\n";
-            $pesanAdmin .= "📅 *Tanggal:* {$validated['tanggal_pinjam']} s/d {$validated['tanggal_kembali']}\n";
-            $pesanAdmin .= "⏰ *Waktu:* {$validated['jam_mulai']} - {$validated['jam_selesai']}\n";
-            $pesanAdmin .= "👥 *Peserta:* {$validated['jumlah_peserta']} Orang\n";
-            $pesanAdmin .= "📝 *Kegiatan:* {$validated['tujuan_penggunaan']}\n";
-            // $pesanAdmin .= "📞 *Kontak:* {$validated['nomor_kontak']}\n\n";
-
-            $pesanAdmin .= "Silakan login ke sistem untuk melakukan review pengajuan ini.";
-
-            \App\Jobs\SendFonnteNotification::dispatch($noHpAdmin, $pesanAdmin);
-        }
 
         return response()->json([
             'success' => true,

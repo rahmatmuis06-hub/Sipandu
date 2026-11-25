@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Exports\PersediaanTemplateExport;
 use App\Imports\PersediaanImport;
-use App\Jobs\SendFonnteNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +26,6 @@ use App\Models\{
 };
 use App\Services\BarangLainnyaUnitService;
 use App\Services\CancelledArchiveService;
-use App\Services\FonnteService;
 use App\Services\PersediaanBatchService;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -624,40 +622,6 @@ class AdminPersediaanController extends Controller
         } else {
             // Jika ditolak, kembalikan status ke disetujui agar pegawai bisa merevisi
             $pengembalian->peminjamanBarangLainnya?->update(['status' => 'disetujui']);
-        }
-
-        // WhatsApp Notification ke Pegawai
-        $pegawai = $pengembalian->user;
-        if ($pegawai && $pegawai->nomor_telepon) {
-            $namaBarang = $pengembalian->peminjamanBarangLainnya->nama_barang ?? 'Barang Lainnya';
-            $kodeUnitPinjam = $pengembalian->peminjamanBarangLainnya->kode_unit ?? null;
-
-            if ($request->status_verifikasi === 'diterima') {
-                $pesanWa = "*Pengembalian Barang Lainnya DITERIMA*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Terima kasih, laporan pengembalian barang lainnya Anda telah diverifikasi dan *Diterima* oleh Admin Persediaan.\n\n";
-                $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
-                if ($kodeUnitPinjam) {
-                    $pesanWa .= "🏷️ *Kode Unit:* {$kodeUnitPinjam}\n";
-                }
-                $pesanWa .= "🔢 *Jumlah:* {$pengembalian->jumlah_dikembalikan}\n";
-                $pesanWa .= "📅 *Tgl Kembali:* " . \Carbon\Carbon::parse($pengembalian->tanggal_pengembalian_aktual)->format('d/m/Y') . "\n";
-                $pesanWa .= "🔍 *Kondisi:* " . ucfirst($pengembalian->kondisi_barang) . "\n\n";
-                $pesanWa .= "Status peminjaman barang lainnya Anda sekarang telah selesai.";
-            } else {
-                $pesanWa = "*Pengembalian Barang Lainnya DITOLAK/REVISI*\n\n";
-                $pesanWa .= "Halo {$pegawai->name},\n";
-                $pesanWa .= "Laporan pengembalian barang lainnya Anda *Ditolak* oleh Admin Persediaan.\n\n";
-                $pesanWa .= "📦 *Barang:* {$namaBarang}\n";
-                if ($kodeUnitPinjam) {
-                    $pesanWa .= "🏷️ *Kode Unit:* {$kodeUnitPinjam}\n";
-                }
-                $pesanWa .= "💬 *Catatan Admin:* " . ($request->komentar_admin ?? '-') . "\n\n";
-                $pesanWa .= "Silakan login ke sistem untuk memperbaiki data laporan pengembalian Anda.";
-            }
-
-            $noHpPegawai = preg_replace('/[^0-9]/', '', $pegawai->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpPegawai, $pesanWa);
         }
 
         return back()->with('success', 'Verifikasi pengembalian barang lainnya berhasil disimpan!');

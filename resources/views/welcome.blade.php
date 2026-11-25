@@ -954,9 +954,9 @@
             </div>
             <div class="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
               <h4 class="font-bold text-navy-900 text-sm flex items-center gap-2 mb-1">
-                <span class="text-slate-600">⚙️</span> Pengaturan Akun &amp; Notifikasi WA
+                <span class="text-slate-600">⚙️</span> Pengaturan Akun &amp; Profil
               </h4>
-              <p class="text-slate-500 text-xs leading-relaxed">Memperbarui profil, nomor WhatsApp untuk notifikasi persetujuan otomatis, tanda tangan digital, dan kata sandi.</p>
+              <p class="text-slate-500 text-xs leading-relaxed">Memperbarui profil, nomor kontak, tanda tangan digital, dan kata sandi.</p>
             </div>
           </div>
         </div>
@@ -1154,7 +1154,7 @@
             <ol class="text-slate-600 text-xs space-y-2 list-decimal list-inside leading-relaxed flex-1">
               <li>Pegawai memilih barang (urut NUP) atau kendaraan dinas pada menu peminjaman.</li>
               <li>Admin Aset Tetap memverifikasi ketersediaan fisik dan meneruskan ke Kasubag Umum.</li>
-              <li>Kasubag Umum menyetujui (*Approve*) dan notifikasi WhatsApp terkirim otomatis.</li>
+              <li>Kasubag Umum menyetujui (*Approve*) pengajuan dan status diperbarui otomatis di sistem.</li>
               <li>Selesai dinas, Pegawai mengisi form <strong>Pengembalian</strong> beserta kondisi &amp; foto bukti.</li>
               <li>Admin Aset memverifikasi laporan kembali dan mencetak Berita Acara Pengembalian (PDF).</li>
             </ol>
@@ -1211,7 +1211,7 @@
               </div>
               <div class="flex items-start gap-3">
                 <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
-                <p class="text-slate-600"><strong class="text-navy-900">Profil, WhatsApp &amp; Keamanan:</strong> Lengkapi nomor WhatsApp dan tanda tangan digital di menu <strong>Pengaturan Akun</strong> untuk mendukung notifikasi otomatis serta dokumen BAST.</p>
+                <p class="text-slate-600"><strong class="text-navy-900">Profil &amp; Keamanan Akun:</strong> Lengkapi profil akun dan tanda tangan digital di menu <strong>Pengaturan Akun</strong> untuk mendukung penerbitan dokumen BAST.</p>
               </div>
             </div>
             <div class="pt-2 flex gap-3 flex-wrap">

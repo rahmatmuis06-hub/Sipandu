@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SendFonnteNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +20,6 @@ use App\Models\PeminjamanBarangLainnya;
 use App\Models\PengembalianBarangLainnya;
 use App\Models\User;
 use App\Services\BarangLainnyaUnitService;
-use App\Services\FonnteService;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Log;
@@ -271,26 +269,6 @@ class PegawaiController extends Controller
                 return $parent;
             });
 
-            // Notifikasi WA
-            $adminAset = User::where('role', 'adminasettetap')->first();
-            if ($adminAset && $adminAset->nomor_telepon) {
-                $namaPegawai = Auth::user()->name;
-                $pesan = "*Permintaan Peminjaman BARANG (Multi-Item)*\n\n";
-                $pesan .= "Halo Admin Aset Tetap,\n";
-                $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan peminjaman beberapa barang:\n\n";
-                foreach ($collectedItems as $i => $item) {
-                    $num = $i + 1;
-                    $pesan .= "{$num}. {$item['aset']->nama_barang} (NUP: " . ($item['nup'] ?? '-') . ") - {$item['jumlah']} Unit\n";
-                }
-                $pesan .= "\n📅 *Tgl Pinjam:* {$request->tanggal_peminjaman}\n";
-                $pesan .= "📅 *Tgl Kembali:* {$request->tanggal_pengembalian}\n";
-                $pesan .= "📝 *Keperluan:* {$request->deskripsi_peruntukan}\n\n";
-                $pesan .= "Silakan login ke sistem untuk melakukan review.";
-
-                $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
-                SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-            }
-
             return back()->with('success', 'Permintaan peminjaman ' . count($collectedItems) . ' aset berhasil diajukan dan sedang menunggu persetujuan Admin.');
         }
 
@@ -382,24 +360,6 @@ class PegawaiController extends Controller
 
             return $parent;
         });
-
-        $adminAset = User::where('role', 'adminasettetap')->first();
-        if ($adminAset && $adminAset->nomor_telepon) {
-            $namaPegawai = Auth::user()->name;
-            $pesan = "*Permintaan Peminjaman BARANG Baru*\n\n";
-            $pesan .= "Halo Admin Aset Tetap,\n";
-            $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan peminjaman dengan detail berikut:\n\n";
-            $pesan .= "📦 *Nama Barang:* {$aset->nama_barang}\n";
-            $pesan .= "🔖 *Kode/NUP:* {$aset->kode_barang} / " . ($aset->nup ?? '-') . "\n";
-            $pesan .= "🔢 *Jumlah:* {$request->jumlah}\n";
-            $pesan .= "📅 *Tgl Pinjam:* {$request->tanggal_peminjaman}\n";
-            $pesan .= "📅 *Tgl Kembali:* {$request->tanggal_pengembalian}\n";
-            $pesan .= "📝 *Keperluan:* {$request->deskripsi_peruntukan}\n\n";
-            $pesan .= "Silakan login ke sistem untuk melakukan review.";
-
-            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-        }
 
         return back()->with('success', 'Permintaan peminjaman aset berhasil dikirim dan sedang menunggu persetujuan Admin.');
     }
@@ -495,24 +455,6 @@ class PegawaiController extends Controller
 
         if ($request->jumlah_dikembalikan >= $peminjaman->jumlah) {
             $peminjaman->update(['status' => 'proses_pengembalian']);
-        }
-
-        $adminAset = User::where('role', 'adminasettetap')->first();
-        if ($adminAset && $adminAset->nomor_telepon) {
-            $namaPegawai = Auth::user()->name;
-
-            $pesan = "*Laporan Pengembalian BARANG*\n\n";
-            $pesan .= "Halo Admin Aset Tetap,\n";
-            $pesan .= "Pegawai atas nama *{$namaPegawai}* melaporkan pengembalian barang dengan detail:\n\n";
-            $pesan .= "📦 *Nama Barang:* {$peminjaman->nama_barang}\n";
-            $pesan .= "🔢 *Jumlah Dikembalikan:* {$request->jumlah_dikembalikan}\n";
-            $pesan .= "📅 *Tanggal Kembali:* {$request->tanggal_pengembalian_aktual}\n";
-            $pesan .= "🔍 *Kondisi:* " . ucfirst($request->kondisi_barang) . "\n";
-            $pesan .= "📝 *Catatan:* " . ($request->catatan ?? '-') . "\n\n";
-            $pesan .= "Silakan login ke sistem untuk melakukan verifikasi foto dan laporan.";
-
-            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpAdmin, $pesan);
         }
 
         return back()->with('success', 'Laporan pengembalian berhasil dikirim dan menunggu verifikasi Admin!');
@@ -646,24 +588,6 @@ class PegawaiController extends Controller
                 return $parent;
             });
 
-            $adminPersediaan = User::where('role', 'adminpersediaan')->first();
-            if ($adminPersediaan && $adminPersediaan->nomor_telepon) {
-                $namaPegawai = Auth::user()->name;
-                $pesan = "*Permintaan PERSEDIAAN Baru (Multi-Item)*\n\n";
-                $pesan .= "Halo Admin Persediaan,\n";
-                $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan permintaan beberapa barang persediaan:\n\n";
-                foreach ($verifiedItems as $idx => $v) {
-                    $num = $idx + 1;
-                    $pesan .= "{$num}. {$v['persediaan']->nama_barang} - {$v['jumlah_diminta']} {$v['persediaan']->satuan}\n";
-                }
-                $pesan .= "\n📝 *Keperluan:* {$request->tujuan_penggunaan}\n";
-                $pesan .= "📅 *Tgl Permintaan:* {$request->tanggal_permintaan}\n\n";
-                $pesan .= "Silakan login ke sistem untuk melakukan review permintaan.";
-
-                $noHpAdmin = preg_replace('/[^0-9]/', '', $adminPersediaan->nomor_telepon);
-                SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-            }
-
             return redirect()->route('pegawai.permintaan-persediaan')
                 ->with('success', 'Permintaan ' . count($verifiedItems) . ' item persediaan berhasil dikirim! Menunggu persetujuan Admin Persediaan.');
         }
@@ -724,23 +648,6 @@ class PegawaiController extends Controller
 
             return $parent;
         });
-
-        $adminPersediaan = User::where('role', 'adminpersediaan')->first();
-        if ($adminPersediaan && $adminPersediaan->nomor_telepon) {
-            $namaPegawai = Auth::user()->name;
-
-            $pesan = "*Permintaan PERSEDIAAN Baru*\n\n";
-            $pesan .= "Halo Admin Persediaan,\n";
-            $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan permintaan barang persediaan:\n\n";
-            $pesan .= "📦 *Barang:* {$persediaan->nama_barang}\n";
-            $pesan .= "🔖 *Kode:* {$persediaan->kode_barang}\n";
-            $pesan .= "🔢 *Jumlah:* {$request->jumlah_diminta}\n";
-            $pesan .= "📝 *Keperluan:* {$request->tujuan_penggunaan}\n\n";
-            $pesan .= "Silakan login ke sistem untuk melakukan review permintaan.";
-
-            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminPersediaan->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-        }
 
         return redirect()->route('pegawai.permintaan-persediaan')
             ->with('success', 'Permintaan berhasil dikirim! Menunggu persetujuan Admin Persediaan.');
@@ -897,33 +804,6 @@ class PegawaiController extends Controller
 
             PeminjamanKendaraan::create($peminjamanData);
 
-            // Kirim notifikasi WA (dibungkus try-catch agar kegagalan queue/WA tidak mengagalkan simpan)
-            try {
-                $adminAset = User::where('role', 'adminasettetap')->first();
-                if ($adminAset && $adminAset->nomor_telepon) {
-                    $namaPegawai = Auth::user()->name;
-
-                    $pesan = "*Permintaan Peminjaman KENDARAAN Baru*\n\n";
-                    $pesan .= "Halo Admin Aset Tetap,\n";
-                    $pesan .= "Pegawai atas nama *{$namaPegawai}* mengajukan peminjaman kendaraan dinas:\n\n";
-                    $merek = $aset->merek ? " ({$aset->merek})" : "";
-                    $pesan .= "🚗 *Kendaraan:* {$aset->nama_barang}{$merek}\n";
-                    
-                    $platNomor = $aset->detailKendaraan->nomor_polisi ?? '-';
-                    $pesan .= "🔢 *Plat Nomor:* {$platNomor}\n";
-                    
-                    $pesan .= "📅 *Tgl Pinjam:* {$request->tanggal_peminjaman}\n";
-                    $pesan .= "📅 *Tgl Kembali:* {$request->tanggal_pengembalian}\n";
-                    $pesan .= "📝 *Keperluan:* {$request->deskripsi_peruntukan}\n\n";
-                    $pesan .= "Silakan login ke sistem untuk melakukan review.";
-
-                    $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
-                    SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-                }
-            } catch (\Throwable $waError) {
-                Log::warning('Gagal dispatch notifikasi WA peminjaman kendaraan: ' . $waError->getMessage());
-            }
-
             return back()->with('success', 'Permintaan peminjaman berhasil dikirim.');
 
         } catch (\Throwable $e) {
@@ -1023,28 +903,6 @@ class PegawaiController extends Controller
         ]);
 
         $peminjaman->update(['status' => 'proses_pengembalian']);
-
-        $adminAset = User::where('role', 'adminasettetap')->first();
-        if ($adminAset && $adminAset->nomor_telepon) {
-            $namaPegawai = Auth::user()->name;
-
-            $pesan = "*Laporan Pengembalian KENDARAAN*\n\n";
-            $pesan .= "Halo Admin Aset Tetap,\n";
-            $pesan .= "Pegawai atas nama *{$namaPegawai}* melaporkan pengembalian kendaraan dinas:\n\n";
-            $pesan .= "🚗 *Kendaraan:* {$peminjaman->nama_barang}\n";
-            
-            // MENAMPILKAN PLAT NOMOR DARI DATA SNAPSHOT
-            $platNomor = $peminjaman->nomor_polisi_saat_pinjam ?? '-';
-            $pesan .= "🔢 *Plat Nomor:* {$platNomor}\n";
-            
-            $pesan .= "📅 *Tanggal Kembali:* {$request->tanggal_pengembalian_aktual}\n";
-            $pesan .= "🔍 *Kondisi Kendaraan:* " . ucfirst($request->kondisi_kendaraan) . "\n";
-            $pesan .= "📝 *Catatan:* " . ($request->catatan ?? '-') . "\n\n";
-            $pesan .= "Silakan login ke sistem untuk melakukan verifikasi foto kendaraan.";
-
-            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminAset->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-        }
 
         return back()->with('success', 'Laporan pengembalian kendaraan berhasil dikirim!');
     }
@@ -1376,28 +1234,6 @@ class PegawaiController extends Controller
         ]);
 
         $peminjaman->update(['status' => 'proses_pengembalian']);
-
-        // Notifikasi WhatsApp ke Admin Persediaan
-        $adminPersediaan = User::where('role', 'adminpersediaan')->first();
-        if ($adminPersediaan && $adminPersediaan->nomor_telepon) {
-            $namaPegawai = Auth::user()->name;
-
-            $pesan = "*Laporan Pengembalian BARANG LAINNYA*\n\n";
-            $pesan .= "Halo Admin Persediaan,\n";
-            $pesan .= "Pegawai atas nama *{$namaPegawai}* melaporkan pengembalian barang lainnya:\n\n";
-            $pesan .= "📦 *Nama Barang:* {$peminjaman->nama_barang}\n";
-            if (!empty($peminjaman->kode_unit)) {
-                $pesan .= "🏷️ *Kode Unit:* {$peminjaman->kode_unit}\n";
-            }
-            $pesan .= "🔢 *Jumlah Dikembalikan:* {$request->jumlah_dikembalikan} {$peminjaman->satuan}\n";
-            $pesan .= "📅 *Tanggal Kembali:* {$request->tanggal_pengembalian_aktual}\n";
-            $pesan .= "🔍 *Kondisi:* " . ucfirst($request->kondisi_barang) . "\n";
-            $pesan .= "📝 *Catatan:* " . ($request->catatan ?? '-') . "\n\n";
-            $pesan .= "Silakan login ke sistem untuk melakukan verifikasi laporan pengembalian.";
-
-            $noHpAdmin = preg_replace('/[^0-9]/', '', $adminPersediaan->nomor_telepon);
-            SendFonnteNotification::dispatch($noHpAdmin, $pesan);
-        }
 
         return back()->with('success', 'Laporan pengembalian barang lainnya berhasil dikirim dan menunggu verifikasi Admin!');
     }
