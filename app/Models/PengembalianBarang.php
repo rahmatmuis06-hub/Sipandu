@@ -24,10 +24,12 @@ class PengembalianBarang extends Model
         'status_pengembalian',
         'status_verifikasi',
         'komentar_admin',
+        'verified_at',
     ];
 
     protected $casts = [
         'tanggal_pengembalian_aktual' => 'datetime',
+        'verified_at' => 'datetime',
     ];
 
     // ✅ RELASI SESUAI STRUKTUR ANDA
@@ -54,12 +56,16 @@ class PengembalianBarang extends Model
 
     public function scopeSearch($query, $search)
     {
-        return $query->where('kondisi_barang', 'like', "%{$search}%")
-                    ->orWhereHas('peminjamanBarang', function($q) use ($search) {
-                        $q->where('nama_barang', 'like', "%{$search}%")
-                          ->orWhere('kode_barang', 'like', "%{$search}%");
-                    })
-                    ->orWhereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
+        return $query->where(function ($sub) use ($search) {
+            $sub->where('kondisi_barang', 'like', "%{$search}%")
+                ->orWhere('catatan', 'like', "%{$search}%")
+                ->orWhereHas('peminjamanBarang', function ($q) use ($search) {
+                    $q->where('nama_barang', 'like', "%{$search}%")
+                        ->orWhere('kode_barang', 'like', "%{$search}%")
+                        ->orWhere('nup', 'like', "%{$search}%");
+                })
+                ->orWhereHas('user', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+        });
     }
 
     public function scopeKondisi($query, $kondisi)

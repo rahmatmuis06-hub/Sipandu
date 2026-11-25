@@ -70,8 +70,11 @@ class PeminjamanKendaraan extends Model
         return match($this->status) {
             'pending' => ['text' => 'Pending', 'color' => 'warning', 'icon' => 'fa-clock'],
             'dalam_review' => ['text' => 'Dalam Review', 'color' => 'info', 'icon' => 'fa-eye'],
+            'diteruskan_kasubag' => ['text' => 'Diteruskan ke Kasubag', 'color' => 'info', 'icon' => 'fa-paper-plane'],
             'disetujui_kasubag' => ['text' => 'Disetujui Kasubag', 'color' => 'success', 'icon' => 'fa-check-circle'],
             'disetujui' => ['text' => 'Disetujui', 'color' => 'success', 'icon' => 'fa-thumbs-up'],
+            'proses_pengembalian' => ['text' => 'Proses Pengembalian', 'color' => 'info', 'icon' => 'fa-hourglass-half'],
+            'dikembalikan', 'selesai' => ['text' => 'Dikembalikan', 'color' => 'primary', 'icon' => 'fa-undo-alt'],
             'ditolak' => ['text' => 'Ditolak', 'color' => 'danger', 'icon' => 'fa-times-circle'],
             'dibatalkan' => ['text' => 'Dibatalkan', 'color' => 'secondary', 'icon' => 'fa-ban'],
             default => ['text' => 'Unknown', 'color' => 'secondary']

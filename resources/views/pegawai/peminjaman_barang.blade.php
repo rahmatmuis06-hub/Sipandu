@@ -1048,6 +1048,8 @@
                 @php
                 $badgeClass = 'pending'; $icon = 'fa-clock'; $statusText = 'Menunggu Admin';
                 if($item->status == 'disetujui' || $item->status == 'disetujui_admin') { $badgeClass = 'approved'; $icon = 'fa-check'; $statusText = 'Disetujui'; }
+                elseif(in_array($item->status, ['dikembalikan', 'selesai'])) { $badgeClass = 'approved'; $icon = 'fa-undo-alt'; $statusText = 'Dikembalikan'; }
+                elseif($item->status == 'proses_pengembalian') { $badgeClass = 'pending'; $icon = 'fa-hourglass-half'; $statusText = 'Proses Pengembalian'; }
                 elseif($item->status == 'ditolak') { $badgeClass = 'rejected'; $icon = 'fa-times'; $statusText = 'Ditolak'; }
                 elseif($item->status == 'diteruskan_kasubag') { $badgeClass = 'pending'; $icon = 'fa-eye'; $statusText = 'Di teruskan kekasubag'; }
                 elseif($item->status == 'dibatalkan') { $badgeClass = 'rejected'; $icon = 'fa-ban'; $statusText = 'Dibatalkan'; }

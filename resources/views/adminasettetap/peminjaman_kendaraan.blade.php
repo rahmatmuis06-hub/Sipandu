@@ -126,6 +126,7 @@
                         <option value="Semua Status" {{ request('status', 'Semua Status') === 'Semua Status' ? 'selected' : '' }}>Semua Status</option>
                         <option value="Pending" {{ request('status') === 'Pending' ? 'selected' : '' }}>Pending / Proses</option>
                         <option value="Diterima" {{ request('status') === 'Diterima' ? 'selected' : '' }}>Disetujui</option>
+                        <option value="Dikembalikan" {{ request('status') === 'Dikembalikan' ? 'selected' : '' }}>Dikembalikan</option>
                         <option value="Ditolak" {{ request('status') === 'Ditolak' ? 'selected' : '' }}>Ditolak</option>
                         <option value="Dibatalkan" {{ request('status') === 'Dibatalkan' ? 'selected' : '' }}>Dibatalkan</option>
                     </select>
@@ -180,6 +181,8 @@
                                 $statusText = $item->status;
                                 
                                 if($item->status == 'disetujui') { $statusClass = 'status-diterima'; }
+                                elseif(in_array($item->status, ['dikembalikan', 'selesai', 'diterima'])) { $statusClass = 'status-diterima'; $statusText = 'Dikembalikan'; }
+                                elseif($item->status == 'proses_pengembalian') { $statusClass = 'status-review'; $statusText = 'Proses Pengembalian'; }
                                 elseif($item->status == 'ditolak') { $statusClass = 'status-ditolak'; }
                                 elseif($item->status == 'diteruskan_kasubag') { $statusClass = 'status-review'; $statusText = 'Di teruskan kekasubag'; }
                                 elseif($item->status == 'dibatalkan') { $statusClass = 'status-ditolak'; $statusText = 'Dibatalkan'; }

@@ -472,7 +472,7 @@ class PegawaiController extends Controller
     {
         $pengembalian = PengembalianBarang::where('user_id', Auth::id())->findOrFail($id);
         if ($pengembalian->status_verifikasi === 'pending') {
-            $pengembalian->peminjamanBarang->update(['status' => 'disetujui']);
+            $pengembalian->peminjamanBarang?->update(['status' => 'disetujui']);
             $pengembalian->update([
                 'status_verifikasi' => 'dibatalkan',
                 'updated_at' => now()
@@ -921,7 +921,7 @@ class PegawaiController extends Controller
         
         // 🐛 PERBAIKAN DI SINI: sebelumnya 'diproses', seharusnya 'pending' sesuai saat create
         if ($pengembalian->status_verifikasi === 'pending') { 
-            $pengembalian->peminjamanKendaraan->update(['status' => 'disetujui']);
+            $pengembalian->peminjamanKendaraan?->update(['status' => 'disetujui']);
             $pengembalian->update([
                 'status_verifikasi' => 'dibatalkan',
                 'updated_at' => now()

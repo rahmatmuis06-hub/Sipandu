@@ -31,6 +31,7 @@ class PengembalianKendaraan extends Model
 
     protected $casts = [
         'tanggal_pengembalian_aktual' => 'datetime',
+        'verified_at' => 'datetime',
         'biaya_denda' => 'decimal:2',
     ];
 
@@ -46,6 +47,6 @@ class PengembalianKendaraan extends Model
 
     public function admin(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'verified_by_adminasettetap_id');
+        return $this->belongsTo(User::class, 'verified_by_admin_id');
     }
 }

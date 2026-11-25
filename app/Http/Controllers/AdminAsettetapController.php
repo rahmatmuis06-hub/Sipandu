@@ -1169,13 +1169,14 @@ class AdminAsettetapController extends Controller
                 });
             });
 
-        // Filter status (contoh: Semua Status, Diterima, Pending, Ditolak, Dibatalkan)
+        // Filter status (contoh: Semua Status, Diterima, Dikembalikan, Pending, Ditolak, Dibatalkan)
         if ($request->status && $request->status !== 'Semua Status') {
             $statusMap = [
-                'Diterima'   => ['disetujui', 'disetujui_admin'],
-                'Pending'    => ['pending', 'dalam_review', 'diteruskan_kasubag'],
-                'Ditolak'    => ['ditolak'],
-                'Dibatalkan' => CancelledArchiveService::CANCELLED_STATUSES,
+                'Diterima'     => ['disetujui', 'disetujui_admin'],
+                'Dikembalikan' => ['proses_pengembalian', 'dikembalikan', 'selesai'],
+                'Pending'      => ['pending', 'dalam_review', 'diteruskan_kasubag'],
+                'Ditolak'      => ['ditolak'],
+                'Dibatalkan'   => CancelledArchiveService::CANCELLED_STATUSES,
             ];
             $selectedStatuses = $statusMap[$request->status] ?? [];
             if (!empty($selectedStatuses)) {
@@ -1349,27 +1350,47 @@ class AdminAsettetapController extends Controller
             'komentar_admin' => 'nullable|string'
         ]);
 
-        $pengembalian->update([
-            'status_verifikasi' => $request->status_verifikasi,
-            'komentar_admin' => $request->komentar_admin,
-            'verified_by_adminAsetTetap_id' => auth()->id(),
-            'verified_at' => now()
-        ]);
+        DB::transaction(function () use ($request, $pengembalian) {
+            $pengembalian->update([
+                'status_verifikasi' => $request->status_verifikasi,
+                'komentar_admin' => $request->komentar_admin,
+                'verified_by_adminAsetTetap_id' => auth()->id(),
+                'verified_at' => now()
+            ]);
 
-        // Update status tabel peminjaman utama
-        if ($request->status_verifikasi === 'diterima') {
-            $pengembalian->peminjamanBarang->update(['status' => 'dikembalikan']);
-
-            // Kembalikan stok jika diperlukan
-            $aset = $pengembalian->peminjamanBarang->barang;
-            if ($aset) {
-                $aset->status = 'Tersedia'; // Sesuaikan dengan alur bisnis Anda
-                $aset->save();
+            $peminjaman = $pengembalian->peminjamanBarang()->with('items')->first();
+            if (!$peminjaman) {
+                return;
             }
-        } else {
-            // Jika ditolak, kembalikan status ke disetujui agar pegawai merevisi pengembalian
-            $pengembalian->peminjamanBarang->update(['status' => 'disetujui']);
-        }
+
+            // Update status tabel peminjaman utama
+            if ($request->status_verifikasi === 'diterima') {
+                $peminjaman->update(['status' => 'dikembalikan']);
+
+                // Kembalikan status aset tetap sesuai item peminjaman
+                $restoredIds = [];
+                foreach ($peminjaman->items as $detail) {
+                    $aset = $detail->aset_tetap_id
+                        ? AssetTetap::find($detail->aset_tetap_id)
+                        : $this->resolveAsetTetapForPinjaman($detail->kode_barang, $detail->nup);
+
+                    if ($aset && !in_array($aset->id, $restoredIds, true)) {
+                        $this->restoreAssetTetapStatus($aset, $pengembalian->status_pengembalian);
+                        $restoredIds[] = $aset->id;
+                    }
+                }
+
+                if ($peminjaman->items->isEmpty()) {
+                    $aset = $this->resolveAsetTetapForPinjaman($peminjaman->kode_barang, $peminjaman->nup);
+                    if ($aset) {
+                        $this->restoreAssetTetapStatus($aset, $pengembalian->status_pengembalian);
+                    }
+                }
+            } else {
+                // Jika ditolak, kembalikan status ke disetujui agar pegawai merevisi pengembalian
+                $peminjaman->update(['status' => 'disetujui']);
+            }
+        });
 
         return back()->with('success', 'Verifikasi pengembalian berhasil disimpan!');
     }
@@ -1413,10 +1434,11 @@ class AdminAsettetapController extends Controller
 
         if ($request->status && $request->status !== 'Semua Status') {
             $statusMap = [
-                'Diterima'   => ['disetujui', 'disetujui_admin'],
-                'Pending'    => ['pending', 'dalam_review', 'diteruskan_kasubag'],
-                'Ditolak'    => ['ditolak'],
-                'Dibatalkan' => CancelledArchiveService::CANCELLED_STATUSES,
+                'Diterima'     => ['disetujui', 'disetujui_admin'],
+                'Dikembalikan' => ['proses_pengembalian', 'dikembalikan', 'selesai'],
+                'Pending'      => ['pending', 'dalam_review', 'diteruskan_kasubag'],
+                'Ditolak'      => ['ditolak'],
+                'Dibatalkan'   => CancelledArchiveService::CANCELLED_STATUSES,
             ];
             $selectedStatuses = $statusMap[$request->status] ?? [];
             if (!empty($selectedStatuses)) {
@@ -1564,20 +1586,36 @@ class AdminAsettetapController extends Controller
             ->when($request->kondisi, function ($q, $kondisi) {
                 $q->where('kondisi_kendaraan', $kondisi);
             })
-            ->when($request->status, function ($q, $status) { // ✅ Ganti status_verifikasi → status_pengembalian
-                $q->where('status_pengembalian', $status);
+            ->when($request->status_verifikasi, function ($q, $statusVerifikasi) {
+                $q->where('status_verifikasi', $statusVerifikasi);
+            })
+            ->when($request->status, function ($q, $status) {
+                if (in_array($status, ['pending', 'diterima', 'ditolak', 'dibatalkan'], true)) {
+                    $q->where('status_verifikasi', $status);
+                } else {
+                    $q->where('status_pengembalian', $status);
+                }
             })
             ->when($request->search, function ($q, $search) {
-                $q->whereHas('peminjamanKendaraan.kendaraan', function ($qb) use ($search) {
-                    $qb->where('nopol', 'like', "%{$search}%")
-                        ->orWhere('merk', 'like', "%{$search}%")
-                        ->orWhere('tipe', 'like', "%{$search}%");
-                })
-                    ->orWhereHas('peminjamanKendaraan.user', function ($qb) use ($search) {
-                        $qb->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    })
-                    ->orWhere('catatan', 'like', "%{$search}%");
+                $q->where(function ($sub) use ($search) {
+                    $sub->where('kondisi_kendaraan', 'like', "%{$search}%")
+                        ->orWhere('catatan', 'like', "%{$search}%")
+                        ->orWhereHas('peminjamanKendaraan', function ($qb) use ($search) {
+                            $qb->where('nama_barang', 'like', "%{$search}%")
+                                ->orWhere('kode_barang', 'like', "%{$search}%")
+                                ->orWhere('nup', 'like', "%{$search}%")
+                                ->orWhere('merek', 'like', "%{$search}%")
+                                ->orWhere('nomor_polisi_saat_pinjam', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('peminjamanKendaraan.user', function ($qb) use ($search) {
+                            $qb->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('user', function ($qb) use ($search) {
+                            $qb->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%");
+                        });
+                });
             })
             ->orderBy('tanggal_pengembalian_aktual', 'desc');
 
@@ -1596,28 +1634,75 @@ class AdminAsettetapController extends Controller
             'komentar_admin' => 'nullable|string'
         ]);
 
-        $pengembalian->update([
-            'status_verifikasi' => $request->status_verifikasi,
-            'komentar_admin' => $request->komentar_admin,
-            'verified_by_admin_id' => auth()->id(),
-            'verified_at' => now()
-        ]);
+        DB::transaction(function () use ($request, $pengembalian) {
+            $pengembalian->update([
+                'status_verifikasi' => $request->status_verifikasi,
+                'komentar_admin' => $request->komentar_admin,
+                'verified_by_admin_id' => auth()->id(),
+                'verified_at' => now()
+            ]);
 
-        if ($request->status_verifikasi === 'pending') {
-            $pengembalian->peminjamanKendaraan()->update(['status' => 'diterima']);
-
-            // Kembalikan stok jika diperlukan
-            $aset = $pengembalian->peminjamanKendaraan()->barang;
-            if ($aset) {
-                $aset->status = 'Tersedia'; // Sesuaikan dengan alur bisnis Anda
-                $aset->save();
+            $peminjaman = $pengembalian->peminjamanKendaraan;
+            if (!$peminjaman) {
+                return;
             }
-        } else {
-            // Jika ditolak, kembalikan status ke disetujui agar pegawai merevisi pengembalian
-            $pengembalian->peminjamanKendaraan->update(['status' => 'disetujui']);
-        }
+
+            if ($request->status_verifikasi === 'diterima') {
+                $peminjaman->update(['status' => 'dikembalikan']);
+
+                // Kembalikan status aset kendaraan di master aset_tetap
+                $aset = $this->resolveAsetTetapForPinjaman($peminjaman->kode_barang, $peminjaman->nup);
+                if ($aset) {
+                    $this->restoreAssetTetapStatus($aset, $pengembalian->status_pengembalian);
+                }
+            } else {
+                // Jika ditolak, kembalikan status ke disetujui agar pegawai merevisi pengembalian
+                $peminjaman->update(['status' => 'disetujui']);
+            }
+        });
 
         return back()->with('success', 'Verifikasi pengembalian kendaraan berhasil disimpan!');
+    }
+
+    /**
+     * Cari record master AssetTetap berdasarkan kode_barang dan NUP (opsional).
+     */
+    private function resolveAsetTetapForPinjaman(?string $kodeBarang, ?string $nup): ?AssetTetap
+    {
+        if (blank($kodeBarang)) {
+            return null;
+        }
+
+        if (!blank($nup)) {
+            $exact = AssetTetap::where('kode_barang', $kodeBarang)
+                ->where('nup', $nup)
+                ->first();
+            if ($exact) {
+                return $exact;
+            }
+        }
+
+        return AssetTetap::where('kode_barang', $kodeBarang)->first();
+    }
+
+    /**
+     * Pulihkan status & kondisi master AssetTetap setelah pengembalian diverifikasi diterima.
+     */
+    private function restoreAssetTetapStatus(AssetTetap $aset, ?string $statusPengembalian): void
+    {
+        if ($statusPengembalian === 'hilang') {
+            $aset->status = 'Keluar';
+        } elseif ($statusPengembalian === 'rusak_berat') {
+            $aset->status = 'Rusak';
+            $aset->kondisi = 'rusak berat';
+        } elseif ($statusPengembalian === 'rusak_ringan') {
+            $aset->status = 'Tersedia';
+            $aset->kondisi = 'rusak ringan';
+        } else {
+            $aset->status = 'Tersedia';
+        }
+
+        $aset->save();
     }
 
     public function showPengembalianKendaraanJsonAdmin($id)
@@ -1646,10 +1731,12 @@ class AdminAsettetapController extends Controller
     // ========== LAPORAN PEMINJAMAN KENDARAAN ==========
     public function laporanPeminjamanKendaraan(Request $request)
     {
-        $query = PeminjamanKendaraan::with(['kendaraan', 'user', 'sopir'])
+        $query = PeminjamanKendaraan::with(['user'])
             ->when($request->date_range, function ($q, $range) {
-                [$start, $end] = explode(' - ', $range);
-                $q->whereBetween('tanggal_pinjam', [Carbon::parse($start), Carbon::parse($end)]);
+                $dates = explode(' - ', $range);
+                if (count($dates) === 2) {
+                    $q->whereBetween('tanggal_peminjaman', [Carbon::parse($dates[0]), Carbon::parse($dates[1])]);
+                }
             });
 
         $laporanPeminjamanKendaraan = $query->get();
@@ -1660,13 +1747,15 @@ class AdminAsettetapController extends Controller
     public function laporanPengembalianKendaraan(Request $request)
     {
         $query = PengembalianKendaraan::with([
-            'peminjamanKendaraan.kendaraan',
+            'peminjamanKendaraan',
             'peminjamanKendaraan.user',
             'user'
         ])
             ->when($request->date_range, function ($q, $range) {
-                [$start, $end] = explode(' - ', $range);
-                $q->whereBetween('tanggal_pengembalian_aktual', [Carbon::parse($start), Carbon::parse($end)]);
+                $dates = explode(' - ', $range);
+                if (count($dates) === 2) {
+                    $q->whereBetween('tanggal_pengembalian_aktual', [Carbon::parse($dates[0]), Carbon::parse($dates[1])]);
+                }
             })
             ->when($request->status, fn($q, $s) => $q->where('status_pengembalian', $s));
 
@@ -1701,7 +1790,7 @@ class AdminAsettetapController extends Controller
         // Untuk pengembalian kendaraan, update juga status peminjaman
         if ($request->type === 'pengembalian-kendaraan') {
             $pengembalian = PengembalianKendaraan::findOrFail($id);
-            $pengembalian->peminjamanKendaraan->update(['status' => 'dikembalikan']);
+            $pengembalian->peminjamanKendaraan?->update(['status' => 'dikembalikan']);
         }
 
         $model->update($updateData);
@@ -1713,10 +1802,12 @@ class AdminAsettetapController extends Controller
     // ========== LAPORAN ==========
     public function laporanPeminjamanBarang(Request $request)
     {
-        $query = PeminjamanBarang::with(['barang', 'user'])
+        $query = PeminjamanBarang::with(['user', 'items'])
             ->when($request->date_range, function ($q, $range) {
-                [$start, $end] = explode(' - ', $range);
-                $q->whereBetween('tanggal_peminjaman', [Carbon::parse($start), Carbon::parse($end)]);
+                $dates = explode(' - ', $range);
+                if (count($dates) === 2) {
+                    $q->whereBetween('tanggal_peminjaman', [Carbon::parse($dates[0]), Carbon::parse($dates[1])]);
+                }
             });
 
         $laporanPeminjamanBarang = $query->get();
